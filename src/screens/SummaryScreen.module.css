@@ -1,0 +1,87 @@
+/* ── Screen shell ───────────────────────────────────────────────────────────── */
+.screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.scrollArea { flex: 1; overflow: auto; padding: 20px 32px 28px; }
+
+/* ── Closed badge (AppHeader right) ─────────────────────────────────────────── */
+.closedBadge {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 18px;
+  background: var(--ok-soft); color: var(--ok);
+  border-radius: 999px; font-weight: 700; font-size: 15px;
+}
+
+/* ── Metric grid ────────────────────────────────────────────────────────────── */
+.metricsGrid  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.detailGrid   { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+.rightCol     { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── MetricCard ─────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  padding: 18px 22px;
+}
+.cardLabel {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.4px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.cardValueAccent { font-size: 40px; font-weight: 800; color: var(--club); letter-spacing: -0.8px; font-variant-numeric: tabular-nums; line-height: 1; }
+.cardValueNormal { font-size: 40px; font-weight: 800; color: var(--ink); letter-spacing: -0.8px; font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* ── Section ────────────────────────────────────────────────────────────────── */
+.sectionTitle {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 1.3px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 14px;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────────── */
+.productEmoji {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 18px;
+}
+.tdProductName { display: flex; align-items: center; gap: 12px; }
+
+/* ── Cash control ───────────────────────────────────────────────────────────── */
+.cashLabel  { display: block; font-size: 14px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 600; }
+.cashInputWrap { position: relative; margin-bottom: 14px; }
+.cashInput {
+  width: 100%; height: 72px;
+  border: 2px solid var(--line); border-radius: 12px;
+  padding: 0 64px 0 20px;
+  font-size: 28px; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-family: inherit;
+  color: var(--ink); outline: none; letter-spacing: -0.3px;
+}
+.cashInputOpen   { background: var(--paper); }
+.cashInputClosed { background: var(--cream-deep); }
+.cashEuroSign {
+  position: absolute; right: 22px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 26px; font-weight: 700; color: var(--ink-mute);
+}
+.cashExpected     { font-size: 14px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500; }
+.cashExpectedVal  { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+
+/* ── Diff badge ─────────────────────────────────────────────────────────────── */
+.diffBadge {
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.diffLabel  { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.85; }
+.diffValue  { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.4px; margin-top: 2px; }
+.diffIcon   { width: 48px; height: 48px; border-radius: 999px; display: grid; place-items: center; font-size: 26px; font-weight: 800; }
+
+/* ── PaymentRow ─────────────────────────────────────────────────────────────── */
+.paymentRowHeader  { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.paymentRowAmount  { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.paymentBar        { height: 10px; border-radius: 999px; overflow: hidden; position: relative; }
+.paymentBarFill    { height: 100%; border-radius: 999px; transition: width 240ms; }
+.paymentRowPct     { font-size: 13px; color: var(--ink-soft); margin-top: 6px; font-weight: 500; }
+
+/* ── Actions bar ────────────────────────────────────────────────────────────── */
+.actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 12px; }

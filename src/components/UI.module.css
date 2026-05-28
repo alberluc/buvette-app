@@ -1,0 +1,155 @@
+/* ── PayBadge ───────────────────────────────────────────────────────────────── */
+.payBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+.payBadgeMd       { padding: 5px 10px;  font-size: 14px; }
+.payBadgeLg       { padding: 8px 14px;  font-size: 16px; }
+.payBadgeEspeces  { background: var(--amber-soft); color: var(--amber); }
+.payBadgeCarte    { background: var(--blue-soft);  color: var(--blue); }
+.payDot           { width: 8px; height: 8px; border-radius: 999px; }
+.payDotEspeces    { background: var(--amber); }
+.payDotCarte      { background: var(--blue); }
+
+/* ── BigButton ──────────────────────────────────────────────────────────────── */
+.bigBtn {
+  appearance: none;
+  height: 72px;
+  padding: 0 32px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: inherit;
+  transition: background 120ms;
+  cursor: pointer;
+}
+.bigBtnPrimary                    { border: none; background: var(--club); color: white; }
+.bigBtnPrimary:hover:not(:disabled) { background: var(--club-deep); }
+.bigBtnPrimary:disabled           { background: #D8CFBE; color: #8C8473; cursor: not-allowed; }
+.bigBtnGhost                      { border: 1.5px solid var(--line); background: transparent; color: var(--ink); }
+.bigBtnGhost:hover:not(:disabled) { background: var(--cream-deep); }
+.bigBtnGhost:disabled             { cursor: not-allowed; }
+.bigBtnDanger                     { border: none; background: var(--danger); color: white; }
+.bigBtnDanger:hover:not(:disabled){ background: #8E2A1E; }
+
+/* ── Icon.Chevron ───────────────────────────────────────────────────────────── */
+.chevron    { transition: transform 200ms; }
+.chevronUp  { transform: rotate(180deg); }
+
+/* ── StatusBar ──────────────────────────────────────────────────────────────── */
+.statusBar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--cream);
+  border-bottom: 1px solid var(--line-soft);
+}
+.statusRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-soft);
+}
+.clubName     { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+.userName     { font-weight: 500; margin-left: 8px; }
+.statusIndicator { display: inline-flex; align-items: center; gap: 5px; }
+.statusDot {
+  width: 7px; height: 7px;
+  border-radius: 999px;
+  transition: background 400ms, box-shadow 400ms;
+}
+.statusDotOnline  { background: var(--ok);   box-shadow: 0 0 0 2px var(--ok-soft); }
+.statusDotOffline { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-soft); }
+.offlineLabel { font-size: 11px; font-weight: 700; color: var(--warn); letter-spacing: 0.3px; }
+.settingsBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 2px;
+  margin-left: 4px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+
+/* ── TabBar ─────────────────────────────────────────────────────────────────── */
+.tabBar {
+  height: 78px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  flex-shrink: 0;
+}
+.tabBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+  transition: color 120ms;
+}
+.tabBtnActive   { color: var(--club); font-weight: 700; }
+.tabIndicator {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 3px;
+  background: var(--club);
+  border-radius: 0 0 3px 3px;
+  transition: width 160ms ease;
+}
+.tabIndicatorActive { width: 64px; }
+
+/* ── AppHeader ──────────────────────────────────────────────────────────────── */
+.appHeader {
+  padding: 20px 32px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--cream);
+  flex-shrink: 0;
+}
+.appHeaderSubtitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.appHeaderTitle {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.4px;
+}

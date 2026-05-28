@@ -12,6 +12,7 @@ import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pu
 import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
+import styles from './App.module.css';
 
 export default function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -64,7 +65,6 @@ export default function App() {
       const resolvedProducts = savedProducts || DEFAULT_PRODUCTS;
       setProducts(resolvedProducts);
 
-      // État local en premier (affiché immédiatement si l'API est lente)
       setDay(initial.day);
       if (initial.justAutoClosed) {
         const archiveEntry = archiveFromDay(initial.justAutoClosed, resolvedProducts);
@@ -86,7 +86,6 @@ export default function App() {
         }
       }
 
-      // Remplace l'état local par les données API (source de vérité partagée)
       if (validSession) {
         try {
           const [apiDay, apiDays, apiProducts] = await Promise.all([
@@ -119,7 +118,6 @@ export default function App() {
     setLicenseStatus('valid');
   }
 
-  // Refresh silencieux de la licence (< 3 jours restants)
   useEffect(() => {
     if (licenseStatus !== 'valid' || !licenseToken) return;
     const p = parseJwt(licenseToken);
@@ -129,7 +127,6 @@ export default function App() {
       .catch(() => {});
   }, [licenseStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch des comptes après validation de la licence
   useEffect(() => {
     if (licenseStatus !== 'valid' || !licenseToken) return;
     fetchAccounts(licenseToken)
@@ -173,7 +170,6 @@ export default function App() {
         wasOfflineRef.current = false;
         setApiOnline(true);
         if (wasOffline) {
-          // Re-sync complète après reconnexion
           const [apiDays, apiProducts] = await Promise.all([
             fetchDays(sessionToken),
             fetchProducts(sessionToken).catch(() => null),
@@ -328,10 +324,10 @@ export default function App() {
   return (
     <div
       data-screen-label={tab === 'orders' ? '01 Commandes' : tab === 'summary' ? '02 Bilan' : '03 Historique'}
-      style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--cream)' }}>
+      className={styles.root}>
       {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <div className={styles.main}>
         {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} />}
         {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} />}
         {tab === 'history' && <HistoryScreen archived={archived} products={products} />}
@@ -349,7 +345,7 @@ export default function App() {
 
       {!t.showStatusBar && (
         <button onClick={() => setSettingsOpen(true)} aria-label="Réglages"
-          style={{ position: 'absolute', top: 12, right: 14, width: 36, height: 36, borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink-soft)', display: 'grid', placeItems: 'center', cursor: 'pointer', zIndex: 50, boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
+          className={styles.floatingSettingsBtn}>
           <GearSvg />
         </button>
       )}
@@ -414,16 +410,15 @@ export default function App() {
 // ── Confirmation de clôture ───────────────────────────────────────────────────
 function ConfirmCloseModal({ onConfirm, onCancel }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,8,0.55)', display: 'grid', placeItems: 'center', zIndex: 300, animation: 'fadeIn 160ms ease' }}>
-      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
-      <div style={{ background: 'var(--cream)', borderRadius: 24, padding: '40px 52px', minWidth: 380, boxShadow: '0 30px 80px rgba(0,0,0,0.35)', textAlign: 'center' }}>
-        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Clôturer la journée ?</div>
-        <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 28, lineHeight: 1.5 }}>
+    <div className={styles.confirmOverlay}>
+      <div className={styles.confirmModal}>
+        <div className={styles.confirmTitle}>Clôturer la journée ?</div>
+        <div className={styles.confirmBody}>
           Cette action archivera la journée en cours.<br />Elle peut être réouverte depuis le bilan.
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onCancel} style={{ flex: 1, height: 52, borderRadius: 12, border: '1.5px solid var(--line)', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>Annuler</button>
-          <button onClick={onConfirm} style={{ flex: 1, height: 52, borderRadius: 12, border: 'none', background: 'var(--club)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: 'white' }}>Clôturer</button>
+        <div className={styles.confirmActions}>
+          <button onClick={onCancel} className={styles.confirmBtnCancel}>Annuler</button>
+          <button onClick={onConfirm} className={styles.confirmBtnOk}>Clôturer</button>
         </div>
       </div>
     </div>
@@ -433,18 +428,17 @@ function ConfirmCloseModal({ onConfirm, onCancel }) {
 // ── Toast clôture automatique ─────────────────────────────────────────────────
 function AutoCloseToast({ entry, onDismiss, onView }) {
   return (
-    <div style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 80, background: 'var(--warn-soft)', color: 'var(--warn)', border: '1px solid var(--warn)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 12px 30px rgba(0,0,0,0.15)', maxWidth: 720, animation: 'slideDown 280ms cubic-bezier(.2,.8,.2,1)' }}>
-      <style>{`@keyframes slideDown { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }`}</style>
-      <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--warn)', color: 'white', display: 'grid', placeItems: 'center', fontSize: 20, fontWeight: 800, flexShrink: 0 }}>!</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--warn)' }}>Clôture automatique</div>
-        <div style={{ fontSize: 14, color: 'var(--ink)', marginTop: 2 }}>
+    <div className={styles.toast}>
+      <div className={styles.toastIcon}>!</div>
+      <div className={styles.toastBody}>
+        <div className={styles.toastTitle}>Clôture automatique</div>
+        <div className={styles.toastText}>
           La journée du <b>{entry.date}</b> n'a pas été clôturée manuellement.
           Elle a été archivée avec son total ({fmtEUR(entry.total)}).
         </div>
       </div>
-      <button onClick={onView} style={{ appearance: 'none', border: '1.5px solid var(--warn)', background: 'transparent', color: 'var(--warn)', padding: '8px 14px', borderRadius: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Voir l'historique</button>
-      <button onClick={onDismiss} aria-label="Fermer" style={{ appearance: 'none', border: 'none', background: 'transparent', color: 'var(--warn)', padding: 6, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+      <button onClick={onView} className={styles.toastViewBtn}>Voir l'historique</button>
+      <button onClick={onDismiss} aria-label="Fermer" className={styles.toastCloseBtn}>
         <Icon.Close size={20} />
       </button>
     </div>

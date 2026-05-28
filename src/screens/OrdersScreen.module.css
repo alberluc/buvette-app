@@ -1,0 +1,253 @@
+/* ── Screen shell ───────────────────────────────────────────────────────────── */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.list {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 24px 120px;
+}
+.orderListInner { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Empty state ────────────────────────────────────────────────────────────── */
+.emptyState  { margin: 80px auto; max-width: 420px; text-align: center; color: var(--ink-soft); }
+.emptyTitle  { font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.emptyText   { font-size: 16px; }
+
+/* ── OrderRow ───────────────────────────────────────────────────────────────── */
+.orderRow {
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 16px 22px;
+  display: grid;
+  grid-template-columns: 76px 1fr auto auto auto;
+  align-items: center;
+  gap: 18px;
+}
+.orderTime {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+.orderItems    { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.orderItem     { font-size: 17px; color: var(--ink); font-weight: 500; display: inline-flex; align-items: baseline; gap: 6px; }
+.orderItemQty  { font-weight: 800; color: var(--club); font-variant-numeric: tabular-nums; }
+.orderTotal    { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; letter-spacing: -0.3px; }
+.deletePlaceholder { width: 44px; }
+.deleteBtn {
+  appearance: none;
+  border: 1.5px solid var(--line-soft);
+  background: transparent;
+  color: var(--ink-mute);
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms, background 120ms;
+}
+.deleteBtn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: #FDE8E6;
+}
+
+/* ── FAB ────────────────────────────────────────────────────────────────────── */
+.fab {
+  position: absolute;
+  right: 28px; bottom: 28px;
+  width: 92px; height: 92px;
+  border-radius: 50%;
+  border: none;
+  background: var(--club);
+  color: white;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(31,111,63,0.40), 0 4px 8px rgba(0,0,0,0.10);
+  transition: transform 120ms, background 120ms;
+}
+.fab:hover   { background: var(--club-deep); }
+.fab:active  { transform: scale(0.96); }
+.closedBadge {
+  position: absolute;
+  right: 28px; bottom: 28px;
+  padding: 14px 22px;
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+/* ── DeleteConfirmModal ─────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(20,15,8,0.45);
+  display: grid; place-items: center;
+  z-index: 200;
+}
+.modal {
+  background: var(--cream);
+  border-radius: 20px;
+  padding: 32px 40px;
+  min-width: 360px; max-width: 480px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.32);
+  text-align: center;
+}
+.modalTitle  { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.modalSub    { font-size: 15px; color: var(--ink-soft); margin-bottom: 6px; }
+.modalAmount { font-size: 20px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; margin-bottom: 28px; }
+.modalActions { display: flex; gap: 12px; }
+.btnCancel {
+  flex: 1; height: 52px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: transparent;
+  cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 600; color: var(--ink);
+}
+.btnDanger {
+  flex: 1; height: 52px; border-radius: 12px;
+  border: none; background: var(--danger);
+  cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700; color: white;
+}
+
+/* ── NewOrderModal ──────────────────────────────────────────────────────────── */
+.newOrderOverlay {
+  position: absolute; inset: 0;
+  background: rgba(20,15,8,0.45);
+  display: grid; place-items: center;
+  z-index: 100;
+  animation: fadeIn 160ms ease;
+}
+.newOrderModal {
+  width: 980px; max-height: 720px;
+  background: var(--cream);
+  border-radius: 22px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  overflow: hidden;
+  animation: slideUp 220ms cubic-bezier(.2,.8,.2,1);
+}
+.modalHeader {
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modalHeaderLabel {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.4px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.modalHeaderTitle { margin: 0; font-size: 26px; font-weight: 700; }
+.closeBtn {
+  appearance: none;
+  border: 1.5px solid var(--line); background: transparent;
+  width: 52px; height: 52px; border-radius: 12px;
+  display: grid; place-items: center;
+  cursor: pointer; color: var(--ink);
+}
+.productsGrid {
+  padding: 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.modalFooter {
+  padding: 18px 28px;
+  background: var(--paper); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+}
+.paymentLabel {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.2px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.paymentOptions { display: flex; gap: 10px; }
+.totalSection   { text-align: right; }
+.totalLabel {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.2px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.totalAmount {
+  font-size: 44px; font-weight: 800;
+  color: var(--club); letter-spacing: -0.8px;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.totalCount { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.modalActions2 {
+  padding: 16px 24px 20px;
+  background: var(--paper);
+  display: flex; justify-content: space-between; gap: 14px;
+}
+
+/* ── ProductCard ────────────────────────────────────────────────────────────── */
+.productCard {
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 18px;
+  transition: border-color 120ms;
+}
+.productCardActive { border: 2px solid var(--club); }
+.productEmoji  { width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; }
+.productName   { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
+.productPrice  { font-size: 15px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+.productCounter { display: flex; align-items: center; gap: 6px; }
+.counterQty    { width: 60px; text-align: center; font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+.counterQtyActive   { color: var(--club); }
+.counterQtyInactive { color: var(--ink-mute); }
+.counterBtn {
+  appearance: none;
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  transition: background 80ms;
+}
+.counterBtnNormal {
+  border: 1.5px solid var(--line);
+  background: var(--cream); color: var(--ink);
+  cursor: pointer;
+}
+.counterBtnNormal:hover { background: var(--cream-deep); }
+.counterBtnDisabled {
+  border: 1.5px solid var(--line-soft);
+  background: transparent; color: var(--ink-mute);
+  cursor: not-allowed;
+}
+
+/* ── PaymentChoice ──────────────────────────────────────────────────────────── */
+.paymentChoice {
+  appearance: none;
+  height: 60px; padding: 0 22px;
+  border-radius: 12px;
+  font-family: inherit; font-size: 19px; font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: all 120ms;
+}
+.paymentChoiceActive   { border: 2px solid var(--club); background: var(--club-soft); color: var(--club-deep); }
+.paymentChoiceInactive { border: 1.5px solid var(--line); background: transparent; color: var(--ink); }
+.paymentRadio { width: 22px; height: 22px; border-radius: 999px; background: var(--paper); box-sizing: border-box; }
+.paymentRadioActive   { border: 6px solid var(--club); }
+.paymentRadioInactive { border: 2px solid var(--ink-mute); }
+.paymentHint  { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+
+/* ── Header right (stat) ────────────────────────────────────────────────────── */
+.headerRight   { text-align: right; }
+.headerStatLabel {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.4px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.headerStatValue {
+  font-size: 38px; font-weight: 800;
+  color: var(--club); letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+}
+.headerStatSub { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }

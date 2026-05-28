@@ -16,7 +16,7 @@ npm run lint     # lint ESLint
 - **React 19** + **Vite 8** — pas de router (navigation par état `tab`)
 - **Dexie 4** — IndexedDB, remplace localStorage
 - **vite-plugin-pwa** — génère manifest + service worker au build
-- Tout le style est en **inline styles** (pas de fichier CSS sauf variables + reset dans `index.css`)
+- Le style utilise **CSS Modules** (un fichier `.module.css` par composant/écran). Les styles dynamiques (couleurs produit, valeurs calculées depuis l'état) restent en `style={{}}` inline.
 
 ## Structure
 
@@ -115,7 +115,8 @@ Les icônes sont dans `public/` : `icon-192.png`, `icon-512.png`, `icon-maskable
 
 ## Conventions
 
-- **Inline styles partout** — pas de classes CSS, pas de CSS modules, pas de Tailwind
+- **CSS Modules** — un fichier `Foo.module.css` à côté de chaque `Foo.jsx`, importé comme `import styles from './Foo.module.css'`
+- **Inline style uniquement** pour les valeurs dynamiques impossibles en CSS pur (couleur spécifique d'un produit, largeur calculée depuis l'état, etc.)
 - **Pas de router** — la navigation est un `useState('orders'|'summary'|'history')`
 - **Pas de global state** (Redux, Zustand…) — tout dans `App.jsx`, passé en props
 - **Pas de TypeScript** — JS pur
