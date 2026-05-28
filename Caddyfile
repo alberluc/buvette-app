@@ -1,0 +1,3 @@
+buvette.petanquedutelegraphe.fr {
+    reverse_proxy app:80
+}
