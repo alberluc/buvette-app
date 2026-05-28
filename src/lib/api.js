@@ -130,6 +130,28 @@ export async function pushProducts(sessionToken, products) {
   return data
 }
 
+// ── Réglages ──────────────────────────────────────────────────────────────────
+
+export async function fetchSettings(sessionToken) {
+  const res = await fetch(`${API_URL}/settings`, {
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function pushSettings(sessionToken, settings) {
+  const res = await fetch(`${API_URL}/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify(settings),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
 // ── Journées ──────────────────────────────────────────────────────────────────
 
 export async function fetchCurrentDay(sessionToken) {
@@ -163,6 +185,27 @@ export async function pushOrder(sessionToken, dayKey, order) {
 
 export async function deleteOrder(sessionToken, dayKey, orderId) {
   const res = await fetch(`${API_URL}/days/${dayKey}/orders/${orderId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function pushMouvement(sessionToken, dayKey, mouvement) {
+  const res = await fetch(`${API_URL}/days/${dayKey}/mouvements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify(mouvement),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function deleteMouvement(sessionToken, dayKey, mouvementId) {
+  const res = await fetch(`${API_URL}/days/${dayKey}/mouvements/${mouvementId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${sessionToken}` },
   })

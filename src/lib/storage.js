@@ -94,6 +94,48 @@ export async function saveAccountsCache(accounts) {
   }
 }
 
+// ── Préférences UI (accent, taille texte…) ────────────────────────────────────
+
+const TWEAKS_KEY = 'tweaks';
+
+export async function loadTweaks() {
+  try {
+    const record = await db.state.get(TWEAKS_KEY);
+    return record?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveTweaks(tweaks) {
+  try {
+    await db.state.put({ key: TWEAKS_KEY, data: tweaks });
+  } catch (e) {
+    console.warn('[storage] saveTweaks failed', e);
+  }
+}
+
+// ── Réglages (fond de caisse…) ────────────────────────────────────────────────
+
+const SETTINGS_KEY = 'settings';
+
+export async function loadSettings() {
+  try {
+    const record = await db.state.get(SETTINGS_KEY);
+    return record?.data ?? { cashFloat: 0 };
+  } catch {
+    return { cashFloat: 0 };
+  }
+}
+
+export async function saveSettings(settings) {
+  try {
+    await db.state.put({ key: SETTINGS_KEY, data: settings });
+  } catch (e) {
+    console.warn('[storage] saveSettings failed', e);
+  }
+}
+
 // ── Produits ──────────────────────────────────────────────────────────────────
 
 export async function loadProducts() {

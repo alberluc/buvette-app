@@ -7,8 +7,9 @@ import { LicenseScreen } from './components/LicenseScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
-import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts } from './lib/api';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts, loadSettings, saveSettings, loadTweaks, saveTweaks } from './lib/storage';
+import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushMouvement, deleteMouvement } from './lib/api';
 import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
@@ -23,7 +24,7 @@ export default function App() {
     root.style.setProperty('--club', p.club);
     root.style.setProperty('--club-deep', p.clubDeep);
     root.style.setProperty('--club-soft', p.clubSoft);
-    root.style.fontSize = (16 * (TEXT_SCALES[t.textSize] || 1)) + 'px';
+    document.getElementById('root').style.zoom = TEXT_SCALES[t.textSize] || 1;
   }, [t.accent, t.textSize]);
 
   const [tab, setTab] = useState('orders');
@@ -34,6 +35,7 @@ export default function App() {
   const [archived, setArchived] = useState([]);
   const [autoCloseNotice, setAutoCloseNotice] = useState(null);
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [cashFloat, setCashFloat] = useState(0);
 
   // ── Licence ───────────────────────────────────────────────────────────────
   const [licenseStatus, setLicenseStatus] = useState('checking');
@@ -51,16 +53,18 @@ export default function App() {
 
   // ── UI ────────────────────────────────────────────────────────────────────
   const [pendingClose, setPendingClose] = useState(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showAccountManager, setShowAccountManager] = useState(false);
 
   // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      const [initial, licToken, sesToken, accsCache, savedProducts] = await Promise.all([
-        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(), loadProducts(),
+      const [initial, licToken, sesToken, accsCache, savedProducts, savedSettings, savedTweaks] = await Promise.all([
+        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(), loadProducts(), loadSettings(), loadTweaks(),
       ]);
+      setCashFloat(savedSettings.cashFloat ?? 0);
+      if (savedTweaks) setTweak(savedTweaks);
 
       const resolvedProducts = savedProducts || DEFAULT_PRODUCTS;
       setProducts(resolvedProducts);
@@ -88,15 +92,17 @@ export default function App() {
 
       if (validSession) {
         try {
-          const [apiDay, apiDays, apiProducts] = await Promise.all([
+          const [apiDay, apiDays, apiProducts, apiSettings] = await Promise.all([
             fetchCurrentDay(validSession),
             fetchDays(validSession),
             fetchProducts(validSession).catch(() => null),
+            fetchSettings(validSession).catch(() => null),
           ]);
           const finalProducts = apiProducts || resolvedProducts;
           setProducts(finalProducts);
           saveProducts(finalProducts);
-          setDay(apiDay);
+          if (apiSettings) { setCashFloat(apiSettings.cashFloat ?? 0); saveSettings(apiSettings); }
+          setDay({ mouvements: [], ...apiDay });
           setArchived(apiDays.map(d => archiveFromApiDay(d, finalProducts)));
           setAutoCloseNotice(null);
         } catch {
@@ -139,6 +145,10 @@ export default function App() {
     if (loaded && day) save({ day, archived });
   }, [day, archived, loaded]);
 
+  useEffect(() => {
+    if (loaded) saveTweaks(t);
+  }, [t]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Auto-archive à minuit ─────────────────────────────────────────────────
   useEffect(() => {
     if (!loaded || !day) return;
@@ -178,11 +188,11 @@ export default function App() {
             setProducts(apiProducts);
             saveProducts(apiProducts);
           }
-          setArchived(prev => apiDays.map(d => archiveFromApiDay(d, apiProducts || products)));
+          setArchived(apiDays.map(d => archiveFromApiDay(d, apiProducts || products)));
         }
         setDay(prev => {
           if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
-          return apiDay;
+          return { mouvements: [], ...apiDay };
         });
       } catch {
         wasOfflineRef.current = true;
@@ -220,6 +230,22 @@ export default function App() {
     if (!day.dayClosed) setAutoCloseNotice(entry);
   };
 
+  const addMouvement = m => {
+    setDay(d => ({ ...d, mouvements: [...(d.mouvements || []), m] }));
+    if (sessionToken) pushMouvement(sessionToken, day.dayKey, m).catch(() => {});
+  };
+
+  const removeMouvement = id => {
+    setDay(d => ({ ...d, mouvements: (d.mouvements || []).filter(m => m.id !== id) }));
+    if (sessionToken) deleteMouvement(sessionToken, day.dayKey, id).catch(() => {});
+  };
+
+  const updateCashFloat = val => {
+    setCashFloat(val);
+    saveSettings({ cashFloat: val });
+    if (sessionToken) pushSettings(sessionToken, { cashFloat: val }).catch(() => {});
+  };
+
   const updateProducts = async newProducts => {
     setProducts(newProducts);
     saveProducts(newProducts);
@@ -233,16 +259,18 @@ export default function App() {
     const p = parseJwt(sessionJWT);
     setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
     try {
-      const [apiDay, apiDays, apiProducts] = await Promise.all([
+      const [apiDay, apiDays, apiProducts, apiSettings] = await Promise.all([
         fetchCurrentDay(sessionJWT),
         fetchDays(sessionJWT),
         fetchProducts(sessionJWT).catch(() => null),
+        fetchSettings(sessionJWT).catch(() => null),
       ]);
       const loginProducts = apiProducts || products;
       if (apiProducts) { setProducts(apiProducts); saveProducts(apiProducts); }
-      setDay(apiDay);
+      if (apiSettings) { setCashFloat(apiSettings.cashFloat ?? 0); saveSettings(apiSettings); }
+      setDay({ mouvements: [], ...apiDay });
       setArchived(apiDays.map(d => archiveFromApiDay(d, loginProducts)));
-    } catch {}
+    } catch { /* Fallback silencieux : on reste en mode hors-ligne */ }
   };
 
   const handleLogout = async () => {
@@ -323,14 +351,27 @@ export default function App() {
   // ── Rendu principal ───────────────────────────────────────────────────────
   return (
     <div
-      data-screen-label={tab === 'orders' ? '01 Commandes' : tab === 'summary' ? '02 Bilan' : '03 Historique'}
+      data-screen-label={
+        tab === 'orders' ? '01 Commandes' :
+        tab === 'summary' ? '02 Bilan' :
+        tab === 'history' ? '03 Historique' :
+        '04 Réglages'
+      }
       className={styles.root}>
-      {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
+      {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
-        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} />}
-        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} />}
-        {tab === 'history' && <HistoryScreen archived={archived} products={products} />}
+        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddMouvement={addMouvement} />}
+        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} cashFloat={cashFloat} archived={archived} onAddMouvement={addMouvement} onRemoveMouvement={removeMouvement} />}
+        {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
+        {tab === 'settings' && <SettingsScreen
+          t={t} setTweak={setTweak}
+          licenseInfo={licenseInfo}
+          cashFloat={cashFloat} onCashFloatChange={updateCashFloat}
+          products={products} onProductsChange={updateProducts}
+          currentUser={currentUser} sessionToken={sessionToken}
+          onManageAccounts={() => setShowAccountManager(true)}
+        />}
 
         {autoCloseNotice && (
           <AutoCloseToast
@@ -344,23 +385,18 @@ export default function App() {
       <TabBar active={tab} onChange={setTab} />
 
       {!t.showStatusBar && (
-        <button onClick={() => setSettingsOpen(true)} aria-label="Réglages"
+        <button onClick={() => setAccountOpen(true)} aria-label="Mon compte"
           className={styles.floatingSettingsBtn}>
-          <GearSvg />
+          <Icon.User size={20} />
         </button>
       )}
 
-      {settingsOpen && (
+      {accountOpen && (
         <SettingsDrawer
-          t={t} setTweak={setTweak}
-          installable={installable} installed={installed} triggerInstall={triggerInstall}
-          dayClosed={day.dayClosed} onCloseDay={() => closeDay(day.cashCounted ?? 0)} onReopenDay={reopenDay}
-          onReset={handleReset} onSimulateNextDay={simulateNextDay} onClose={() => setSettingsOpen(false)}
-          licenseInfo={licenseInfo} currentUser={currentUser}
-          onLogout={() => { setSettingsOpen(false); handleLogout(); }}
-          onChangePassword={() => { setSettingsOpen(false); setShowChangePassword(true); }}
-          onManageAccounts={() => { setSettingsOpen(false); setShowAccountManager(true); }}
-          products={products} onProductsChange={updateProducts}
+          currentUser={currentUser}
+          onLogout={() => { setAccountOpen(false); handleLogout(); }}
+          onChangePassword={() => { setAccountOpen(false); setShowChangePassword(true); }}
+          onClose={() => setAccountOpen(false)}
         />
       )}
 

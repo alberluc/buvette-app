@@ -90,6 +90,50 @@ router.delete('/days/:dayKey/orders/:orderId', requireSession, async (req, res) 
   }
 })
 
+// Ajoute un mouvement de caisse — append atomique en JSONB
+router.post('/days/:dayKey/mouvements', requireSession, async (req, res) => {
+  const { licenseKey } = req.session
+  const { dayKey } = req.params
+  const mouvement = req.body
+  if (!mouvement || !mouvement.id || !mouvement.time || mouvement.amount == null)
+    return res.status(400).json({ error: 'Mouvement invalide : id, time, amount requis' })
+  try {
+    const updated = await db('days')
+      .where({ license_key: licenseKey, day_key: dayKey })
+      .update({
+        mouvements: db.raw('mouvements || ?::jsonb', [JSON.stringify([mouvement])]),
+        updated_at: db.raw('NOW()'),
+      })
+      .returning('*')
+    if (!updated.length) return res.status(404).json({ error: 'Journée introuvable' })
+    res.json(toClientDay(updated[0]))
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+// Supprime un mouvement de caisse par son id
+router.delete('/days/:dayKey/mouvements/:mouvementId', requireSession, async (req, res) => {
+  const { licenseKey } = req.session
+  const { dayKey, mouvementId } = req.params
+  try {
+    const updated = await db('days')
+      .where({ license_key: licenseKey, day_key: dayKey })
+      .update({
+        mouvements: db.raw(
+          `(SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb) FROM jsonb_array_elements(mouvements) AS elem WHERE elem->>'id' != ?)`,
+          [mouvementId]
+        ),
+        updated_at: db.raw('NOW()'),
+      })
+      .returning('*')
+    if (!updated.length) return res.status(404).json({ error: 'Journée introuvable' })
+    res.json(toClientDay(updated[0]))
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 // Mise à jour de la journée (clôture, réouverture, libellé, espèces comptées)
 router.put('/days/:dayKey', requireSession, async (req, res) => {
   const { licenseKey } = req.session
@@ -118,6 +162,7 @@ function toClientDay(row) {
     date: row.date,
     label: row.label,
     orders: row.orders,
+    mouvements: row.mouvements || [],
     dayClosed: row.day_closed,
     autoClosed: row.auto_closed,
     cashCounted: row.cash_counted !== null ? Number(row.cash_counted) : null,

@@ -3,7 +3,7 @@ import { summarize } from './data';
 
 export function makeEmptyToday() {
   const key = todayKey();
-  return { dayKey: key, date: formatDate(key), label: '', orders: [], dayClosed: false, cashCounted: null };
+  return { dayKey: key, date: formatDate(key), label: '', orders: [], mouvements: [], dayClosed: false, cashCounted: null };
 }
 
 export function archiveFromDay(day, products) {
@@ -14,6 +14,7 @@ export function archiveFromDay(day, products) {
     dayKey: day.dayKey, date: day.date, label: day.label || '',
     orderCount: s.count, total: s.total, especes: s.especes, carte: s.carte,
     cashCounted: day.dayClosed ? day.cashCounted : null,
+    mouvements: day.mouvements || [],
     closed: true, autoClosed: !day.dayClosed, products: archivedProducts,
   };
 }
@@ -26,6 +27,7 @@ export function archiveFromApiDay(day, products) {
     dayKey: day.dayKey, date: day.date, label: day.label || '',
     orderCount: s.count, total: s.total, especes: s.especes, carte: s.carte,
     cashCounted: day.cashCounted,
+    mouvements: day.mouvements || [],
     closed: true, autoClosed: day.autoClosed, products: archivedProducts,
   };
 }

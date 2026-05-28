@@ -74,6 +74,21 @@
 }
 .fab:hover   { background: var(--club-deep); }
 .fab:active  { transform: scale(0.96); }
+.fabSecondary {
+  position: absolute;
+  right: 36px; bottom: 140px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  transition: transform 120ms, background 120ms, color 120ms;
+}
+.fabSecondary:hover  { background: var(--cream-deep); color: var(--ink); }
+.fabSecondary:active { transform: scale(0.94); }
 .closedBadge {
   position: absolute;
   right: 28px; bottom: 28px;

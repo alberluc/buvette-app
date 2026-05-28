@@ -1,21 +1,47 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
+import { MouvementModal } from '../components/MouvementModal';
 import { fmtEUR, summarize } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
-export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted }) {
+export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted, cashFloat, archived, onAddMouvement, onRemoveMouvement }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const summary = useMemo(() => summarize(orders, products), [orders, products]);
 
   const [counted, setCounted] = useState(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
+  const [mouvementOpen, setMouvementOpen] = useState(false);
+
   useEffect(() => {
     setCounted(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
   }, [cashCounted]);
 
+  // ── Calcul espèces attendues en caisse ────────────────────────────────────────
+  const { expectedCash, base, report, reportDays, mouvTotal, baseFromFloat } = useMemo(() => {
+    let base = cashFloat ?? 0;
+    let baseFromFloat = true;
+    let report = 0;
+    let reportDays = 0;
+    for (const a of (archived || [])) {
+      if (a.cashCounted !== null) {
+        base = a.cashCounted;
+        baseFromFloat = false;
+        break;
+      }
+      report += a.especes;
+      report += (a.mouvements || []).reduce((s, m) => s + m.amount, 0);
+      reportDays++;
+    }
+    const dayMouvements = day.mouvements || [];
+    const mouvTotal = dayMouvements.reduce((s, m) => s + m.amount, 0);
+    return { expectedCash: base + report + summary.especes + mouvTotal, base, report, reportDays, mouvTotal, baseFromFloat };
+  }, [cashFloat, archived, summary.especes, day.mouvements]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mouvements = day.mouvements || [];
+
   const countedNum = parseFloat(counted.replace(',', '.'));
   const hasCount = !isNaN(countedNum);
-  const diff = hasCount ? countedNum - summary.especes : 0;
+  const diff = hasCount ? countedNum - expectedCash : 0;
 
   let diffState = 'neutral';
   if (hasCount) {
@@ -25,11 +51,13 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
   }
 
   const diffPalette = {
-    ok:      { bg: 'var(--ok-soft)',     fg: 'var(--ok)',     label: 'Caisse OK',       icon: '✓' },
+    ok:      { bg: 'var(--ok-soft)',     fg: 'var(--ok)',     label: 'Caisse OK',        icon: '✓' },
     missing: { bg: 'var(--danger-soft)', fg: 'var(--danger)', label: 'Manque en caisse', icon: '−' },
-    excess:  { bg: 'var(--warn-soft)',   fg: 'var(--warn)',   label: 'Excédent',         icon: '+' },
-    neutral: { bg: 'var(--cream-deep)',  fg: 'var(--ink-soft)', label: 'À saisir',       icon: '·' },
+    excess:  { bg: 'var(--warn-soft)',   fg: 'var(--warn)',   label: 'Excédent',          icon: '+' },
+    neutral: { bg: 'var(--cream-deep)',  fg: 'var(--ink-soft)', label: 'À saisir',        icon: '·' },
   }[diffState];
+
+  const baseLabel = baseFromFloat ? 'Fond de caisse' : 'Dernier comptage';
 
   return (
     <div className={styles.screen}>
@@ -95,11 +123,50 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
               </div>
             </Section>
 
+            <Section title="Mouvements de caisse">
+              {mouvements.length === 0 ? (
+                <div className={styles.mouvEmpty}>Aucun mouvement enregistré</div>
+              ) : (
+                <div className={styles.mouvList}>
+                  {mouvements.map(m => (
+                    <MouvementRow
+                      key={m.id}
+                      mouvement={m}
+                      dayClosed={dayClosed}
+                      onRemove={() => onRemoveMouvement(m.id)}
+                    />
+                  ))}
+                  <div className={styles.mouvNet}>
+                    Net du jour : <span style={{ color: mouvTotal >= 0 ? 'var(--ok)' : 'var(--danger)' }}>
+                      {mouvTotal >= 0 ? '+' : ''}{fmtEUR(mouvTotal)}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {!dayClosed && (
+                <button className={styles.addMouvBtn} onClick={() => setMouvementOpen(true)}>
+                  + Ajouter un mouvement
+                </button>
+              )}
+            </Section>
+
             <Section title="Contrôle de la caisse espèces" accent={diffPalette.bg}>
-              <div style={{ marginBottom: 12 }}>
-                <div className={styles.cashExpected}>Espèces attendues</div>
-                <div className={styles.cashExpectedVal}>{fmtEUR(summary.especes)}</div>
+              <div className={styles.breakdownRows}>
+                <BreakdownLine label={baseLabel} value={base} />
+                {report !== 0 && (
+                  <BreakdownLine
+                    label={`Report non comptés (${reportDays} j.)`}
+                    value={report}
+                    signed
+                  />
+                )}
+                <BreakdownLine label="Espèces du jour" value={summary.especes} signed />
+                {mouvTotal !== 0 && (
+                  <BreakdownLine label="Mouvements du jour" value={mouvTotal} signed />
+                )}
+                <BreakdownLine label="Total attendu en caisse" value={expectedCash} total />
               </div>
+
               <label className={styles.cashLabel}>Montant compté en caisse</label>
               <div className={styles.cashInputWrap}>
                 <input
@@ -120,7 +187,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
                 <div>
                   <div className={styles.diffLabel}>{diffPalette.label}</div>
                   <div className={styles.diffValue}>
-                    {hasCount ? (diff === 0 ? 'Écart : 0,00 €' : `Écart : ${diff > 0 ? '+' : ''}${fmtEUR(diff).replace('€', '').trim()} €`) : '—'}
+                    {hasCount ? (Math.abs(diff) < 0.01 ? 'Écart : 0,00 €' : `Écart : ${diff > 0 ? '+' : ''}${fmtEUR(diff).replace('€', '').trim()} €`) : '—'}
                   </div>
                 </div>
                 {/* bg inline — dérivé de diffPalette.fg */}
@@ -147,6 +214,13 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
           )}
         </div>
       </div>
+
+      {mouvementOpen && (
+        <MouvementModal
+          onClose={() => setMouvementOpen(false)}
+          onValidate={onAddMouvement}
+        />
+      )}
     </div>
   );
 }
@@ -188,6 +262,36 @@ function PaymentRow({ kind, amount, total }) {
         <div className={styles.paymentBarFill} style={{ width: pct + '%', background: color }} />
       </div>
       <div className={styles.paymentRowPct}>{pct} % du chiffre du jour</div>
+    </div>
+  );
+}
+
+function MouvementRow({ mouvement, dayClosed, onRemove }) {
+  const isPos = mouvement.amount >= 0;
+  return (
+    <div className={styles.mouvRow}>
+      <span className={styles.mouvTime}>{mouvement.time}</span>
+      <span className={styles.mouvLabel}>{mouvement.label}</span>
+      {/* color inline — dépend du signe du mouvement */}
+      <span className={styles.mouvAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
+        {isPos ? '+' : ''}{fmtEUR(mouvement.amount)}
+      </span>
+      {!dayClosed && (
+        <button onClick={onRemove} className={styles.mouvDeleteBtn} aria-label="Supprimer">
+          <Icon.Trash size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function BreakdownLine({ label, value, signed, total }) {
+  return (
+    <div className={`${styles.breakdownRow} ${total ? styles.breakdownRowTotal : ''}`}>
+      <span className={styles.breakdownLabel}>{label}</span>
+      <span className={`${styles.breakdownValue} ${total ? styles.breakdownValueTotal : ''}`}>
+        {signed && value >= 0 ? '+' : ''}{fmtEUR(value)}
+      </span>
     </div>
   );
 }

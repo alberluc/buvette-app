@@ -87,6 +87,18 @@ export const Icon = {
       <rect x="22" y="6" width="2" height="4" rx="1" fill="currentColor" stroke="none" />
     </svg>
   ),
+  User: ({ size = 24 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  ),
+  Settings: ({ size = 24 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 11-2.83-2.83l.06.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  ),
   Trash: ({ size = 24 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6"/>
@@ -97,26 +109,22 @@ export const Icon = {
   ),
 };
 
-export function StatusBar({ time, onSettings, apiOnline = true, clubName, userName }) {
+export function StatusBar({ time, onAccount, apiOnline = true, clubName, userName }) {
   return (
     <div className={styles.statusBar}>
       <div>{time}</div>
       <div className={styles.statusRight}>
         <span className={styles.clubName}>
           {clubName ? clubName.toUpperCase() : 'BUVETTE CLUB'}
-          {userName ? <span className={styles.userName}>— {userName}</span> : null}
         </span>
         <span className={styles.statusIndicator}>
           <span className={`${styles.statusDot} ${apiOnline ? styles.statusDotOnline : styles.statusDotOffline}`} />
           {!apiOnline && <span className={styles.offlineLabel}>Hors ligne</span>}
         </span>
         <Icon.Battery size={12} />
-        {onSettings && (
-          <button onClick={onSettings} aria-label="Réglages" title="Réglages" className={styles.settingsBtn}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 11-2.83-2.83l.06.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
+        {onAccount && (
+          <button onClick={onAccount} aria-label="Mon compte" title={userName || 'Compte'} className={styles.settingsBtn}>
+            <Icon.User size={16} />
           </button>
         )}
       </div>
@@ -126,9 +134,10 @@ export function StatusBar({ time, onSettings, apiOnline = true, clubName, userNa
 
 export function TabBar({ active, onChange }) {
   const tabs = [
-    { id: 'orders',  label: 'Commandes', icon: <Icon.Receipt size={26} /> },
-    { id: 'summary', label: 'Bilan',     icon: <Icon.Chart   size={26} /> },
-    { id: 'history', label: 'Historique',icon: <Icon.Clock   size={26} /> },
+    { id: 'orders',   label: 'Commandes',  icon: <Icon.Receipt  size={26} /> },
+    { id: 'summary',  label: 'Bilan',      icon: <Icon.Chart    size={26} /> },
+    { id: 'history',  label: 'Historique', icon: <Icon.Clock    size={26} /> },
+    { id: 'settings', label: 'Réglages',   icon: <Icon.Settings size={26} /> },
   ];
   return (
     <div className={styles.tabBar}>

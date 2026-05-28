@@ -1,12 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
+import { MouvementModal } from '../components/MouvementModal';
 import { fmtEUR } from '../lib/data';
 import styles from './OrdersScreen.module.css';
 
-export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder }) {
+export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMouvement }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
+  const [mouvementOpen, setMouvementOpen] = useState(false);
   const summary = useMemo(() => {
     let total = 0;
     for (const o of orders) total += o.total;
@@ -59,18 +61,36 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder }) {
       </div>
 
       {!dayClosed && (
-        <button
-          onClick={() => setModalOpen(true)}
-          className={styles.fab}
-          aria-label="Nouvelle commande">
-          <Icon.Plus size={44} />
-        </button>
+        <>
+          <button
+            onClick={() => setMouvementOpen(true)}
+            className={styles.fabSecondary}
+            aria-label="Mouvement de caisse"
+            title="Mouvement de caisse"
+          >
+            <TransferSvg />
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className={styles.fab}
+            aria-label="Nouvelle commande"
+          >
+            <Icon.Plus size={44} />
+          </button>
+        </>
       )}
 
       {dayClosed && (
         <div className={styles.closedBadge}>
           Journée clôturée — ouvrir une nouvelle journée pour saisir
         </div>
+      )}
+
+      {mouvementOpen && (
+        <MouvementModal
+          onClose={() => setMouvementOpen(false)}
+          onValidate={onAddMouvement}
+        />
       )}
 
       {modalOpen && (
@@ -260,6 +280,15 @@ function CounterBtn({ onClick, disabled, kind }) {
       className={`${styles.counterBtn} ${disabled ? styles.counterBtnDisabled : styles.counterBtnNormal}`}>
       {kind === 'plus' ? <Icon.Plus size={26} /> : <Icon.Minus size={26} />}
     </button>
+  );
+}
+
+function TransferSvg() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 16V4m0 0L3 8m4-4l4 4" />
+      <path d="M17 8v12m0 0l4-4m-4 4l-4-4" />
+    </svg>
   );
 }
 

@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppHeader, Icon } from '../components/UI';
 import { fmtEUR } from '../lib/data';
 import styles from './HistoryScreen.module.css';
 
-export function HistoryScreen({ archived, products }) {
+export function HistoryScreen({ archived, products, cashFloat }) {
   const [openId, setOpenId] = useState(null);
   const days = archived || [];
+
+  // Recalcule attendu + écart pour chaque journée archivée en propageant la base
+  // (fond de caisse → dernier comptage connu)
+  const daysComputed = useMemo(() => {
+    let base = cashFloat ?? 0;
+    const result = [];
+    for (const day of [...days].reverse()) {
+      const mouvTotal = (day.mouvements || []).reduce((s, m) => s + m.amount, 0);
+      const attendu = base + day.especes + mouvTotal;
+      const ecart = day.cashCounted != null ? day.cashCounted - attendu : null;
+      result.unshift({ ...day, _attendu: attendu, _ecart: ecart, _base: base, _mouvTotal: mouvTotal });
+      base = day.cashCounted != null ? day.cashCounted : attendu;
+    }
+    return result;
+  }, [days, cashFloat]);
 
   return (
     <div className={styles.screen}>
@@ -33,7 +48,7 @@ export function HistoryScreen({ archived, products }) {
           </div>
         ) : (
           <div className={styles.dayListInner}>
-            {days.map((day, i) => (
+            {daysComputed.map((day, i) => (
               <DayRow
                 key={day.dayKey || i} day={day}
                 products={products}
@@ -50,7 +65,7 @@ export function HistoryScreen({ archived, products }) {
 
 function DayRow({ day, products, open, onToggle }) {
   const auto = !!day.autoClosed;
-  const diff = (day.cashCounted ?? 0) - day.especes;
+  const diff = day._ecart ?? 0;
   const isOk = !auto && day.cashCounted != null && Math.abs(diff) < 0.01;
   return (
     <div className={`${styles.dayRow} ${auto ? styles.dayRowAuto : ''}`}>
@@ -100,7 +115,9 @@ function CaisseBadge({ auto, ok, diff, hasCount }) {
 function DayDetail({ day, products }) {
   const auto = !!day.autoClosed;
   const hasCount = day.cashCounted != null;
-  const diff = (day.cashCounted ?? 0) - day.especes;
+  const diff = day._ecart ?? 0;
+  const mouvements = day.mouvements || [];
+
   return (
     <div className={styles.dayDetail}>
       {auto && (
@@ -117,6 +134,7 @@ function DayDetail({ day, products }) {
           <div className={styles.productList}>
             {products.map(p => {
               const qty = (day.products || {})[p.id] || 0;
+              if (qty === 0) return null;
               const total = qty * p.price;
               return (
                 <div key={p.id} className={styles.productRow}>
@@ -140,11 +158,35 @@ function DayDetail({ day, products }) {
             <DetailRow icon={<span className={`${styles.dot} ${styles.dotCarte}`} />} label="Carte" value={fmtEUR(day.carte)} />
             <DetailRow label="Total encaissé" value={fmtEUR(day.total)} bold />
           </div>
+          {mouvements.length > 0 && (
+            <>
+              <div className={styles.detailSectionLabel} style={{ marginTop: 16 }}>Mouvements de caisse</div>
+              <div className={styles.detailRows}>
+                {mouvements.map(m => (
+                  <DetailRow
+                    key={m.id}
+                    label={`${m.time} · ${m.label}`}
+                    value={(m.amount >= 0 ? '+' : '') + fmtEUR(m.amount)}
+                    color={m.amount >= 0 ? 'var(--ok)' : 'var(--danger)'}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <div>
           <div className={styles.detailSectionLabel}>Caisse espèces</div>
           <div className={styles.detailRows}>
-            <DetailRow label="Attendu" value={fmtEUR(day.especes)} />
+            <DetailRow label="Base (fond / comptage préc.)" value={fmtEUR(day._base)} />
+            <DetailRow label="Espèces du jour" value={'+' + fmtEUR(day.especes)} />
+            {day._mouvTotal !== 0 && (
+              <DetailRow
+                label="Mouvements"
+                value={(day._mouvTotal >= 0 ? '+' : '') + fmtEUR(day._mouvTotal)}
+                color={day._mouvTotal >= 0 ? 'var(--ok)' : 'var(--danger)'}
+              />
+            )}
+            <DetailRow label="Attendu en caisse" value={fmtEUR(day._attendu)} bold />
             <DetailRow label="Compté" value={hasCount ? fmtEUR(day.cashCounted) : '—'} muted={!hasCount} />
             <DetailRow
               label="Écart"
