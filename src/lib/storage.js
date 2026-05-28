@@ -1,12 +1,15 @@
 import { db } from './db';
 
-const KEY = 'v2';
-const PIN_KEY = 'pin';
-export const DEFAULT_PIN = '1234';
+const DATA_KEY = 'v2';
+const LICENSE_KEY = 'license';
+const SESSION_KEY = 'session';
+const ACCOUNTS_CACHE_KEY = 'accounts-cache';
+
+// ── Données journée ───────────────────────────────────────────────────────────
 
 export async function load() {
   try {
-    const record = await db.state.get(KEY);
+    const record = await db.state.get(DATA_KEY);
     return record?.data ?? null;
   } catch {
     return null;
@@ -15,7 +18,7 @@ export async function load() {
 
 export async function save(state) {
   try {
-    await db.state.put({ key: KEY, data: state });
+    await db.state.put({ key: DATA_KEY, data: state });
   } catch (e) {
     console.warn('[storage] save failed', e);
   }
@@ -23,28 +26,11 @@ export async function save(state) {
 
 export async function reset() {
   try {
-    await db.state.bulkDelete([KEY, PIN_KEY]);
+    await db.state.bulkDelete([DATA_KEY, SESSION_KEY, ACCOUNTS_CACHE_KEY]);
   } catch {}
 }
 
-export async function loadPIN() {
-  try {
-    const record = await db.state.get(PIN_KEY);
-    return record?.data ?? null; // null = jamais modifié, code par défaut
-  } catch {
-    return null;
-  }
-}
-
-export async function savePIN(pin) {
-  try {
-    await db.state.put({ key: PIN_KEY, data: pin });
-  } catch (e) {
-    console.warn('[storage] savePIN failed', e);
-  }
-}
-
-const LICENSE_KEY = 'license';
+// ── Licence ───────────────────────────────────────────────────────────────────
 
 export async function loadLicense() {
   try {
@@ -62,6 +48,52 @@ export async function saveLicense(token) {
     console.warn('[storage] saveLicense failed', e);
   }
 }
+
+// ── Session utilisateur ───────────────────────────────────────────────────────
+
+export async function loadSession() {
+  try {
+    const record = await db.state.get(SESSION_KEY);
+    return record?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSession(token) {
+  try {
+    await db.state.put({ key: SESSION_KEY, data: token });
+  } catch (e) {
+    console.warn('[storage] saveSession failed', e);
+  }
+}
+
+export async function deleteSession() {
+  try {
+    await db.state.delete(SESSION_KEY);
+  } catch {}
+}
+
+// ── Cache des comptes (pour affichage hors-ligne) ─────────────────────────────
+
+export async function loadAccountsCache() {
+  try {
+    const record = await db.state.get(ACCOUNTS_CACHE_KEY);
+    return record?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveAccountsCache(accounts) {
+  try {
+    await db.state.put({ key: ACCOUNTS_CACHE_KEY, data: accounts });
+  } catch (e) {
+    console.warn('[storage] saveAccountsCache failed', e);
+  }
+}
+
+// ── Utilitaires date ──────────────────────────────────────────────────────────
 
 export function todayKey() {
   const d = new Date();

@@ -8,6 +8,8 @@ export function parseJwt(token) {
   }
 }
 
+// ── Licences ──────────────────────────────────────────────────────────────────
+
 export async function activateLicense(key) {
   const res = await fetch(`${API_URL}/activate`, {
     method: 'POST',
@@ -24,6 +26,82 @@ export async function refreshLicense(token) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+// ── Comptes ───────────────────────────────────────────────────────────────────
+
+export async function fetchAccounts(licenseToken) {
+  const res = await fetch(`${API_URL}/accounts`, {
+    headers: { 'Authorization': `Bearer ${licenseToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function setupFirstAccount(licenseToken, { name, password }) {
+  const res = await fetch(`${API_URL}/auth/setup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${licenseToken}` },
+    body: JSON.stringify({ name, password }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data // { token: sessionJWT }
+}
+
+export async function login(licenseToken, { accountId, password }) {
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${licenseToken}` },
+    body: JSON.stringify({ accountId, password }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data // { token: sessionJWT }
+}
+
+export async function createAccount(sessionToken, { name, password, role }) {
+  const res = await fetch(`${API_URL}/accounts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ name, password, role }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function deleteAccount(sessionToken, accountId) {
+  const res = await fetch(`${API_URL}/accounts/${accountId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function verifyPassword(sessionToken, password) {
+  const res = await fetch(`${API_URL}/auth/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ password }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function changePassword(sessionToken, accountId, { currentPassword, newPassword }) {
+  const res = await fetch(`${API_URL}/accounts/${accountId}/password`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ currentPassword, newPassword }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')
