@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
-import { PRODUCTS, fmtEUR, summarize } from '../lib/data';
+import { fmtEUR, summarize } from '../lib/data';
 
-export function SummaryScreen({ day, onClose, onReopen, cashCounted, setCashCounted }) {
+export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
-  const summary = useMemo(() => summarize(orders), [orders]);
+  const summary = useMemo(() => summarize(orders, products), [orders, products]);
 
   const [counted, setCounted] = useState(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
   useEffect(() => {
@@ -64,8 +64,8 @@ export function SummaryScreen({ day, onClose, onReopen, cashCounted, setCashCoun
                 </tr>
               </thead>
               <tbody>
-                {PRODUCTS.map(p => {
-                  const d = summary.products[p.id];
+                {products.map(p => {
+                  const d = summary.products[p.id] || { qty: 0, total: 0 };
                   return (
                     <tr key={p.id} style={{ borderBottom: '1px solid var(--line-soft)' }}>
                       <td style={{ ...td, display: 'flex', alignItems: 'center', gap: 12 }}>

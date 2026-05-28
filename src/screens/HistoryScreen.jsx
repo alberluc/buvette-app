@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { AppHeader, Icon } from '../components/UI';
-import { PRODUCTS, fmtEUR } from '../lib/data';
+import { fmtEUR } from '../lib/data';
 
-export function HistoryScreen({ archived }) {
+export function HistoryScreen({ archived, products }) {
   const [openId, setOpenId] = useState(null);
   const days = archived || [];
 
@@ -35,6 +35,7 @@ export function HistoryScreen({ archived }) {
             {days.map((day, i) => (
               <DayRow
                 key={day.dayKey || i} day={day}
+                products={products}
                 open={openId === (day.dayKey || i)}
                 onToggle={() => setOpenId(openId === (day.dayKey || i) ? null : (day.dayKey || i))}
               />
@@ -46,7 +47,7 @@ export function HistoryScreen({ archived }) {
   );
 }
 
-function DayRow({ day, open, onToggle }) {
+function DayRow({ day, products, open, onToggle }) {
   const auto = !!day.autoClosed;
   const diff = (day.cashCounted ?? 0) - day.especes;
   const isOk = !auto && day.cashCounted != null && Math.abs(diff) < 0.01;
@@ -79,7 +80,7 @@ function DayRow({ day, open, onToggle }) {
         <CaisseBadge auto={auto} ok={isOk} diff={diff} hasCount={day.cashCounted != null} />
         <div style={{ color: 'var(--ink-soft)' }}><Icon.Chevron dir={open ? 'up' : 'down'} /></div>
       </button>
-      {open && <DayDetail day={day} />}
+      {open && <DayDetail day={day} products={products} />}
     </div>
   );
 }
@@ -108,7 +109,7 @@ function CaisseBadge({ auto, ok, diff, hasCount }) {
   );
 }
 
-function DayDetail({ day }) {
+function DayDetail({ day, products }) {
   const auto = !!day.autoClosed;
   const hasCount = day.cashCounted != null;
   const diff = (day.cashCounted ?? 0) - day.especes;
@@ -126,8 +127,8 @@ function DayDetail({ day }) {
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.3, color: 'var(--ink-mute)', textTransform: 'uppercase', marginBottom: 10 }}>Détail par produit</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {PRODUCTS.map(p => {
-              const qty = day.products[p.id] || 0;
+            {products.map(p => {
+              const qty = (day.products || {})[p.id] || 0;
               const total = qty * p.price;
               return (
                 <div key={p.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12, padding: '8px 0' }}>

@@ -1,6 +1,15 @@
+import { useState } from 'react';
 import { Icon } from './UI';
 import { ACCENT_SWATCHES } from '../lib/theme';
 import { formatDate } from '../lib/storage';
+
+const PRESET_COLORS = [
+  '#C99A3B', '#8E2A3A', '#2F6BBB', '#5E4632',
+  '#2E8B57', '#E05C2A', '#7B2D8B', '#C0392B',
+  '#1ABC9C', '#34495E',
+];
+
+const PRESET_EMOJIS = ['🍺', '🍷', '🥤', '🍿', '☕', '🧃', '🥪', '🍕', '🍫', '🧁', '🍪', '🥨'];
 
 export function SettingsDrawer({
   t, setTweak,
@@ -9,8 +18,20 @@ export function SettingsDrawer({
   onReset, onSimulateNextDay, onClose,
   licenseInfo, currentUser,
   onLogout, onChangePassword, onManageAccounts,
+  products, onProductsChange,
 }) {
+  const [editingProduct, setEditingProduct] = useState(null); // null | { id, name, price, emoji, color } | 'new'
+  const isAdmin = currentUser?.role === 'admin';
+  const handleSaveProduct = updated => {
+    const id = updated.id || (updated.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now());
+    const withId = { ...updated, id };
+    const exists = products.find(p => p.id === withId.id);
+    onProductsChange(exists ? products.map(p => p.id === withId.id ? withId : p) : [...products, withId]);
+    setEditingProduct(null);
+  };
+
   return (
+    <>
     <div
       onClick={onClose}
       style={{ position: 'absolute', inset: 0, background: 'rgba(20,15,8,0.45)', zIndex: 200, display: 'flex', justifyContent: 'flex-end', animation: 'fadeIn 160ms ease' }}>
@@ -102,6 +123,29 @@ export function SettingsDrawer({
             </div>
           </DrawerSection>
 
+          {isAdmin && (
+            <DrawerSection title="Catalogue produits">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                {products.map(p => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--paper)', border: '1px solid var(--line-soft)', borderRadius: 10 }}>
+                    <span style={{ width: 32, height: 32, borderRadius: 8, background: p.color + '22', display: 'grid', placeItems: 'center', fontSize: 18, border: `1px solid ${p.color}44`, flexShrink: 0 }}>{p.emoji}</span>
+                    <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: 'var(--ink)' }}>{p.name}</span>
+                    <span style={{ fontSize: 14, color: 'var(--ink-soft)', fontVariantNumeric: 'tabular-nums' }}>{String(p.price).replace('.', ',')} €</span>
+                    <button onClick={() => setEditingProduct(p)} style={{ appearance: 'none', border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink-soft)', width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+                      <PencilSvg />
+                    </button>
+                    <button onClick={() => { if (products.length > 1) onProductsChange(products.filter(x => x.id !== p.id)); }} style={{ appearance: 'none', border: '1px solid var(--line)', background: 'transparent', color: products.length > 1 ? 'var(--danger)' : 'var(--ink-mute)', width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', cursor: products.length > 1 ? 'pointer' : 'not-allowed' }}>
+                      <TrashSvg />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <DrawerButton onClick={() => setEditingProduct({ id: '', name: '', price: '', emoji: '🍺', color: PRESET_COLORS[0] })}>
+                + Ajouter un produit
+              </DrawerButton>
+            </DrawerSection>
+          )}
+
           <DrawerSection title="Application">
             {installable && !installed && (
               <button onClick={triggerInstall} style={{
@@ -148,6 +192,15 @@ export function SettingsDrawer({
         </div>
       </div>
     </div>
+    {isAdmin && editingProduct && (
+      <ProductEditModal
+        product={editingProduct}
+        isNew={!products.find(p => p.id === editingProduct.id)}
+        onClose={() => setEditingProduct(null)}
+        onSave={handleSaveProduct}
+      />
+    )}
+    </>
   );
 }
 
@@ -190,6 +243,106 @@ function UserAvatar({ name, size = 36 }) {
       fontSize: Math.round(size * 0.4), fontWeight: 700, color: 'white',
     }}>
       {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function PencilSvg() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function TrashSvg() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4h6v2" />
+    </svg>
+  );
+}
+
+// ── Modale d'édition produit ──────────────────────────────────────────────────
+
+function ProductEditModal({ product, isNew, onClose, onSave }) {
+  const [form, setForm] = useState({ ...product });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const priceNum = parseFloat(String(form.price).replace(',', '.'));
+  const valid = form.name.trim().length > 0 && !isNaN(priceNum) && priceNum >= 0 && form.emoji.trim().length > 0;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,8,0.55)', display: 'grid', placeItems: 'center', zIndex: 300 }}>
+      <div style={{ background: 'var(--cream)', borderRadius: 20, padding: '28px 32px', width: 460, boxShadow: '0 24px 64px rgba(0,0,0,0.35)' }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 20 }}>
+          {isNew ? 'Nouveau produit' : 'Modifier le produit'}
+        </div>
+
+        {/* Emoji */}
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 6 }}>Emoji</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+          {PRESET_EMOJIS.map(e => (
+            <button key={e} onClick={() => set('emoji', e)} style={{
+              appearance: 'none', border: form.emoji === e ? '2px solid var(--club)' : '1.5px solid var(--line)',
+              background: form.emoji === e ? 'var(--club-soft)' : 'var(--paper)',
+              width: 40, height: 40, borderRadius: 10, fontSize: 20, cursor: 'pointer',
+            }}>{e}</button>
+          ))}
+          <input
+            type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} maxLength={2}
+            placeholder="✏️" style={{
+              width: 40, height: 40, border: '1.5px solid var(--line)', borderRadius: 10,
+              fontSize: 20, textAlign: 'center', background: 'var(--paper)', fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Nom */}
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 6 }}>Nom</label>
+        <input
+          type="text" value={form.name} onChange={e => set('name', e.target.value)}
+          placeholder="Ex : Bière, Soda…"
+          style={{ width: '100%', height: 48, border: '1.5px solid var(--line)', borderRadius: 10, padding: '0 14px', fontSize: 16, fontFamily: 'inherit', background: 'var(--paper)', color: 'var(--ink)', outline: 'none', boxSizing: 'border-box', marginBottom: 14 }}
+        />
+
+        {/* Prix */}
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 6 }}>Prix unitaire (€)</label>
+        <input
+          type="text" inputMode="decimal" value={form.price} onChange={e => set('price', e.target.value)}
+          placeholder="2,00"
+          style={{ width: '100%', height: 48, border: '1.5px solid var(--line)', borderRadius: 10, padding: '0 14px', fontSize: 16, fontFamily: 'inherit', background: 'var(--paper)', color: 'var(--ink)', outline: 'none', boxSizing: 'border-box', marginBottom: 14 }}
+        />
+
+        {/* Couleur */}
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 6 }}>Couleur</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 22 }}>
+          {PRESET_COLORS.map(c => (
+            <button key={c} onClick={() => set('color', c)} style={{
+              appearance: 'none', border: form.color === c ? '3px solid var(--ink)' : '2px solid transparent',
+              background: c, width: 32, height: 32, borderRadius: 8, cursor: 'pointer',
+              outline: form.color === c ? '2px solid var(--paper)' : 'none', outlineOffset: '1px',
+            }} />
+          ))}
+        </div>
+
+        {/* Boutons */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, height: 48, borderRadius: 12, border: '1.5px solid var(--line)', background: 'transparent', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: 'var(--ink)', cursor: 'pointer' }}>
+            Annuler
+          </button>
+          <button
+            onClick={() => valid && onSave({ ...form, price: parseFloat(String(form.price).replace(',', '.')) })}
+            disabled={!valid}
+            style={{ flex: 2, height: 48, borderRadius: 12, border: 'none', background: valid ? 'var(--club)' : 'var(--line)', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, color: valid ? 'white' : 'var(--ink-mute)', cursor: valid ? 'pointer' : 'not-allowed' }}>
+            {isNew ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ const DATA_KEY = 'v2';
 const LICENSE_KEY = 'license';
 const SESSION_KEY = 'session';
 const ACCOUNTS_CACHE_KEY = 'accounts-cache';
+const PRODUCTS_KEY = 'products';
 
 // ── Données journée ───────────────────────────────────────────────────────────
 
@@ -90,6 +91,25 @@ export async function saveAccountsCache(accounts) {
     await db.state.put({ key: ACCOUNTS_CACHE_KEY, data: accounts });
   } catch (e) {
     console.warn('[storage] saveAccountsCache failed', e);
+  }
+}
+
+// ── Produits ──────────────────────────────────────────────────────────────────
+
+export async function loadProducts() {
+  try {
+    const record = await db.state.get(PRODUCTS_KEY);
+    return record?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveProducts(products) {
+  try {
+    await db.state.put({ key: PRODUCTS_KEY, data: products });
+  } catch (e) {
+    console.warn('[storage] saveProducts failed', e);
   }
 }
 

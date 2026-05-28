@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { PRODUCTS } from '../lib/data';
 
 export function PayBadge({ kind, size = 'md' }) {
   const isEspeces = kind === 'especes';
@@ -229,9 +228,9 @@ export function AppHeader({ title, subtitle, right }) {
   );
 }
 
-export function orderLineSummary(items) {
+export function orderLineSummary(items, products) {
   return items.map(([pid, q]) => {
-    const p = PRODUCTS.find(x => x.id === pid);
-    return `${q} × ${p.name}`;
+    const p = products ? products.find(x => x.id === pid) : null;
+    return `${q} × ${p ? p.name : pid}`;
   }).join('  ·  ');
 }

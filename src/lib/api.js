@@ -108,6 +108,28 @@ export async function changePassword(sessionToken, accountId, { currentPassword,
   return data
 }
 
+// ── Produits ──────────────────────────────────────────────────────────────────
+
+export async function fetchProducts(sessionToken) {
+  const res = await fetch(`${API_URL}/products`, {
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function pushProducts(sessionToken, products) {
+  const res = await fetch(`${API_URL}/products`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify(products),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
 // ── Journées ──────────────────────────────────────────────────────────────────
 
 export async function fetchCurrentDay(sessionToken) {

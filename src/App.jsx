@@ -7,9 +7,9 @@ import { LicenseScreen } from './components/LicenseScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
-import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay } from './lib/api';
-import { fmtEUR } from './lib/data';
+import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts } from './lib/storage';
+import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts } from './lib/api';
+import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
 
@@ -32,6 +32,7 @@ export default function App() {
   const [day, setDay] = useState(null);
   const [archived, setArchived] = useState([]);
   const [autoCloseNotice, setAutoCloseNotice] = useState(null);
+  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
 
   // ── Licence ───────────────────────────────────────────────────────────────
   const [licenseStatus, setLicenseStatus] = useState('checking');
@@ -56,14 +57,22 @@ export default function App() {
   // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      const [initial, licToken, sesToken, accsCache] = await Promise.all([
-        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(),
+      const [initial, licToken, sesToken, accsCache, savedProducts] = await Promise.all([
+        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(), loadProducts(),
       ]);
+
+      const resolvedProducts = savedProducts || DEFAULT_PRODUCTS;
+      setProducts(resolvedProducts);
 
       // État local en premier (affiché immédiatement si l'API est lente)
       setDay(initial.day);
-      setArchived(initial.archived);
-      setAutoCloseNotice(initial.justAutoClosed);
+      if (initial.justAutoClosed) {
+        const archiveEntry = archiveFromDay(initial.justAutoClosed, resolvedProducts);
+        setArchived([archiveEntry, ...(initial.archived || [])]);
+        if (!initial.justAutoClosed.dayClosed) setAutoCloseNotice(archiveEntry);
+      } else {
+        setArchived(initial.archived);
+      }
       setCachedAccounts(accsCache);
       applyLicenseToken(licToken);
 
@@ -80,12 +89,16 @@ export default function App() {
       // Remplace l'état local par les données API (source de vérité partagée)
       if (validSession) {
         try {
-          const [apiDay, apiDays] = await Promise.all([
+          const [apiDay, apiDays, apiProducts] = await Promise.all([
             fetchCurrentDay(validSession),
             fetchDays(validSession),
+            fetchProducts(validSession).catch(() => null),
           ]);
+          const finalProducts = apiProducts || resolvedProducts;
+          setProducts(finalProducts);
+          saveProducts(finalProducts);
           setDay(apiDay);
-          setArchived(apiDays.map(archiveFromApiDay));
+          setArchived(apiDays.map(d => archiveFromApiDay(d, finalProducts)));
           setAutoCloseNotice(null);
         } catch {
           // Fallback silencieux : l'état local est déjà affiché
@@ -136,7 +149,7 @@ export default function App() {
       const today = new Date();
       const key = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
       if (day.dayKey !== key) {
-        const entry = archiveFromDay(day);
+        const entry = archiveFromDay(day, products);
         setArchived(prev => [entry, ...prev]);
         if (!day.dayClosed) setAutoCloseNotice(entry);
         if (sessionToken) {
@@ -148,7 +161,7 @@ export default function App() {
       }
     }, 60000);
     return () => clearInterval(id);
-  }, [day, loaded, sessionToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [day, loaded, sessionToken, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polling (sync inter-tablettes, toutes les 10 s) ──────────────────────
   useEffect(() => {
@@ -161,8 +174,15 @@ export default function App() {
         setApiOnline(true);
         if (wasOffline) {
           // Re-sync complète après reconnexion
-          const apiDays = await fetchDays(sessionToken);
-          setArchived(apiDays.map(archiveFromApiDay));
+          const [apiDays, apiProducts] = await Promise.all([
+            fetchDays(sessionToken),
+            fetchProducts(sessionToken).catch(() => null),
+          ]);
+          if (apiProducts) {
+            setProducts(apiProducts);
+            saveProducts(apiProducts);
+          }
+          setArchived(prev => apiDays.map(d => archiveFromApiDay(d, apiProducts || products)));
         }
         setDay(prev => {
           if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
@@ -174,7 +194,7 @@ export default function App() {
       }
     }, 10000);
     return () => clearInterval(id);
-  }, [loaded, sessionToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loaded, sessionToken, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Journée ───────────────────────────────────────────────────────────────
   const addOrder = o => {
@@ -198,10 +218,16 @@ export default function App() {
   const requestCloseDay = cashCounted => setPendingClose({ cashCounted });
 
   const simulateNextDay = () => {
-    const entry = archiveFromDay(day);
+    const entry = archiveFromDay(day, products);
     setArchived(prev => [entry, ...prev]);
     setDay(makeEmptyToday());
     if (!day.dayClosed) setAutoCloseNotice(entry);
+  };
+
+  const updateProducts = async newProducts => {
+    setProducts(newProducts);
+    saveProducts(newProducts);
+    if (sessionToken) pushProducts(sessionToken, newProducts).catch(() => {});
   };
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -211,12 +237,15 @@ export default function App() {
     const p = parseJwt(sessionJWT);
     setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
     try {
-      const [apiDay, apiDays] = await Promise.all([
+      const [apiDay, apiDays, apiProducts] = await Promise.all([
         fetchCurrentDay(sessionJWT),
         fetchDays(sessionJWT),
+        fetchProducts(sessionJWT).catch(() => null),
       ]);
+      const loginProducts = apiProducts || products;
+      if (apiProducts) { setProducts(apiProducts); saveProducts(apiProducts); }
       setDay(apiDay);
-      setArchived(apiDays.map(archiveFromApiDay));
+      setArchived(apiDays.map(d => archiveFromApiDay(d, loginProducts)));
     } catch {}
   };
 
@@ -303,9 +332,9 @@ export default function App() {
       {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-        {tab === 'orders'  && <OrdersScreen day={day} onAddOrder={addOrder} onRemoveOrder={removeOrder} />}
-        {tab === 'summary' && <SummaryScreen day={day} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} />}
-        {tab === 'history' && <HistoryScreen archived={archived} />}
+        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} />}
+        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} />}
+        {tab === 'history' && <HistoryScreen archived={archived} products={products} />}
 
         {autoCloseNotice && (
           <AutoCloseToast
@@ -335,6 +364,7 @@ export default function App() {
           onLogout={() => { setSettingsOpen(false); handleLogout(); }}
           onChangePassword={() => { setSettingsOpen(false); setShowChangePassword(true); }}
           onManageAccounts={() => { setSettingsOpen(false); setShowAccountManager(true); }}
+          products={products} onProductsChange={updateProducts}
         />
       )}
 

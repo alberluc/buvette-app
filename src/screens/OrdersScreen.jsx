@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
-import { PRODUCTS, fmtEUR } from '../lib/data';
+import { fmtEUR } from '../lib/data';
 
-export function OrdersScreen({ day, onAddOrder, onRemoveOrder }) {
+export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,6 +56,7 @@ export function OrdersScreen({ day, onAddOrder, onRemoveOrder }) {
                 orderIndex={originalIndex}
                 dayClosed={dayClosed}
                 onRemove={onRemoveOrder}
+                products={products}
               />
             );
           })}
@@ -94,13 +95,14 @@ export function OrdersScreen({ day, onAddOrder, onRemoveOrder }) {
 
       {modalOpen && (
         <NewOrderModal
+          products={products}
           onClose={() => setModalOpen(false)}
           onValidate={(items, payment) => {
             const now = new Date();
             const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             const total = items.reduce((s, [pid, q]) => {
-              const p = PRODUCTS.find(x => x.id === pid);
-              return s + p.price * q;
+              const p = products.find(x => x.id === pid);
+              return s + (p ? p.price : 0) * q;
             }, 0);
             onAddOrder({ id: crypto.randomUUID(), time, items, payment, total });
             setModalOpen(false);
@@ -111,7 +113,7 @@ export function OrdersScreen({ day, onAddOrder, onRemoveOrder }) {
   );
 }
 
-function OrderRow({ order, orderIndex, dayClosed, onRemove }) {
+function OrderRow({ order, orderIndex, dayClosed, onRemove, products }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <>
@@ -126,12 +128,12 @@ function OrderRow({ order, orderIndex, dayClosed, onRemove }) {
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
           {order.items.map(([pid, q]) => {
-            const p = PRODUCTS.find(x => x.id === pid);
+            const p = products.find(x => x.id === pid);
             return (
               <span key={pid} style={{ fontSize: 17, color: 'var(--ink)', fontWeight: 500, display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontWeight: 800, color: 'var(--club)', fontVariantNumeric: 'tabular-nums' }}>{q}</span>
                 <span>×</span>
-                <span>{p.name}</span>
+                <span>{p ? p.name : pid}</span>
               </span>
             );
           })}
@@ -164,6 +166,7 @@ function OrderRow({ order, orderIndex, dayClosed, onRemove }) {
       {confirmDelete && (
         <DeleteConfirmModal
           order={order}
+          products={products}
           onCancel={() => setConfirmDelete(false)}
           onConfirm={() => { setConfirmDelete(false); onRemove(order, orderIndex); }}
         />
@@ -172,10 +175,10 @@ function OrderRow({ order, orderIndex, dayClosed, onRemove }) {
   );
 }
 
-function DeleteConfirmModal({ order, onCancel, onConfirm }) {
+function DeleteConfirmModal({ order, products, onCancel, onConfirm }) {
   const itemSummary = order.items.map(([pid, q]) => {
-    const p = PRODUCTS.find(x => x.id === pid);
-    return `${q} × ${p.name}`;
+    const p = products.find(x => x.id === pid);
+    return `${q} × ${p ? p.name : pid}`;
   }).join('  ·  ');
 
   return (
@@ -214,7 +217,7 @@ function DeleteConfirmModal({ order, onCancel, onConfirm }) {
   );
 }
 
-function NewOrderModal({ onClose, onValidate }) {
+function NewOrderModal({ products, onClose, onValidate }) {
   const [cart, setCart] = useState({});
   const [payment, setPayment] = useState('especes');
 
@@ -228,8 +231,8 @@ function NewOrderModal({ onClose, onValidate }) {
 
   const items = Object.entries(cart).filter(([, q]) => q > 0);
   const total = items.reduce((s, [pid, q]) => {
-    const p = PRODUCTS.find(x => x.id === pid);
-    return s + p.price * q;
+    const p = products.find(x => x.id === pid);
+    return s + (p ? p.price : 0) * q;
   }, 0);
   const itemCount = items.reduce((s, [, q]) => s + q, 0);
 
@@ -269,7 +272,7 @@ function NewOrderModal({ onClose, onValidate }) {
         </div>
 
         <div style={{ padding: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {PRODUCTS.map(p => (
+          {products.map(p => (
             <ProductCard key={p.id} product={p} qty={cart[p.id] || 0}
                          onMinus={() => bump(p.id, -1)} onPlus={() => bump(p.id, +1)} />
           ))}
