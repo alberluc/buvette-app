@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
 import { PRODUCTS, fmtEUR } from '../lib/data';
 
-export function OrdersScreen({ day, onAddOrder }) {
+export function OrdersScreen({ day, onAddOrder, onRemoveOrder }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
@@ -47,9 +47,18 @@ export function OrdersScreen({ day, onAddOrder }) {
           </div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {display.map((o, i) => (
-            <OrderRow key={display.length - i} order={o} />
-          ))}
+          {display.map((o, i) => {
+            const originalIndex = orders.length - 1 - i;
+            return (
+              <OrderRow
+                key={display.length - i}
+                order={o}
+                orderIndex={originalIndex}
+                dayClosed={dayClosed}
+                onRemove={onRemoveOrder}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -93,7 +102,7 @@ export function OrdersScreen({ day, onAddOrder }) {
               const p = PRODUCTS.find(x => x.id === pid);
               return s + p.price * q;
             }, 0);
-            onAddOrder({ time, items, payment, total });
+            onAddOrder({ id: crypto.randomUUID(), time, items, payment, total });
             setModalOpen(false);
           }}
         />
@@ -102,32 +111,104 @@ export function OrdersScreen({ day, onAddOrder }) {
   );
 }
 
-function OrderRow({ order }) {
+function OrderRow({ order, orderIndex, dayClosed, onRemove }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  return (
+    <>
+      <div style={{
+        background: 'var(--paper)', border: '1px solid var(--line-soft)',
+        borderRadius: 14, padding: '16px 22px',
+        display: 'grid', gridTemplateColumns: '76px 1fr auto auto auto',
+        alignItems: 'center', gap: 18,
+      }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink-soft)', fontVariantNumeric: 'tabular-nums', letterSpacing: -0.2 }}>
+          {order.time}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+          {order.items.map(([pid, q]) => {
+            const p = PRODUCTS.find(x => x.id === pid);
+            return (
+              <span key={pid} style={{ fontSize: 17, color: 'var(--ink)', fontWeight: 500, display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontWeight: 800, color: 'var(--club)', fontVariantNumeric: 'tabular-nums' }}>{q}</span>
+                <span>×</span>
+                <span>{p.name}</span>
+              </span>
+            );
+          })}
+        </div>
+        <PayBadge kind={order.payment} />
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', minWidth: 80, textAlign: 'right', letterSpacing: -0.3 }}>
+          {fmtEUR(order.total)}
+        </div>
+        {!dayClosed ? (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            aria-label="Supprimer la commande"
+            style={{
+              appearance: 'none', border: '1.5px solid var(--line-soft)',
+              background: 'transparent', color: 'var(--ink-mute)',
+              width: 44, height: 44, borderRadius: 10,
+              display: 'grid', placeItems: 'center', cursor: 'pointer',
+              transition: 'color 120ms, border-color 120ms, background 120ms',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.borderColor = 'var(--danger)'; e.currentTarget.style.background = '#FDE8E6'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-mute)'; e.currentTarget.style.borderColor = 'var(--line-soft)'; e.currentTarget.style.background = 'transparent'; }}
+          >
+            <Icon.Trash size={20} />
+          </button>
+        ) : (
+          <div style={{ width: 44 }} />
+        )}
+      </div>
+
+      {confirmDelete && (
+        <DeleteConfirmModal
+          order={order}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => { setConfirmDelete(false); onRemove(order, orderIndex); }}
+        />
+      )}
+    </>
+  );
+}
+
+function DeleteConfirmModal({ order, onCancel, onConfirm }) {
+  const itemSummary = order.items.map(([pid, q]) => {
+    const p = PRODUCTS.find(x => x.id === pid);
+    return `${q} × ${p.name}`;
+  }).join('  ·  ');
+
   return (
     <div style={{
-      background: 'var(--paper)', border: '1px solid var(--line-soft)',
-      borderRadius: 14, padding: '16px 22px',
-      display: 'grid', gridTemplateColumns: '76px 1fr auto auto',
-      alignItems: 'center', gap: 18,
+      position: 'fixed', inset: 0, background: 'rgba(20,15,8,0.45)',
+      display: 'grid', placeItems: 'center', zIndex: 200,
     }}>
-      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink-soft)', fontVariantNumeric: 'tabular-nums', letterSpacing: -0.2 }}>
-        {order.time}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-        {order.items.map(([pid, q]) => {
-          const p = PRODUCTS.find(x => x.id === pid);
-          return (
-            <span key={pid} style={{ fontSize: 17, color: 'var(--ink)', fontWeight: 500, display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontWeight: 800, color: 'var(--club)', fontVariantNumeric: 'tabular-nums' }}>{q}</span>
-              <span>×</span>
-              <span>{p.name}</span>
-            </span>
-          );
-        })}
-      </div>
-      <PayBadge kind={order.payment} />
-      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', minWidth: 80, textAlign: 'right', letterSpacing: -0.3 }}>
-        {fmtEUR(order.total)}
+      <div style={{
+        background: 'var(--cream)', borderRadius: 20, padding: '32px 40px',
+        minWidth: 360, maxWidth: 480, boxShadow: '0 24px 64px rgba(0,0,0,0.32)',
+        textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
+          Supprimer cette commande ?
+        </div>
+        <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginBottom: 6 }}>
+          {order.time} · {itemSummary}
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', marginBottom: 28 }}>
+          {fmtEUR(order.total)}
+        </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={onCancel} style={{
+            flex: 1, height: 52, borderRadius: 12,
+            border: '1.5px solid var(--line)', background: 'transparent',
+            cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: 'var(--ink)',
+          }}>Annuler</button>
+          <button onClick={onConfirm} style={{
+            flex: 1, height: 52, borderRadius: 12,
+            border: 'none', background: 'var(--danger)',
+            cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: 'white',
+          }}>Supprimer</button>
+        </div>
       </div>
     </div>
   );

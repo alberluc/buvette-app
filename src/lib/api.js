@@ -139,6 +139,16 @@ export async function pushOrder(sessionToken, dayKey, order) {
   return data
 }
 
+export async function deleteOrder(sessionToken, dayKey, orderId) {
+  const res = await fetch(`${API_URL}/days/${dayKey}/orders/${orderId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
 export async function updateDay(sessionToken, dayKey, patch) {
   const res = await fetch(`${API_URL}/days/${dayKey}`, {
     method: 'PUT',

@@ -68,6 +68,28 @@ router.post('/days/:dayKey/orders', requireSession, async (req, res) => {
   }
 })
 
+// Supprime une commande de la journée par son id
+router.delete('/days/:dayKey/orders/:orderId', requireSession, async (req, res) => {
+  const { licenseKey } = req.session
+  const { dayKey, orderId } = req.params
+  try {
+    const updated = await db('days')
+      .where({ license_key: licenseKey, day_key: dayKey })
+      .update({
+        orders: db.raw(
+          `(SELECT COALESCE(jsonb_agg(elem), '[]'::jsonb) FROM jsonb_array_elements(orders) AS elem WHERE elem->>'id' != ?)`,
+          [orderId]
+        ),
+        updated_at: db.raw('NOW()'),
+      })
+      .returning('*')
+    if (!updated.length) return res.status(404).json({ error: 'Journée introuvable' })
+    res.json(toClientDay(updated[0]))
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 // Mise à jour de la journée (clôture, réouverture, libellé, espèces comptées)
 router.put('/days/:dayKey', requireSession, async (req, res) => {
   const { licenseKey } = req.session

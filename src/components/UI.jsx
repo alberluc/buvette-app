@@ -116,9 +116,17 @@ export const Icon = {
       <rect x="22" y="6" width="2" height="4" rx="1" fill="currentColor" stroke="none" />
     </svg>
   ),
+  Trash: ({ size = 24 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14H6L5 6"/>
+      <path d="M10 11v6M14 11v6"/>
+      <path d="M9 6V4h6v2"/>
+    </svg>
+  ),
 };
 
-export function StatusBar({ time, onSettings, apiOnline = true }) {
+export function StatusBar({ time, onSettings, apiOnline = true, clubName, userName }) {
   return (
     <div style={{
       height: 32, display: 'flex', alignItems: 'center',
@@ -128,7 +136,10 @@ export function StatusBar({ time, onSettings, apiOnline = true }) {
     }}>
       <div>{time}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--ink-soft)' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5 }}>BUVETTE CLUB</span>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5 }}>
+          {clubName ? clubName.toUpperCase() : 'BUVETTE CLUB'}
+          {userName ? <span style={{ fontWeight: 500, marginLeft: 8 }}>— {userName}</span> : null}
+        </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           <span style={{
             width: 7, height: 7, borderRadius: 999,

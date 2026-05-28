@@ -1,0 +1,5 @@
+{
+  "nodeArgs": ["--env-file=.env"],
+  "ext": "js,json",
+  "ignore": ["node_modules", "data", "migrations"]
+}

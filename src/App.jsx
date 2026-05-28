@@ -8,7 +8,7 @@ import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, updateDay } from './lib/api';
+import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay } from './lib/api';
 import { fmtEUR } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
@@ -181,6 +181,10 @@ export default function App() {
     setDay(d => ({ ...d, orders: [...d.orders, o] }));
     if (sessionToken) pushOrder(sessionToken, day.dayKey, o).catch(() => {});
   };
+  const removeOrder = (order, orderIndex) => {
+    setDay(d => ({ ...d, orders: d.orders.filter((_, i) => i !== orderIndex) }));
+    if (sessionToken && order.id) deleteOrder(sessionToken, day.dayKey, order.id).catch(() => {});
+  };
   const closeDay = cashCounted => {
     setDay(d => ({ ...d, dayClosed: true, cashCounted }));
     setTab('summary');
@@ -296,10 +300,10 @@ export default function App() {
     <div
       data-screen-label={tab === 'orders' ? '01 Commandes' : tab === 'summary' ? '02 Bilan' : '03 Historique'}
       style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--cream)' }}>
-      {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} />}
+      {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-        {tab === 'orders'  && <OrdersScreen day={day} onAddOrder={addOrder} />}
+        {tab === 'orders'  && <OrdersScreen day={day} onAddOrder={addOrder} onRemoveOrder={removeOrder} />}
         {tab === 'summary' && <SummaryScreen day={day} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} />}
         {tab === 'history' && <HistoryScreen archived={archived} />}
 
