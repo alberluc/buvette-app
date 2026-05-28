@@ -44,6 +44,25 @@ export async function savePIN(pin) {
   }
 }
 
+const LICENSE_KEY = 'license';
+
+export async function loadLicense() {
+  try {
+    const record = await db.state.get(LICENSE_KEY);
+    return record?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveLicense(token) {
+  try {
+    await db.state.put({ key: LICENSE_KEY, data: token });
+  } catch (e) {
+    console.warn('[storage] saveLicense failed', e);
+  }
+}
+
 export function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

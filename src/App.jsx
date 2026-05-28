@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { StatusBar, TabBar, Icon } from './components/UI';
 import { useTweaks, TweaksPanel, TweakSection, TweakColor, TweakRadio, TweakToggle, TweakButton } from './components/TweaksPanel';
 import { PINLockScreen, PINChallenge, ChangePINModal } from './components/PINScreen';
+import { LicenseScreen } from './components/LicenseScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
-import { load, save, reset, loadPIN, savePIN, DEFAULT_PIN, todayKey, formatDate } from './lib/storage';
+import { load, save, reset, loadPIN, savePIN, loadLicense, saveLicense, DEFAULT_PIN, todayKey, formatDate } from './lib/storage';
+import { parseJwt, refreshLicense } from './lib/api';
 import { PRODUCTS, fmtEUR, summarize } from './lib/data';
 
 const TWEAK_DEFAULTS = {
@@ -87,6 +89,11 @@ export default function App() {
   const [archived, setArchived] = useState([]);
   const [autoCloseNotice, setAutoCloseNotice] = useState(null);
 
+  // ── Licence ───────────────────────────────────────────────────────────────
+  const [licenseStatus, setLicenseStatus] = useState('checking'); // 'checking'|'valid'|'expired'|'missing'
+  const [licenseToken, setLicenseToken] = useState(null);
+  const [licenseInfo, setLicenseInfo] = useState(null); // { club, plan, licenseExpires }
+
   // ── PIN ───────────────────────────────────────────────────────────────────
   const [storedPIN, setStoredPIN] = useState(null);   // null = code par défaut jamais changé
   const [pinUnlocked, setPinUnlocked] = useState(false);
@@ -95,14 +102,44 @@ export default function App() {
 
   // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
-    Promise.all([loadInitialState(), loadPIN()]).then(([initial, pin]) => {
+    Promise.all([loadInitialState(), loadPIN(), loadLicense()]).then(([initial, pin, token]) => {
       setDay(initial.day);
       setArchived(initial.archived);
       setAutoCloseNotice(initial.justAutoClosed);
-      setStoredPIN(pin); // null si jamais modifié
+      setStoredPIN(pin);
+      applyLicenseToken(token);
       setLoaded(true);
     });
   }, []);
+
+  function applyLicenseToken(token) {
+    if (!token) { setLicenseStatus('missing'); return; }
+    const payload = parseJwt(token);
+    if (!payload) { setLicenseStatus('missing'); return; }
+    if (payload.exp < Date.now() / 1000) {
+      setLicenseToken(token);
+      setLicenseStatus('expired');
+      return;
+    }
+    setLicenseToken(token);
+    setLicenseInfo({ club: payload.club, plan: payload.plan, licenseExpires: payload.licenseExpires });
+    setLicenseStatus('valid');
+  }
+
+  // Refresh silencieux si le token expire dans moins de 3 jours
+  useEffect(() => {
+    if (licenseStatus !== 'valid' || !licenseToken) return;
+    const payload = parseJwt(licenseToken);
+    if (!payload || payload.exp - Date.now() / 1000 > 3 * 24 * 3600) return;
+    refreshLicense(licenseToken)
+      .then(data => { saveLicense(data.token); applyLicenseToken(data.token); })
+      .catch(() => {});
+  }, [licenseStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLicenseActivated = async (token) => {
+    await saveLicense(token);
+    applyLicenseToken(token);
+  };
 
   // ── Persistance ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -187,6 +224,13 @@ export default function App() {
   // ── Garde-fous ────────────────────────────────────────────────────────────
   if (!loaded || !day) return null;
 
+  if (licenseStatus === 'missing') {
+    return <LicenseScreen mode="activate" onActivated={handleLicenseActivated} />;
+  }
+  if (licenseStatus === 'expired') {
+    return <LicenseScreen mode="expired" expiredToken={licenseToken} onActivated={handleLicenseActivated} />;
+  }
+
   const effectivePIN = storedPIN ?? DEFAULT_PIN;
 
   if (!pinUnlocked) {
@@ -261,6 +305,7 @@ export default function App() {
           onChangePIN={() => setShowChangePIN(true)}
           onSimulateNextDay={simulateNextDay}
           onClose={() => setSettingsOpen(false)}
+          licenseInfo={licenseInfo}
         />
       )}
 
@@ -372,7 +417,7 @@ function GearSvg() {
 }
 
 // ── Drawer de réglages ────────────────────────────────────────────────────────
-function SettingsDrawer({ t, setTweak, installable, installed, triggerInstall, dayClosed, onCloseDay, onReopenDay, onReset, onChangePIN, onSimulateNextDay, onClose }) {
+function SettingsDrawer({ t, setTweak, installable, installed, triggerInstall, dayClosed, onCloseDay, onReopenDay, onReset, onChangePIN, onSimulateNextDay, onClose, licenseInfo }) {
   return (
     <div
       onClick={onClose}
@@ -433,6 +478,17 @@ function SettingsDrawer({ t, setTweak, installable, installed, triggerInstall, d
             </div>
           </DrawerSection>
 
+          {licenseInfo && (
+            <DrawerSection title="Licence">
+              <div style={{ padding: '12px 16px', background: 'var(--club-soft)', borderRadius: 12, border: '1px solid var(--club)' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--club-deep)' }}>{licenseInfo.club}</div>
+                <div style={{ fontSize: 13, color: 'var(--club-deep)', marginTop: 4, opacity: 0.8 }}>
+                  Licence {licenseInfo.plan === 'annual' ? 'annuelle' : 'mensuelle'} · expire le {formatDate(licenseInfo.licenseExpires)}
+                </div>
+              </div>
+            </DrawerSection>
+          )}
+
           <DrawerSection title="Sécurité">
             <DrawerButton onClick={() => { onChangePIN(); onClose(); }}>
               🔐 Changer le code PIN
@@ -480,7 +536,7 @@ function SettingsDrawer({ t, setTweak, installable, installed, triggerInstall, d
               Réinitialiser toutes les données
             </DrawerButton>
             <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 8, lineHeight: 1.5 }}>
-              Restaure les données de démonstration et remet le code PIN à <b>1234</b>.
+              Supprime toutes les commandes et l'historique, et remet le code PIN à <b>1234</b>.
             </div>
           </DrawerSection>
 
