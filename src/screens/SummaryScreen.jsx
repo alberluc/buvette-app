@@ -4,7 +4,7 @@ import { OperationModal } from '../components/OperationModal';
 import { fmtEUR, summarize } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
-export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted, cashFloat, archived, onAddOperation, onRemoveOperation }) {
+export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, cashFloat, archived, onAddOperation, onRemoveOperation }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const summary = useMemo(() => summarize(orders, products), [orders, products]);
@@ -73,7 +73,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
 
       <div className={styles.scrollArea}>
         <div className={styles.metricsGrid}>
-          <MetricCard label="Total attendu" value={fmtEUR(summary.total)} accent />
+          <MetricCard label="Total attendu" value={fmtEUR(summary.total + opsTotal)} accent />
           <MetricCard label="Nombre de commandes" value={summary.count} />
         </div>
 
@@ -171,11 +171,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
               <div className={styles.cashInputWrap}>
                 <input
                   type="text" inputMode="decimal" value={counted}
-                  onChange={(e) => {
-                    setCounted(e.target.value);
-                    const n = parseFloat(e.target.value.replace(',', '.'));
-                    setCashCounted(isNaN(n) ? null : n);
-                  }}
+                  onChange={(e) => setCounted(e.target.value)}
                   placeholder="0,00" disabled={dayClosed}
                   className={`${styles.cashInput} ${dayClosed ? styles.cashInputClosed : styles.cashInputOpen}`}
                 />

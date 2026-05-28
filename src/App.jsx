@@ -12,7 +12,7 @@ import { save, reset, loadLicense, saveLicense, loadSession, saveSession, delete
 import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushOperation, deleteOperation } from './lib/api';
 import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
+import { makeEmptyToday, makeEmptyDay, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
 import styles from './App.module.css';
 
 export default function App() {
@@ -155,7 +155,7 @@ export default function App() {
     const id = setInterval(() => {
       const today = new Date();
       const key = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      if (day.dayKey !== key) {
+      if (day.dayKey !== key && day.dayKey < key) {
         const entry = archiveFromDay(day, products);
         setArchived(prev => [entry, ...prev]);
         if (!day.dayClosed) setAutoCloseNotice(entry);
@@ -192,6 +192,7 @@ export default function App() {
         }
         setDay(prev => {
           if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
+          if (prev.dayKey !== apiDay.dayKey) return prev;
           return { mouvements: [], ...apiDay };
         });
       } catch {
@@ -220,13 +221,15 @@ export default function App() {
     setDay(d => ({ ...d, dayClosed: false }));
     if (sessionToken) updateDay(sessionToken, day.dayKey, { day_closed: false }).catch(() => {});
   };
-  const setCashCounted = v => setDay(d => ({ ...d, cashCounted: v }));
   const requestCloseDay = cashCounted => setPendingClose({ cashCounted });
 
   const simulateNextDay = () => {
     const entry = archiveFromDay(day, products);
     setArchived(prev => [entry, ...prev]);
-    setDay(makeEmptyToday());
+    const [y, m, d] = day.dayKey.split('-').map(Number);
+    const next = new Date(y, m - 1, d + 1);
+    const nextKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+    setDay(makeEmptyDay(nextKey));
     if (!day.dayClosed) setAutoCloseNotice(entry);
   };
 
@@ -362,7 +365,7 @@ export default function App() {
 
       <div className={styles.main}>
         {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
-        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
+        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
         {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
         {tab === 'settings' && <SettingsScreen
           t={t} setTweak={setTweak}

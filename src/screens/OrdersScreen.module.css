@@ -178,6 +178,20 @@
   background: var(--paper);
   display: flex; align-items: center; justify-content: space-between;
 }
+.modalHeaderActions { display: flex; align-items: center; gap: 10px; }
+.clearAllBtn {
+  appearance: none;
+  border: 1.5px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  padding: 0 18px;
+  height: 44px;
+  border-radius: 10px;
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+}
+.clearAllBtn:hover { background: var(--danger); color: white; }
 .modalHeaderLabel {
   font-size: 11px; font-weight: 700;
   letter-spacing: 1.4px; color: var(--ink-mute);
@@ -192,8 +206,8 @@
   cursor: pointer; color: var(--ink);
 }
 .productsGrid {
-  padding: 24px;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  padding: 20px 24px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
 }
 .modalFooter {
   padding: 18px 28px;
@@ -229,37 +243,37 @@
   background: var(--paper);
   border: 1.5px solid var(--line);
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center; gap: 18px;
-  transition: border-color 120ms;
+  align-items: center; gap: 14px;
+  cursor: pointer;
+  transition: border-color 120ms, background 80ms;
+  user-select: none;
 }
-.productCardActive { border: 2px solid var(--club); }
-.productEmoji  { width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; }
-.productName   { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
-.productPrice  { font-size: 15px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
-.productCounter { display: flex; align-items: center; gap: 6px; }
-.counterQty    { width: 60px; text-align: center; font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
-.counterQtyActive   { color: var(--club); }
-.counterQtyInactive { color: var(--ink-mute); }
-.counterBtn {
+.productCard:hover  { background: var(--cream); }
+.productCard:active { background: var(--cream-deep); }
+.productCardActive  { border: 2px solid var(--club); background: var(--club-soft); }
+.productCardActive:hover { background: var(--club-soft); }
+.productEmoji { width: 54px; height: 54px; border-radius: 12px; display: grid; place-items: center; font-size: 26px; }
+.productName  { font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
+.productPrice { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+.qtyBadge {
   appearance: none;
-  width: 56px; height: 56px;
-  border-radius: 12px;
-  display: grid; place-items: center;
+  border: none;
+  background: var(--club);
+  color: white;
+  border-radius: 999px;
+  padding: 0 12px;
+  height: 34px;
+  font-family: inherit;
+  font-size: 16px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
   transition: background 80ms;
 }
-.counterBtnNormal {
-  border: 1.5px solid var(--line);
-  background: var(--cream); color: var(--ink);
-  cursor: pointer;
-}
-.counterBtnNormal:hover { background: var(--cream-deep); }
-.counterBtnDisabled {
-  border: 1.5px solid var(--line-soft);
-  background: transparent; color: var(--ink-mute);
-  cursor: not-allowed;
-}
+.qtyBadge:hover { background: var(--danger); }
 
 /* ── PaymentChoice ──────────────────────────────────────────────────────────── */
 .paymentChoice {

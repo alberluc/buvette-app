@@ -16,7 +16,7 @@ export function HistoryScreen({ archived, products, cashFloat }) {
       const mouvTotal = (day.mouvements || []).reduce((s, m) => s + m.amount, 0);
       const attendu = base + day.especes + mouvTotal;
       const ecart = day.cashCounted != null ? day.cashCounted - attendu : null;
-      result.unshift({ ...day, _attendu: attendu, _ecart: ecart, _base: base, _mouvTotal: mouvTotal });
+      result.unshift({ ...day, _attendu: attendu, _ecart: ecart, _base: base, _mouvTotal: mouvTotal, _grandTotal: day.total + mouvTotal });
       base = day.cashCounted != null ? day.cashCounted : attendu;
     }
     return result;
@@ -31,7 +31,7 @@ export function HistoryScreen({ archived, products, cashFloat }) {
           <div className={styles.headerRight}>
             <div className={styles.headerLabel}>Cumul saison</div>
             <div className={styles.headerValue}>
-              {fmtEUR(days.reduce((s, d) => s + d.total, 0))}
+              {fmtEUR(daysComputed.reduce((s, d) => s + d._grandTotal, 0))}
             </div>
             <div className={styles.headerSub}>
               {days.length} journées · {days.reduce((s, d) => s + d.orderCount, 0)} commandes
@@ -80,7 +80,7 @@ function DayRow({ day, products, open, onToggle }) {
         </div>
         <div className={`${styles.dayStat} ${styles.dayTotal}`}>
           <div className={styles.dayStatLabelSm}>Total</div>
-          <div>{fmtEUR(day.total)}</div>
+          <div>{fmtEUR(day._grandTotal)}</div>
         </div>
         <CaisseBadge auto={auto} ok={isOk} diff={diff} hasCount={day.cashCounted != null} />
         <div className={styles.chevronCell}><Icon.Chevron dir={open ? 'up' : 'down'} /></div>
@@ -156,7 +156,6 @@ function DayDetail({ day, products }) {
           <div className={styles.detailRows}>
             <DetailRow icon={<span className={`${styles.dot} ${styles.dotEspeces}`} />} label="Espèces" value={fmtEUR(day.especes)} />
             <DetailRow icon={<span className={`${styles.dot} ${styles.dotCarte}`} />} label="Carte" value={fmtEUR(day.carte)} />
-            <DetailRow label="Total encaissé" value={fmtEUR(day.total)} bold />
           </div>
           {mouvements.length > 0 && (
             <>

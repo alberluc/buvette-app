@@ -3,6 +3,10 @@ import { summarize } from './data';
 
 export function makeEmptyToday() {
   const key = todayKey();
+  return makeEmptyDay(key);
+}
+
+export function makeEmptyDay(key) {
   return { dayKey: key, date: formatDate(key), label: '', orders: [], mouvements: [], dayClosed: false, cashCounted: null };
 }
 
@@ -26,7 +30,7 @@ export function archiveFromApiDay(day, products) {
   return {
     dayKey: day.dayKey, date: day.date, label: day.label || '',
     orderCount: s.count, total: s.total, especes: s.especes, carte: s.carte,
-    cashCounted: day.cashCounted,
+    cashCounted: day.autoClosed ? null : day.cashCounted,
     mouvements: day.mouvements || [],
     closed: true, autoClosed: day.autoClosed, products: archivedProducts,
   };

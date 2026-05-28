@@ -12,8 +12,9 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
   const summary = useMemo(() => {
     let total = 0;
     for (const o of orders) total += o.total;
-    return { total, count: orders.length };
-  }, [orders]);
+    const opsTotal = (day.mouvements || []).reduce((s, op) => s + op.amount, 0);
+    return { total: total + opsTotal, count: orders.length };
+  }, [orders, day.mouvements]);
   const listRef = useRef(null);
 
   const display = useMemo(() => {
@@ -237,6 +238,9 @@ function NewOrderModal({ products, onClose, onValidate }) {
   }, 0);
   const itemCount = items.reduce((s, [, q]) => s + q, 0);
 
+  const clearProduct = (pid) => setCart(c => { const n = { ...c }; n[pid] = 0; return n; });
+  const clearAll = () => setCart({});
+
   return (
     <div className={styles.newOrderOverlay}>
       <div className={styles.newOrderModal}>
@@ -245,15 +249,23 @@ function NewOrderModal({ products, onClose, onValidate }) {
             <div className={styles.modalHeaderLabel}>Nouvelle commande</div>
             <h2 className={styles.modalHeaderTitle}>Sélectionner les produits</h2>
           </div>
-          <button onClick={onClose} className={styles.closeBtn} aria-label="Fermer">
-            <Icon.Close size={24} />
-          </button>
+          <div className={styles.modalHeaderActions}>
+            {itemCount > 0 && (
+              <button onClick={clearAll} className={styles.clearAllBtn} aria-label="Tout vider">
+                Tout vider
+              </button>
+            )}
+            <button onClick={onClose} className={styles.closeBtn} aria-label="Fermer">
+              <Icon.Close size={24} />
+            </button>
+          </div>
         </div>
 
         <div className={styles.productsGrid}>
           {products.map(p => (
             <ProductCard key={p.id} product={p} qty={cart[p.id] || 0}
-                         onMinus={() => bump(p.id, -1)} onPlus={() => bump(p.id, +1)} />
+                         onTap={() => bump(p.id, +1)}
+                         onClear={() => clearProduct(p.id)} />
           ))}
         </div>
 
@@ -291,11 +303,13 @@ function NewOrderModal({ products, onClose, onValidate }) {
   );
 }
 
-function ProductCard({ product, qty, onMinus, onPlus }) {
+function ProductCard({ product, qty, onTap, onClear }) {
   const active = qty > 0;
   return (
-    <div className={`${styles.productCard} ${active ? styles.productCardActive : ''}`}>
-      {/* background et border restent inline — couleur spécifique au produit */}
+    <div
+      className={`${styles.productCard} ${active ? styles.productCardActive : ''}`}
+      onClick={onTap}
+    >
       <div className={styles.productEmoji}
            style={{ background: product.color + '22', border: `1.5px solid ${product.color}55` }}>
         {product.emoji}
@@ -304,22 +318,16 @@ function ProductCard({ product, qty, onMinus, onPlus }) {
         <div className={styles.productName}>{product.name}</div>
         <div className={styles.productPrice}>{fmtEUR(product.price)} l'unité</div>
       </div>
-      <div className={styles.productCounter}>
-        <CounterBtn onClick={onMinus} disabled={qty === 0} kind="minus" />
-        <div className={`${styles.counterQty} ${active ? styles.counterQtyActive : styles.counterQtyInactive}`}>{qty}</div>
-        <CounterBtn onClick={onPlus} kind="plus" />
-      </div>
+      {active && (
+        <button
+          className={styles.qtyBadge}
+          onClick={e => { e.stopPropagation(); onClear(); }}
+          aria-label={`Retirer ${product.name}`}
+        >
+          {qty} <Icon.Close size={13} />
+        </button>
+      )}
     </div>
-  );
-}
-
-function CounterBtn({ onClick, disabled, kind }) {
-  return (
-    <button
-      onClick={onClick} disabled={disabled}
-      className={`${styles.counterBtn} ${disabled ? styles.counterBtnDisabled : styles.counterBtnNormal}`}>
-      {kind === 'plus' ? <Icon.Plus size={26} /> : <Icon.Minus size={26} />}
-    </button>
   );
 }
 

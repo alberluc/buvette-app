@@ -28,6 +28,11 @@ export function SettingsDrawer({ currentUser, onLogout, onChangePassword, onClos
           </div>
           <DrawerButton onClick={onChangePassword}>Changer mon mot de passe</DrawerButton>
           <DrawerButton onClick={onLogout} secondary margin>Se déconnecter</DrawerButton>
+          {import.meta.env.DEV && (
+            <DrawerButton onClick={() => { onClose(); window.postMessage({ type: '__activate_edit_mode' }, '*'); }} margin>
+              🛠 Tweaks (dev)
+            </DrawerButton>
+          )}
           <div className={styles.version}>Buvette Club · v1.0</div>
         </div>
       </div>
