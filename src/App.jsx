@@ -9,7 +9,7 @@ import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts, loadSettings, saveSettings, loadTweaks, saveTweaks } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushMouvement, deleteMouvement } from './lib/api';
+import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushOperation, deleteOperation } from './lib/api';
 import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
@@ -230,14 +230,14 @@ export default function App() {
     if (!day.dayClosed) setAutoCloseNotice(entry);
   };
 
-  const addMouvement = m => {
-    setDay(d => ({ ...d, mouvements: [...(d.mouvements || []), m] }));
-    if (sessionToken) pushMouvement(sessionToken, day.dayKey, m).catch(() => {});
+  const addOperation = op => {
+    setDay(d => ({ ...d, mouvements: [...(d.mouvements || []), op] }));
+    if (sessionToken) pushOperation(sessionToken, day.dayKey, op).catch(() => {});
   };
 
-  const removeMouvement = id => {
-    setDay(d => ({ ...d, mouvements: (d.mouvements || []).filter(m => m.id !== id) }));
-    if (sessionToken) deleteMouvement(sessionToken, day.dayKey, id).catch(() => {});
+  const removeOperation = id => {
+    setDay(d => ({ ...d, mouvements: (d.mouvements || []).filter(op => op.id !== id) }));
+    if (sessionToken) deleteOperation(sessionToken, day.dayKey, id).catch(() => {});
   };
 
   const updateCashFloat = val => {
@@ -361,8 +361,8 @@ export default function App() {
       {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
-        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddMouvement={addMouvement} />}
-        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} cashFloat={cashFloat} archived={archived} onAddMouvement={addMouvement} onRemoveMouvement={removeMouvement} />}
+        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
+        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} setCashCounted={setCashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
         {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
         {tab === 'settings' && <SettingsScreen
           t={t} setTweak={setTweak}

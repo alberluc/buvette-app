@@ -134,7 +134,7 @@ export function StatusBar({ time, onAccount, apiOnline = true, clubName, userNam
 
 export function TabBar({ active, onChange }) {
   const tabs = [
-    { id: 'orders',   label: 'Commandes',  icon: <Icon.Receipt  size={26} /> },
+    { id: 'orders',   label: 'Journal',    icon: <Icon.Receipt  size={26} /> },
     { id: 'summary',  label: 'Bilan',      icon: <Icon.Chart    size={26} /> },
     { id: 'history',  label: 'Historique', icon: <Icon.Clock    size={26} /> },
     { id: 'settings', label: 'Réglages',   icon: <Icon.Settings size={26} /> },

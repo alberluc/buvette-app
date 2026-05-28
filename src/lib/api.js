@@ -193,19 +193,19 @@ export async function deleteOrder(sessionToken, dayKey, orderId) {
   return data
 }
 
-export async function pushMouvement(sessionToken, dayKey, mouvement) {
+export async function pushOperation(sessionToken, dayKey, operation) {
   const res = await fetch(`${API_URL}/days/${dayKey}/mouvements`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-    body: JSON.stringify(mouvement),
+    body: JSON.stringify(operation),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')
   return data
 }
 
-export async function deleteMouvement(sessionToken, dayKey, mouvementId) {
-  const res = await fetch(`${API_URL}/days/${dayKey}/mouvements/${mouvementId}`, {
+export async function deleteOperation(sessionToken, dayKey, operationId) {
+  const res = await fetch(`${API_URL}/days/${dayKey}/mouvements/${operationId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${sessionToken}` },
   })

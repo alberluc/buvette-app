@@ -1,23 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
-import { MouvementModal } from '../components/MouvementModal';
+import { OperationModal } from '../components/OperationModal';
 import { fmtEUR, summarize } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
-export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted, cashFloat, archived, onAddMouvement, onRemoveMouvement }) {
+export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, setCashCounted, cashFloat, archived, onAddOperation, onRemoveOperation }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const summary = useMemo(() => summarize(orders, products), [orders, products]);
 
   const [counted, setCounted] = useState(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
-  const [mouvementOpen, setMouvementOpen] = useState(false);
+  const [operationOpen, setOperationOpen] = useState(false);
 
   useEffect(() => {
     setCounted(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
   }, [cashCounted]);
 
   // ── Calcul espèces attendues en caisse ────────────────────────────────────────
-  const { expectedCash, base, report, reportDays, mouvTotal, baseFromFloat } = useMemo(() => {
+  const { expectedCash, base, report, reportDays, opsTotal, baseFromFloat } = useMemo(() => {
     let base = cashFloat ?? 0;
     let baseFromFloat = true;
     let report = 0;
@@ -32,12 +32,12 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
       report += (a.mouvements || []).reduce((s, m) => s + m.amount, 0);
       reportDays++;
     }
-    const dayMouvements = day.mouvements || [];
-    const mouvTotal = dayMouvements.reduce((s, m) => s + m.amount, 0);
-    return { expectedCash: base + report + summary.especes + mouvTotal, base, report, reportDays, mouvTotal, baseFromFloat };
+    const dayOperations = day.mouvements || [];
+    const opsTotal = dayOperations.reduce((s, op) => s + op.amount, 0);
+    return { expectedCash: base + report + summary.especes + opsTotal, base, report, reportDays, opsTotal, baseFromFloat };
   }, [cashFloat, archived, summary.especes, day.mouvements]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const mouvements = day.mouvements || [];
+  const operations = day.mouvements || [];
 
   const countedNum = parseFloat(counted.replace(',', '.'));
   const hasCount = !isNaN(countedNum);
@@ -123,29 +123,29 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
               </div>
             </Section>
 
-            <Section title="Mouvements de caisse">
-              {mouvements.length === 0 ? (
-                <div className={styles.mouvEmpty}>Aucun mouvement enregistré</div>
+            <Section title="Opérations de caisse">
+              {operations.length === 0 ? (
+                <div className={styles.mouvEmpty}>Aucune opération enregistrée</div>
               ) : (
                 <div className={styles.mouvList}>
-                  {mouvements.map(m => (
-                    <MouvementRow
-                      key={m.id}
-                      mouvement={m}
+                  {operations.map(op => (
+                    <OperationRow
+                      key={op.id}
+                      operation={op}
                       dayClosed={dayClosed}
-                      onRemove={() => onRemoveMouvement(m.id)}
+                      onRemove={() => onRemoveOperation(op.id)}
                     />
                   ))}
                   <div className={styles.mouvNet}>
-                    Net du jour : <span style={{ color: mouvTotal >= 0 ? 'var(--ok)' : 'var(--danger)' }}>
-                      {mouvTotal >= 0 ? '+' : ''}{fmtEUR(mouvTotal)}
+                    Net du jour : <span style={{ color: opsTotal >= 0 ? 'var(--ok)' : 'var(--danger)' }}>
+                      {opsTotal >= 0 ? '+' : ''}{fmtEUR(opsTotal)}
                     </span>
                   </div>
                 </div>
               )}
               {!dayClosed && (
-                <button className={styles.addMouvBtn} onClick={() => setMouvementOpen(true)}>
-                  + Ajouter un mouvement
+                <button className={styles.addMouvBtn} onClick={() => setOperationOpen(true)}>
+                  + Ajouter une opération
                 </button>
               )}
             </Section>
@@ -161,8 +161,8 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
                   />
                 )}
                 <BreakdownLine label="Espèces du jour" value={summary.especes} signed />
-                {mouvTotal !== 0 && (
-                  <BreakdownLine label="Mouvements du jour" value={mouvTotal} signed />
+                {opsTotal !== 0 && (
+                  <BreakdownLine label="Opérations du jour" value={opsTotal} signed />
                 )}
                 <BreakdownLine label="Total attendu en caisse" value={expectedCash} total />
               </div>
@@ -215,10 +215,10 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, s
         </div>
       </div>
 
-      {mouvementOpen && (
-        <MouvementModal
-          onClose={() => setMouvementOpen(false)}
-          onValidate={onAddMouvement}
+      {operationOpen && (
+        <OperationModal
+          onClose={() => setOperationOpen(false)}
+          onValidate={onAddOperation}
         />
       )}
     </div>
@@ -266,15 +266,15 @@ function PaymentRow({ kind, amount, total }) {
   );
 }
 
-function MouvementRow({ mouvement, dayClosed, onRemove }) {
-  const isPos = mouvement.amount >= 0;
+function OperationRow({ operation, dayClosed, onRemove }) {
+  const isPos = operation.amount >= 0;
   return (
     <div className={styles.mouvRow}>
-      <span className={styles.mouvTime}>{mouvement.time}</span>
-      <span className={styles.mouvLabel}>{mouvement.label}</span>
-      {/* color inline — dépend du signe du mouvement */}
+      <span className={styles.mouvTime}>{operation.time}</span>
+      <span className={styles.mouvLabel}>{operation.label}</span>
+      {/* color inline — dépend du signe de l'opération */}
       <span className={styles.mouvAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
-        {isPos ? '+' : ''}{fmtEUR(mouvement.amount)}
+        {isPos ? '+' : ''}{fmtEUR(operation.amount)}
       </span>
       {!dayClosed && (
         <button onClick={onRemove} className={styles.mouvDeleteBtn} aria-label="Supprimer">

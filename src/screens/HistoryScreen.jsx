@@ -160,7 +160,7 @@ function DayDetail({ day, products }) {
           </div>
           {mouvements.length > 0 && (
             <>
-              <div className={styles.detailSectionLabel} style={{ marginTop: 16 }}>Mouvements de caisse</div>
+              <div className={styles.detailSectionLabel} style={{ marginTop: 16 }}>Opérations de caisse</div>
               <div className={styles.detailRows}>
                 {mouvements.map(m => (
                   <DetailRow
@@ -181,7 +181,7 @@ function DayDetail({ day, products }) {
             <DetailRow label="Espèces du jour" value={'+' + fmtEUR(day.especes)} />
             {day._mouvTotal !== 0 && (
               <DetailRow
-                label="Mouvements"
+                label="Opérations"
                 value={(day._mouvTotal >= 0 ? '+' : '') + fmtEUR(day._mouvTotal)}
                 color={day._mouvTotal >= 0 ? 'var(--ok)' : 'var(--danger)'}
               />

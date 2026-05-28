@@ -1,14 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
-import { MouvementModal } from '../components/MouvementModal';
+import { OperationModal } from '../components/OperationModal';
 import { fmtEUR } from '../lib/data';
 import styles from './OrdersScreen.module.css';
 
-export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMouvement }) {
+export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
-  const [mouvementOpen, setMouvementOpen] = useState(false);
+  const [operationOpen, setOperationOpen] = useState(false);
   const summary = useMemo(() => {
     let total = 0;
     for (const o of orders) total += o.total;
@@ -16,13 +16,19 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMo
   }, [orders]);
   const listRef = useRef(null);
 
-  const display = [...orders].reverse();
+  const display = useMemo(() => {
+    const entries = [
+      ...orders.map((o, i) => ({ ...o, _type: 'order', _index: i })),
+      ...(day.mouvements || []).map(op => ({ ...op, _type: 'operation' })),
+    ];
+    return entries.sort((a, b) => b.time.localeCompare(a.time));
+  }, [orders, day.mouvements]);
 
   return (
     <div className={styles.screen}>
       <AppHeader
         subtitle={day.date.toUpperCase()}
-        title="Journal des commandes"
+        title="Journal"
         right={
           <div className={styles.headerRight}>
             <div className={styles.headerStatLabel}>Total du jour</div>
@@ -37,36 +43,40 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMo
       <div ref={listRef} className={styles.list}>
         {display.length === 0 && (
           <div className={styles.emptyState}>
-            <div className={styles.emptyTitle}>Aucune commande pour l'instant</div>
+            <div className={styles.emptyTitle}>Aucune opération pour l'instant</div>
             <div className={styles.emptyText}>
-              Appuyez sur le bouton « + » en bas à droite pour enregistrer la première commande de la journée.
+              Appuyez sur « + » pour enregistrer une commande, ou sur le bouton ↑↓ pour ajouter une opération de caisse.
             </div>
           </div>
         )}
         <div className={styles.orderListInner}>
-          {display.map((o, i) => {
-            const originalIndex = orders.length - 1 - i;
-            return (
-              <OrderRow
-                key={display.length - i}
-                order={o}
-                orderIndex={originalIndex}
-                dayClosed={dayClosed}
-                onRemove={onRemoveOrder}
-                products={products}
-              />
-            );
-          })}
+          {display.map(entry =>
+            entry._type === 'order'
+              ? <OrderRow
+                  key={`order-${entry.id || entry._index}`}
+                  order={entry}
+                  orderIndex={entry._index}
+                  dayClosed={dayClosed}
+                  onRemove={onRemoveOrder}
+                  products={products}
+                />
+              : <OperationRow
+                  key={`op-${entry.id}`}
+                  operation={entry}
+                  dayClosed={dayClosed}
+                  onRemove={onRemoveOperation}
+                />
+          )}
         </div>
       </div>
 
       {!dayClosed && (
         <>
           <button
-            onClick={() => setMouvementOpen(true)}
+            onClick={() => setOperationOpen(true)}
             className={styles.fabSecondary}
-            aria-label="Mouvement de caisse"
-            title="Mouvement de caisse"
+            aria-label="Opération de caisse"
+            title="Opération de caisse"
           >
             <TransferSvg />
           </button>
@@ -86,10 +96,10 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMo
         </div>
       )}
 
-      {mouvementOpen && (
-        <MouvementModal
-          onClose={() => setMouvementOpen(false)}
-          onValidate={onAddMouvement}
+      {operationOpen && (
+        <OperationModal
+          onClose={() => setOperationOpen(false)}
+          onValidate={onAddOperation}
         />
       )}
 
@@ -108,6 +118,36 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddMo
             setModalOpen(false);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function OperationRow({ operation, dayClosed, onRemove }) {
+  const isPos = operation.amount >= 0;
+  return (
+    <div
+      className={styles.operationRow}
+      style={{ borderLeftColor: isPos ? 'var(--ok)' : 'var(--danger)' }}
+    >
+      <div className={styles.orderTime}>{operation.time}</div>
+      <div>
+        <div className={styles.operationLabel}>{operation.label}</div>
+        <div className={styles.operationKind}>{isPos ? 'Entrée caisse' : 'Sortie caisse'}</div>
+      </div>
+      <div className={styles.operationAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
+        {isPos ? '+' : ''}{fmtEUR(operation.amount)}
+      </div>
+      {!dayClosed ? (
+        <button
+          onClick={() => onRemove(operation.id)}
+          aria-label="Supprimer l'opération"
+          className={styles.deleteBtn}
+        >
+          <Icon.Trash size={20} />
+        </button>
+      ) : (
+        <div className={styles.deletePlaceholder} />
       )}
     </div>
   );
