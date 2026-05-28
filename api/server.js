@@ -2,6 +2,7 @@ import express from 'express'
 import licensesRouter from './routes/licenses.js'
 import authRouter from './routes/auth.js'
 import accountsRouter from './routes/accounts.js'
+import daysRouter from './routes/days.js'
 import adminRouter from './routes/admin.js'
 
 if (!process.env.JWT_SECRET || !process.env.ADMIN_SECRET) {
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 app.use('/', licensesRouter)
 app.use('/', authRouter)
 app.use('/', accountsRouter)
+app.use('/', daysRouter)
 app.use('/admin', adminRouter)
 
 app.listen(3000, () => console.log('API buvette démarrée sur :3000'))

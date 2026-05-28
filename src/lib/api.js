@@ -107,3 +107,45 @@ export async function changePassword(sessionToken, accountId, { currentPassword,
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')
   return data
 }
+
+// ── Journées ──────────────────────────────────────────────────────────────────
+
+export async function fetchCurrentDay(sessionToken) {
+  const res = await fetch(`${API_URL}/days/current`, {
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function fetchDays(sessionToken) {
+  const res = await fetch(`${API_URL}/days`, {
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function pushOrder(sessionToken, dayKey, order) {
+  const res = await fetch(`${API_URL}/days/${dayKey}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify(order),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function updateDay(sessionToken, dayKey, patch) {
+  const res = await fetch(`${API_URL}/days/${dayKey}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify(patch),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}

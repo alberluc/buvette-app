@@ -118,7 +118,7 @@ export const Icon = {
   ),
 };
 
-export function StatusBar({ time, onSettings }) {
+export function StatusBar({ time, onSettings, apiOnline = true }) {
   return (
     <div style={{
       height: 32, display: 'flex', alignItems: 'center',
@@ -129,9 +129,20 @@ export function StatusBar({ time, onSettings }) {
       <div>{time}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--ink-soft)' }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5 }}>BUVETTE CLUB</span>
-        <Icon.Wifi size={14} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: 999,
+            background: apiOnline ? 'var(--ok)' : 'var(--warn)',
+            boxShadow: apiOnline ? '0 0 0 2px var(--ok-soft)' : '0 0 0 2px var(--warn-soft)',
+            transition: 'background 400ms, box-shadow 400ms',
+          }} />
+          {!apiOnline && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--warn)', letterSpacing: 0.3 }}>
+              Hors ligne
+            </span>
+          )}
+        </span>
         <Icon.Battery size={12} />
-        <span style={{ fontSize: 11 }}>87%</span>
         {onSettings && (
           <button onClick={onSettings} aria-label="Réglages" title="Réglages" style={{
             appearance: 'none', border: 'none', background: 'transparent',

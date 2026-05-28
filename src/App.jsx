@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StatusBar, TabBar, Icon } from './components/UI';
 import { useTweaks, TweaksPanel, TweakSection, TweakColor, TweakRadio, TweakToggle, TweakButton } from './components/TweaksPanel';
 import { SettingsDrawer } from './components/SettingsDrawer';
@@ -8,10 +8,10 @@ import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts } from './lib/api';
+import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, updateDay } from './lib/api';
 import { fmtEUR } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { makeEmptyToday, archiveFromDay, loadInitialState } from './lib/day';
+import { makeEmptyToday, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
 
 export default function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -43,6 +43,10 @@ export default function App() {
   const [sessionToken, setSessionToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
+  // ── Sync ──────────────────────────────────────────────────────────────────
+  const [apiOnline, setApiOnline] = useState(true);
+  const wasOfflineRef = useRef(false);
+
   // ── UI ────────────────────────────────────────────────────────────────────
   const [pendingClose, setPendingClose] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -51,22 +55,45 @@ export default function App() {
 
   // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
-    Promise.all([loadInitialState(), loadLicense(), loadSession(), loadAccountsCache()])
-      .then(([initial, licToken, sesToken, accsCache]) => {
-        setDay(initial.day);
-        setArchived(initial.archived);
-        setAutoCloseNotice(initial.justAutoClosed);
-        setCachedAccounts(accsCache);
-        applyLicenseToken(licToken);
-        if (sesToken) {
-          const p = parseJwt(sesToken);
-          if (p && p.exp > Date.now() / 1000) {
-            setSessionToken(sesToken);
-            setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
-          }
+    (async () => {
+      const [initial, licToken, sesToken, accsCache] = await Promise.all([
+        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(),
+      ]);
+
+      // État local en premier (affiché immédiatement si l'API est lente)
+      setDay(initial.day);
+      setArchived(initial.archived);
+      setAutoCloseNotice(initial.justAutoClosed);
+      setCachedAccounts(accsCache);
+      applyLicenseToken(licToken);
+
+      let validSession = null;
+      if (sesToken) {
+        const p = parseJwt(sesToken);
+        if (p && p.exp > Date.now() / 1000) {
+          validSession = sesToken;
+          setSessionToken(sesToken);
+          setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
         }
-        setLoaded(true);
-      });
+      }
+
+      // Remplace l'état local par les données API (source de vérité partagée)
+      if (validSession) {
+        try {
+          const [apiDay, apiDays] = await Promise.all([
+            fetchCurrentDay(validSession),
+            fetchDays(validSession),
+          ]);
+          setDay(apiDay);
+          setArchived(apiDays.map(archiveFromApiDay));
+          setAutoCloseNotice(null);
+        } catch {
+          // Fallback silencieux : l'état local est déjà affiché
+        }
+      }
+
+      setLoaded(true);
+    })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyLicenseToken(token) {
@@ -111,17 +138,58 @@ export default function App() {
       if (day.dayKey !== key) {
         const entry = archiveFromDay(day);
         setArchived(prev => [entry, ...prev]);
-        setDay(makeEmptyToday());
         if (!day.dayClosed) setAutoCloseNotice(entry);
+        if (sessionToken) {
+          updateDay(sessionToken, day.dayKey, { day_closed: true, auto_closed: true }).catch(() => {});
+          fetchCurrentDay(sessionToken).then(apiDay => setDay(apiDay)).catch(() => setDay(makeEmptyToday()));
+        } else {
+          setDay(makeEmptyToday());
+        }
       }
     }, 60000);
     return () => clearInterval(id);
-  }, [day, loaded]);
+  }, [day, loaded, sessionToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Polling (sync inter-tablettes, toutes les 10 s) ──────────────────────
+  useEffect(() => {
+    if (!loaded || !sessionToken) return;
+    const id = setInterval(async () => {
+      try {
+        const apiDay = await fetchCurrentDay(sessionToken);
+        const wasOffline = wasOfflineRef.current;
+        wasOfflineRef.current = false;
+        setApiOnline(true);
+        if (wasOffline) {
+          // Re-sync complète après reconnexion
+          const apiDays = await fetchDays(sessionToken);
+          setArchived(apiDays.map(archiveFromApiDay));
+        }
+        setDay(prev => {
+          if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
+          return apiDay;
+        });
+      } catch {
+        wasOfflineRef.current = true;
+        setApiOnline(false);
+      }
+    }, 10000);
+    return () => clearInterval(id);
+  }, [loaded, sessionToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Journée ───────────────────────────────────────────────────────────────
-  const addOrder = o => setDay(d => ({ ...d, orders: [...d.orders, o] }));
-  const closeDay = cashCounted => { setDay(d => ({ ...d, dayClosed: true, cashCounted })); setTab('summary'); };
-  const reopenDay = () => setDay(d => ({ ...d, dayClosed: false }));
+  const addOrder = o => {
+    setDay(d => ({ ...d, orders: [...d.orders, o] }));
+    if (sessionToken) pushOrder(sessionToken, day.dayKey, o).catch(() => {});
+  };
+  const closeDay = cashCounted => {
+    setDay(d => ({ ...d, dayClosed: true, cashCounted }));
+    setTab('summary');
+    if (sessionToken) updateDay(sessionToken, day.dayKey, { day_closed: true, cash_counted: cashCounted }).catch(() => {});
+  };
+  const reopenDay = () => {
+    setDay(d => ({ ...d, dayClosed: false }));
+    if (sessionToken) updateDay(sessionToken, day.dayKey, { day_closed: false }).catch(() => {});
+  };
   const setCashCounted = v => setDay(d => ({ ...d, cashCounted: v }));
   const requestCloseDay = cashCounted => setPendingClose({ cashCounted });
 
@@ -138,6 +206,14 @@ export default function App() {
     setSessionToken(sessionJWT);
     const p = parseJwt(sessionJWT);
     setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
+    try {
+      const [apiDay, apiDays] = await Promise.all([
+        fetchCurrentDay(sessionJWT),
+        fetchDays(sessionJWT),
+      ]);
+      setDay(apiDay);
+      setArchived(apiDays.map(archiveFromApiDay));
+    } catch {}
   };
 
   const handleLogout = async () => {
@@ -220,7 +296,7 @@ export default function App() {
     <div
       data-screen-label={tab === 'orders' ? '01 Commandes' : tab === 'summary' ? '02 Bilan' : '03 Historique'}
       style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--cream)' }}>
-      {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} />}
+      {t.showStatusBar && <StatusBar time={clockTime} onSettings={() => setSettingsOpen(true)} apiOnline={apiOnline} />}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
         {tab === 'orders'  && <OrdersScreen day={day} onAddOrder={addOrder} />}
