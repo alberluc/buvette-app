@@ -313,3 +313,96 @@
   font-variant-numeric: tabular-nums;
 }
 .headerStatSub { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+
+/* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .list { padding: 10px 10px 160px; }
+
+  /* OrderRow + OperationRow : layout 2 lignes via grid-areas */
+  .orderRow,
+  .operationRow {
+    grid-template-columns: 48px 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "time content amount"
+      "time badge   del   ";
+    gap: 4px 8px;
+    padding: 10px 12px;
+  }
+  .orderTime        { grid-area: time;    font-size: 14px; align-self: center; }
+  .orderItems       { grid-area: content; }
+  .orderItem        { font-size: 15px; }
+  .orderTotal       { grid-area: amount;  font-size: 16px; min-width: unset; align-self: start; }
+  .operationLabel   { grid-area: content; font-size: 15px; }
+  .operationAmount  { grid-area: amount;  font-size: 16px; min-width: unset; align-self: start; }
+  /* 3ème enfant = badge (PayBadge ou OpBadge) */
+  .orderRow > :nth-child(3),
+  .operationRow > :nth-child(3) { grid-area: badge; align-self: center; }
+  .deleteBtn, .deletePlaceholder { grid-area: del; }
+
+  /* Modal suppression */
+  .modal { min-width: unset; width: calc(100vw - 32px); padding: 24px 20px; }
+
+  /* NewOrderModal — bottom-sheet */
+  .newOrderOverlay {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+  }
+  .newOrderModal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+  }
+  .modalHeader { padding: 14px 16px; }
+  .modalHeaderTitle { font-size: 20px; }
+  .clearAllBtn { padding: 0 12px; height: 38px; font-size: 14px; }
+  .closeBtn { width: 42px; height: 42px; }
+
+  .productsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .productEmoji { width: 40px; height: 40px; font-size: 20px; }
+  .productName  { font-size: 16px; }
+
+  .modalFooter {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .totalSection { text-align: left; }
+  .totalAmount  { font-size: 32px; }
+  .paymentOptions { gap: 8px; }
+  .paymentChoice  { height: 46px; padding: 0 14px; font-size: 16px; }
+
+  .modalActions2 {
+    flex-direction: column-reverse;
+    padding: 10px 14px 16px;
+    gap: 8px;
+  }
+  /* Force les boutons à pleine largeur sur mobile (override inline styles) */
+  .modalActions2 > * { width: 100% !important; min-width: 0 !important; }
+
+  /* FAB — plus petit + safe area */
+  .fab {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: 72px; height: 72px;
+  }
+  .fabSecondary {
+    right: 22px;
+    bottom: calc(106px + env(safe-area-inset-bottom, 0px));
+    width: 54px; height: 54px;
+  }
+  .closedBadge {
+    right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    font-size: 13px; padding: 10px 16px;
+  }
+
+  .headerStatValue { font-size: 26px; }
+  .headerStatSub   { font-size: 12px; }
+}

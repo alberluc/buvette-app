@@ -88,3 +88,21 @@
   padding: 6px; cursor: pointer;
   display: grid; place-items: center;
 }
+
+/* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .confirmModal {
+    min-width: unset;
+    width: calc(100vw - 32px);
+    padding: 28px 24px;
+    border-radius: 20px;
+  }
+  .toast {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    max-width: none;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

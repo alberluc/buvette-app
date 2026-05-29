@@ -130,3 +130,34 @@
 
 /* ── Actions bar ────────────────────────────────────────────────────────────── */
 .actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 12px; }
+
+/* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .scrollArea { padding: 12px 12px 20px; }
+
+  .metricsGrid { gap: 10px; margin-bottom: 12px; }
+  .cardValueAccent,
+  .cardValueNormal { font-size: 28px; }
+
+  /* Détail + colonne droite : 1 colonne sur mobile */
+  .detailGrid { grid-template-columns: 1fr; }
+
+  /* Champ caisse */
+  .cashInput {
+    height: 60px;
+    font-size: 22px;
+    padding: 0 48px 0 16px;
+  }
+  .cashEuroSign { font-size: 20px; right: 16px; }
+  .cashExpectedVal { font-size: 22px; }
+
+  /* Bouton d'action pleine largeur */
+  .actions {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+  .actions > * { min-width: 0 !important; width: 100% !important; }
+
+  /* Mouvements : cible de tap plus grande */
+  .mouvDeleteBtn { width: 38px; height: 38px; }
+}

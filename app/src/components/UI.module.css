@@ -153,3 +153,29 @@
   color: var(--ink);
   letter-spacing: -0.4px;
 }
+
+/* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .statusBar { display: none; }
+
+  .appHeader {
+    padding: 10px 16px;
+    gap: 10px;
+    align-items: center;
+  }
+  .appHeaderSubtitle {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+  }
+  .appHeaderTitle { font-size: 22px; }
+
+  .tabBar {
+    height: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .tabBtn { font-size: 11px; gap: 2px; }
+  .tabIndicatorActive { width: 36px; }
+
+  .bigBtn { height: 56px; font-size: 18px; padding: 0 20px; }
+}
