@@ -169,7 +169,9 @@ export function todayKey() {
 }
 
 export function formatDate(d) {
-  const dt = new Date(d + 'T12:00:00');
+  // Pour les dates ISO complètes (ex: "2026-12-31T00:00:00.000Z"), on parse directement.
+  // Pour les dates courtes "YYYY-MM-DD", on ajoute T12:00:00 pour éviter un décalage UTC.
+  const dt = new Date(typeof d === 'string' && !d.includes('T') ? d + 'T12:00:00' : d);
   return dt.toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });

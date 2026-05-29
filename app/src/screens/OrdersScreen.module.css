@@ -216,6 +216,7 @@
 .productsGrid {
   padding: 20px 24px;
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+  flex: 1; overflow-y: auto; min-height: 0;
 }
 .modalFooter {
   padding: 18px 28px;
@@ -368,14 +369,20 @@
   .productEmoji { width: 40px; height: 40px; font-size: 20px; }
   .productName  { font-size: 16px; }
 
+  /* Footer : une ligne [paiement | compteur] — le total est déjà dans le bouton Valider */
   .modalFooter {
-    display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
     gap: 10px;
-    padding: 12px 14px;
   }
-  .totalSection { text-align: left; }
-  .totalAmount  { font-size: 32px; }
+  /* Label "MODE DE PAIEMENT" superflu sur mobile */
+  .paymentLabel { display: none; }
+  /* Montant dupliqué — caché ; seul le compteur reste */
+  .totalLabel, .totalAmount { display: none; }
+  .totalSection { text-align: right; }
+  .totalCount   { font-size: 13px; white-space: nowrap; margin-top: 0; }
   .paymentOptions { gap: 8px; }
   .paymentChoice  { height: 46px; padding: 0 14px; font-size: 16px; }
 
@@ -402,6 +409,9 @@
     right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     font-size: 13px; padding: 10px 16px;
   }
+
+  /* Assure que le contenu défile au-delà des FABs + safe-area */
+  .list { padding: 10px 10px calc(160px + env(safe-area-inset-bottom, 0px)); }
 
   .headerStatValue { font-size: 26px; }
   .headerStatSub   { font-size: 12px; }

@@ -79,40 +79,40 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
 
         <div className={styles.detailGrid}>
           <Section title="Détail par produit">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--line)' }}>
-                  <th style={th}>Produit</th>
-                  <th style={{ ...th, textAlign: 'center' }}>Quantité</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Prix unit.</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(p => {
-                  const d = summary.products[p.id] || { qty: 0, total: 0 };
-                  return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid var(--line-soft)' }}>
-                      <td style={{ ...td, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        {/* background et border inline — couleur spécifique au produit */}
-                        <span className={styles.productEmoji}
-                              style={{ background: p.color + '22', border: `1px solid ${p.color}40` }}>
-                          {p.emoji}
-                        </span>
-                        <span style={{ fontWeight: 600, fontSize: 17 }}>{p.name}</span>
-                      </td>
-                      <td style={{ ...td, textAlign: 'center', fontSize: 22, fontWeight: 700, color: d.qty > 0 ? 'var(--club)' : 'var(--ink-mute)', fontVariantNumeric: 'tabular-nums' }}>{d.qty}</td>
-                      <td style={{ ...td, textAlign: 'right', color: 'var(--ink-soft)', fontVariantNumeric: 'tabular-nums' }}>{fmtEUR(p.price)}</td>
-                      <td style={{ ...td, textAlign: 'right', fontSize: 19, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtEUR(d.total)}</td>
-                    </tr>
-                  );
-                })}
-                <tr>
-                  <td style={{ ...td, fontWeight: 700, fontSize: 18 }} colSpan="3">Total</td>
-                  <td style={{ ...td, textAlign: 'right', fontSize: 22, fontWeight: 800, color: 'var(--club)', fontVariantNumeric: 'tabular-nums' }}>{fmtEUR(summary.total)}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className={styles.productTable}>
+              <div className={styles.productTableHeader}>
+                <div>Produit</div>
+                <div>Qté</div>
+                <div>Prix unit.</div>
+                <div>Total</div>
+              </div>
+              {products.map(p => {
+                const d = summary.products[p.id] || { qty: 0, total: 0 };
+                return (
+                  <div key={p.id} className={styles.productRow}>
+                    <div className={styles.ptColProduct}>
+                      {/* background et border inline — couleur spécifique au produit */}
+                      <span className={styles.productEmoji}
+                            style={{ background: p.color + '22', border: `1px solid ${p.color}40` }}>
+                        {p.emoji}
+                      </span>
+                      <span className={styles.ptProductName}>{p.name}</span>
+                    </div>
+                    {/* color inline — dépend de la quantité vendue */}
+                    <div className={styles.ptColQty}
+                         style={{ color: d.qty > 0 ? 'var(--club)' : 'var(--ink-mute)' }}>
+                      {d.qty}
+                    </div>
+                    <div className={styles.ptColPrice}>{fmtEUR(p.price)}</div>
+                    <div className={styles.ptColTotal}>{fmtEUR(d.total)}</div>
+                  </div>
+                );
+              })}
+              <div className={styles.productTotalRow}>
+                <span className={styles.ptTotalLabel}>Total</span>
+                <span className={styles.ptTotalAmount}>{fmtEUR(summary.total)}</span>
+              </div>
+            </div>
           </Section>
 
           <div className={styles.rightCol}>
@@ -222,8 +222,6 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
   );
 }
 
-const th = { textAlign: 'left', padding: '10px 8px', fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: 'var(--ink-mute)', textTransform: 'uppercase' };
-const td = { padding: '12px 8px', verticalAlign: 'middle' };
 
 function MetricCard({ label, value, accent }) {
   return (

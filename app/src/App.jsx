@@ -257,6 +257,15 @@ export default function App() {
     if (sessionToken) pushSettings(sessionToken, { cashFloat, opSuggestions: val }).catch(() => {});
   };
 
+  const updateClubName = name => {
+    if (!sessionToken) return;
+    pushSettings(sessionToken, { cashFloat, opSuggestions, clubName: name })
+      .then(data => {
+        if (data.licenseToken) { saveLicense(data.licenseToken); applyLicenseToken(data.licenseToken); }
+      })
+      .catch(() => {});
+  };
+
   const updateProducts = async newProducts => {
     setProducts(newProducts);
     saveProducts(newProducts);
@@ -378,6 +387,7 @@ export default function App() {
         {tab === 'settings' && <SettingsScreen
           t={t} setTweak={setTweak}
           licenseInfo={licenseInfo}
+          clubName={licenseInfo?.club} onClubNameChange={updateClubName}
           cashFloat={cashFloat} onCashFloatChange={updateCashFloat}
           products={products} onProductsChange={updateProducts}
           opSuggestions={opSuggestions} onOpSuggestionsChange={updateOpSuggestions}

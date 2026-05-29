@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { activateLicense, refreshLicense } from '../lib/api'
+import styles from './LicenseScreen.module.css'
 
 const ERROR_LABELS = {
   'Clé invalide': "Cette clé de licence n'existe pas.",
@@ -9,6 +10,15 @@ const ERROR_LABELS = {
 
 function normalizeError(msg) {
   return ERROR_LABELS[msg] || 'Impossible de joindre le serveur. Vérifiez votre connexion.'
+}
+
+function ClipboardSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="2" width="6" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  )
 }
 
 export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) {
@@ -44,6 +54,19 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
     refs[Math.min(3, Math.floor(raw.length / 4))].current?.focus()
   }
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      const raw = text.toUpperCase().replace(/[^A-Z0-9]/g, '')
+      if (!raw) return
+      setGroups(Array.from({ length: 4 }, (_, i) => raw.slice(i * 4, i * 4 + 4)))
+      setError('')
+      refs[Math.min(3, Math.floor(raw.length / 4))].current?.focus()
+    } catch {
+      // Permission refusée ou API indisponible
+    }
+  }
+
   const handleActivate = async () => {
     if (!isComplete || loading) return
     setLoading(true)
@@ -73,86 +96,67 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
   }
 
   const keyInput = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-      {groups.map((g, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            ref={refs[i]}
-            value={g}
-            onChange={e => handleChange(i, e.target.value)}
-            onKeyDown={e => handleKeyDown(i, e)}
-            onPaste={handlePaste}
-            maxLength={4}
-            autoCapitalize="characters"
-            style={{
-              width: 72, height: 56, textAlign: 'center',
-              fontSize: 20, fontWeight: 700, letterSpacing: 6,
-              fontFamily: 'monospace',
-              border: `1.5px solid ${g.length === 4 ? 'var(--club)' : 'var(--line)'}`,
-              borderRadius: 10,
-              background: g.length === 4 ? 'var(--club-soft)' : 'var(--cream)',
-              color: 'var(--ink)', outline: 'none',
-              transition: 'border-color 120ms, background 120ms',
-            }}
-          />
-          {i < 3 && <span style={{ color: 'var(--ink-mute)', fontSize: 20, userSelect: 'none' }}>–</span>}
-        </div>
-      ))}
-    </div>
+    <>
+      <div className={styles.keyRow}>
+        {groups.map((g, i) => (
+          <div key={i} className={styles.keyGroup}>
+            <input
+              ref={refs[i]}
+              value={g}
+              onChange={e => handleChange(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+              onPaste={handlePaste}
+              maxLength={4}
+              autoCapitalize="characters"
+              className={`${styles.keyInput} ${g.length === 4 ? styles.keyInputFilled : ''}`}
+            />
+            {i < 3 && <span className={styles.separator}>–</span>}
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={handlePasteFromClipboard} className={styles.pasteBtn}>
+        <ClipboardSvg /> Coller depuis le presse-papier
+      </button>
+    </>
   )
 
   return (
-    <div style={{
-      width: '100%', height: '100%',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--cream)',
-    }}>
-      <div style={{ marginBottom: 40, textAlign: 'center' }}>
-        <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 12 }}>🍺</div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)' }}>Buvette Club</div>
-        <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 4, fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase' }}>Caisse buvette</div>
+    <div className={styles.screen}>
+      <div className={styles.brand}>
+        <div className={styles.brandEmoji}>🍺</div>
+        <div className={styles.brandName}>Buvette Club</div>
+        <div className={styles.brandSub}>Caisse buvette</div>
       </div>
 
-      <div style={{
-        background: 'var(--paper)', borderRadius: 24,
-        padding: '36px 44px', width: 480,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid var(--line)',
-      }}>
+      <div className={styles.card}>
         {mode === 'expired' ? (
           <>
-            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: 'var(--ink)', textAlign: 'center' }}>
-              Renouvellement requis
-            </h2>
-            <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--ink-soft)', textAlign: 'center', lineHeight: 1.5 }}>
+            <h2 className={styles.title}>Renouvellement requis</h2>
+            <p className={`${styles.subtitle} ${styles.subtitleSm}`}>
               Votre licence a expiré. Connectez-vous à internet pour la renouveler automatiquement.
             </p>
-            <button onClick={handleRefresh} disabled={loading} style={primaryBtnStyle(!loading)}>
+            <button onClick={handleRefresh} disabled={loading} className={styles.primaryBtn}>
               {loading ? 'Renouvellement…' : 'Renouveler la licence'}
             </button>
-            {error && <div style={errorStyle}>{error}</div>}
-
-            <div style={{ margin: '24px 0 20px', borderTop: '1px solid var(--line)' }} />
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-soft)', textAlign: 'center' }}>
-              Vous avez une nouvelle clé de licence ?
-            </p>
+            {error && <div className={styles.error}>{error}</div>}
+            <hr className={styles.divider} />
+            <p className={styles.newKeyLabel}>Vous avez une nouvelle clé de licence ?</p>
             {keyInput}
             <button
               onClick={handleActivate} disabled={!isComplete || loading}
-              style={{ ...secondaryBtnStyle(isComplete && !loading), marginTop: 12 }}>
+              className={styles.secondaryBtn}>
               Activer une nouvelle clé
             </button>
           </>
         ) : (
           <>
-            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: 'var(--ink)', textAlign: 'center' }}>
-              Activation
-            </h2>
-            <p style={{ margin: '0 0 28px', fontSize: 14, color: 'var(--ink-soft)', textAlign: 'center', lineHeight: 1.5 }}>
-              Saisir la clé de licence reçue lors de votre achat.
-            </p>
+            <h2 className={styles.title}>Activation</h2>
+            <p className={styles.subtitle}>Saisir la clé de licence reçue lors de votre achat.</p>
             {keyInput}
-            {error && <div style={errorStyle}>{error}</div>}
-            <button onClick={handleActivate} disabled={!isComplete || loading} style={{ ...primaryBtnStyle(isComplete && !loading), marginTop: error ? 12 : 24 }}>
+            {error && <div className={styles.error}>{error}</div>}
+            <button
+              onClick={handleActivate} disabled={!isComplete || loading}
+              className={`${styles.primaryBtn} ${error ? styles.primaryBtnMtSm : styles.primaryBtnMt}`}>
               {loading ? 'Activation…' : 'Activer'}
             </button>
           </>
@@ -160,31 +164,4 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
       </div>
     </div>
   )
-}
-
-function primaryBtnStyle(enabled) {
-  return {
-    display: 'block', width: '100%', height: 56, borderRadius: 12, border: 'none',
-    background: enabled ? 'var(--club)' : 'var(--line)',
-    color: enabled ? 'white' : 'var(--ink-mute)',
-    fontSize: 17, fontWeight: 700,
-    cursor: enabled ? 'pointer' : 'default',
-    fontFamily: 'inherit', transition: 'background 150ms',
-  }
-}
-
-function secondaryBtnStyle(enabled) {
-  return {
-    display: 'block', width: '100%', height: 48, borderRadius: 12,
-    border: '1.5px solid var(--line)', background: 'transparent',
-    color: enabled ? 'var(--ink)' : 'var(--ink-mute)',
-    fontSize: 15, fontWeight: 700,
-    cursor: enabled ? 'pointer' : 'default',
-    fontFamily: 'inherit',
-  }
-}
-
-const errorStyle = {
-  marginTop: 12, fontSize: 13, fontWeight: 600,
-  color: 'var(--danger)', textAlign: 'center',
 }

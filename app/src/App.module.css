@@ -90,6 +90,11 @@
 }
 
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
+@keyframes slideDownMobile {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+
 @media (max-width: 599px) {
   .confirmModal {
     min-width: unset;
@@ -104,5 +109,7 @@
     max-width: none;
     flex-wrap: wrap;
     gap: 10px;
+    /* override slideDown (which uses translateX(-50%)) with a Y-only animation */
+    animation: slideDownMobile 280ms cubic-bezier(.2,.8,.2,1);
   }
 }

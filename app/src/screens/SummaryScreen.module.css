@@ -37,14 +37,63 @@
   text-transform: uppercase; margin-bottom: 14px;
 }
 
-/* ── Table ──────────────────────────────────────────────────────────────────── */
+/* ── Tableau produits (div-grid) ─────────────────────────────────────────────── */
+.productTable { width: 100%; }
+
+.productTableHeader,
+.productRow {
+  display: grid;
+  grid-template-columns: 1fr 56px 80px 96px;
+  align-items: center;
+  gap: 0 10px;
+}
+.productTableHeader {
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+.productTableHeader > div {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+  color: var(--ink-mute); text-transform: uppercase;
+  text-align: right;
+}
+.productTableHeader > div:first-child { text-align: left; }
+
+.productRow {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ptColProduct { display: flex; align-items: center; gap: 12px; }
+.ptProductName { font-weight: 600; font-size: 16px; color: var(--ink); }
+
+.ptColQty {
+  text-align: center;
+  font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.ptColPrice {
+  text-align: right;
+  font-size: 14px; color: var(--ink-soft); font-variant-numeric: tabular-nums;
+}
+.ptColTotal {
+  text-align: right;
+  font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+.productTotalRow {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0 2px;
+  border-top: 2px solid var(--line);
+  margin-top: 2px;
+}
+.ptTotalLabel  { font-size: 15px; font-weight: 700; color: var(--ink); }
+.ptTotalAmount { font-size: 20px; font-weight: 800; color: var(--club); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+
 .productEmoji {
   width: 36px; height: 36px;
   border-radius: 10px;
   display: grid; place-items: center;
   font-size: 18px;
+  flex-shrink: 0;
 }
-.tdProductName { display: flex; align-items: center; gap: 12px; }
 
 /* ── Cash control ───────────────────────────────────────────────────────────── */
 .cashLabel  { display: block; font-size: 14px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 600; }
@@ -131,16 +180,34 @@
 /* ── Actions bar ────────────────────────────────────────────────────────────── */
 .actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 12px; }
 
+/* ── Tableau produits (responsive via classe JS) ────────────────────────────── */
+.productTable { width: 100%; border-collapse: collapse; }
+
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {
-  .scrollArea { padding: 12px 12px 20px; }
+  /* Assure que le contenu défile au-delà de la TabBar + safe-area */
+  .scrollArea { padding: 12px 12px calc(78px + env(safe-area-inset-bottom, 0px)); }
 
   .metricsGrid { gap: 10px; margin-bottom: 12px; }
   .cardValueAccent,
   .cardValueNormal { font-size: 28px; }
 
+  /* Badge clôture dans le header : réduit sur mobile */
+  .closedBadge { font-size: 13px; padding: 7px 12px; gap: 7px; }
+
   /* Détail + colonne droite : 1 colonne sur mobile */
   .detailGrid { grid-template-columns: 1fr; }
+
+  /* Tableau produits : 3 colonnes, sans header ni prix unitaire */
+  .productTableHeader { display: none; }
+  .productRow { grid-template-columns: 1fr auto auto; gap: 0 8px; padding: 8px 0; }
+  .ptColPrice  { display: none; }
+  .ptColQty    { font-size: 15px; min-width: 28px; }
+  .ptColTotal  { font-size: 14px; min-width: 60px; }
+  .ptProductName { font-size: 14px; }
+  .productEmoji  { width: 28px; height: 28px; font-size: 14px; border-radius: 6px; }
+  .ptTotalLabel  { font-size: 14px; }
+  .ptTotalAmount { font-size: 16px; }
 
   /* Champ caisse */
   .cashInput {

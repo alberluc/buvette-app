@@ -1,0 +1,213 @@
+/* ── Écran centré ────────────────────────────────────────────────────────────── */
+.screen {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--cream);
+  padding: 0 16px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* ── Brand ───────────────────────────────────────────────────────────────────── */
+.brand      { margin-bottom: 40px; text-align: center; }
+.brandEmoji { font-size: 52px; line-height: 1; margin-bottom: 12px; }
+.brandName  { font-size: 26px; font-weight: 800; color: var(--ink); }
+.brandSub   { font-size: 12px; color: var(--ink-mute); margin-top: 4px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+
+/* ── Carte formulaire ────────────────────────────────────────────────────────── */
+.card {
+  background: var(--paper);
+  border-radius: 24px;
+  padding: 36px 44px;
+  width: 480px; max-width: 100%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border: 1px solid var(--line);
+}
+.cardTitle { margin: 0 0 8px; font-size: 20px; font-weight: 700; text-align: center; color: var(--ink); }
+.cardSubtitle { margin: 0 0 28px; font-size: 14px; color: var(--ink-soft); text-align: center; line-height: 1.5; }
+.loginTitle { margin: 0 0 20px; font-size: 18px; font-weight: 700; text-align: center; color: var(--ink); }
+
+/* ── Champs ──────────────────────────────────────────────────────────────────── */
+.input {
+  display: block; width: 100%; height: 52px; border-radius: 10px;
+  border: 1.5px solid var(--line); background: var(--cream);
+  color: var(--ink); font-size: 16px; font-family: inherit;
+  padding: 0 14px; outline: none; box-sizing: border-box;
+}
+.fieldLabel   { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.fieldLabelMt { margin-top: 18px; }
+
+/* ── Bouton principal ────────────────────────────────────────────────────────── */
+.primaryBtn {
+  display: block; width: 100%; height: 56px; border-radius: 12px; border: none;
+  background: var(--club); color: white;
+  font-size: 17px; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: background 150ms;
+}
+.primaryBtn:hover:not(:disabled) { background: var(--club-deep); }
+.primaryBtn:disabled { background: var(--line); color: var(--ink-mute); cursor: default; }
+
+/* ── Messages ────────────────────────────────────────────────────────────────── */
+.inlineError  { margin-top: 6px;  font-size: 13px; font-weight: 600; color: var(--danger); }
+.inlineWarn   { margin-top: 6px;  font-size: 13px; font-weight: 600; color: var(--warn); }
+.centerError  { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--danger); text-align: center; }
+.centerErrorSm { margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--danger); text-align: center; }
+
+/* ── Sélection de compte ─────────────────────────────────────────────────────── */
+.accountList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.accountBtn {
+  appearance: none; width: 100%;
+  border: 1.5px solid var(--line); background: transparent;
+  border-radius: 12px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; font-family: inherit; text-align: left;
+  transition: border-color 120ms, background 120ms;
+}
+.accountBtnActive { border: 2px solid var(--club); background: var(--club-soft); }
+.accountBtnName   { font-size: 15px; font-weight: 600; color: var(--ink); }
+.accountBtnActive .accountBtnName { color: var(--club-deep); }
+.accountBtnRole   { font-size: 12px; color: var(--ink-mute); margin-top: 1px; }
+
+/* ── Bouton réinitialisation (bas de page) ───────────────────────────────────── */
+.resetBtn {
+  position: absolute; bottom: 28px;
+  appearance: none; border: none; background: transparent;
+  color: var(--ink-mute); font-size: 13px; cursor: pointer; font-family: inherit;
+}
+
+/* ── Modale confirmation réinitialisation ────────────────────────────────────── */
+.confirmOverlay {
+  position: absolute; inset: 0;
+  background: rgba(20,15,8,0.5);
+  display: grid; place-items: center; z-index: 10;
+}
+.confirmModal {
+  background: var(--paper); border-radius: 20px;
+  padding: 32px 36px; max-width: 360px; width: calc(100% - 32px);
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.confirmTitle { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.confirmBody  { font-size: 14px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 24px; }
+.confirmBtns  { display: flex; gap: 10px; }
+.btnCancel {
+  flex: 1; height: 48px; border-radius: 10px;
+  border: 1.5px solid var(--line); background: transparent;
+  cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink);
+}
+.btnDanger {
+  flex: 1; height: 48px; border-radius: 10px; border: none;
+  background: var(--danger); cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 700; color: white;
+}
+
+/* ── Modale changement de mot de passe ───────────────────────────────────────── */
+.modalOverlay {
+  position: fixed; inset: 0;
+  background: rgba(20,15,8,0.55);
+  display: grid; place-items: center; z-index: 300;
+  padding: 16px;
+}
+.changePwdModal {
+  background: var(--cream); border-radius: 24px;
+  padding: 36px 52px;
+  width: 420px; max-width: 100%;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+}
+.changePwdStepLabel {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+  color: var(--ink-mute); text-transform: uppercase;
+  margin-bottom: 16px; text-align: center;
+}
+.changePwdSteps   { display: flex; gap: 6px; margin-bottom: 28px; justify-content: center; }
+.changePwdStep    { width: 40px; height: 4px; border-radius: 2px; background: var(--line); transition: background 200ms; }
+.changePwdStepDone { background: var(--club); }
+
+.stepTitle    { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 6px; color: var(--ink); }
+.stepSubtitle { font-size: 14px; color: var(--ink-soft); text-align: center; margin-bottom: 24px; line-height: 1.5; }
+.cancelLink {
+  display: block; width: 100%; margin-top: 10px;
+  appearance: none; border: none; background: transparent;
+  color: var(--ink-soft); font-size: 15px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ── Gestionnaire de comptes (tiroir) ────────────────────────────────────────── */
+.drawerOverlay {
+  position: fixed; inset: 0;
+  background: rgba(20,15,8,0.45); z-index: 250;
+  display: flex; justify-content: flex-end;
+}
+.drawerPanel {
+  width: 480px; height: 100%;
+  background: var(--cream);
+  box-shadow: -20px 0 60px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column;
+  animation: slideRight 220ms cubic-bezier(.2,.8,.2,1);
+}
+.drawerHeader {
+  padding: 20px 24px; border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  display: flex; align-items: center; gap: 12px;
+}
+.drawerHeaderFlex  { flex: 1; }
+.drawerHeaderLabel { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 4px; }
+.drawerHeaderTitle { margin: 0; font-size: 20px; font-weight: 700; }
+.drawerIconBtn {
+  appearance: none; border: 1.5px solid var(--line); background: transparent;
+  width: 40px; height: 40px; border-radius: 10px;
+  display: grid; place-items: center;
+  cursor: pointer; color: var(--ink); flex-shrink: 0; font-size: 18px;
+}
+.drawerBody { flex: 1; overflow: auto; padding: 20px 24px 28px; }
+
+/* ── Liste de comptes (AccountManager) ───────────────────────────────────────── */
+.accountItemsList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.accountItem {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.accountItemInfo   { flex: 1; }
+.accountItemHeader { display: flex; align-items: center; gap: 8px; }
+.accountItemName   { font-size: 15px; font-weight: 600; color: var(--ink); }
+.accountItemYou    { font-size: 11px; background: var(--club-soft); color: var(--club-deep); padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+.accountItemRole   { font-size: 13px; color: var(--ink-mute); margin-top: 2px; }
+.accountItemDeleteBtn {
+  appearance: none; border: 1.5px solid var(--line); background: transparent;
+  width: 36px; height: 36px; border-radius: 8px;
+  display: grid; place-items: center;
+  cursor: pointer; color: var(--danger); font-size: 18px;
+}
+.addAccountBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 52px; border-radius: 12px;
+  border: 1.5px dashed var(--line); background: transparent;
+  color: var(--ink-soft); font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ── Sélecteur de rôle ───────────────────────────────────────────────────────── */
+.roleGroup { display: flex; gap: 8px; margin-bottom: 18px; }
+.roleBtn {
+  flex: 1; height: 44px; border-radius: 10px;
+  border: 1.5px solid var(--line); background: transparent;
+  color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: border-color 120ms, background 120ms;
+}
+.roleBtnActive { border: 2px solid var(--club); background: var(--club-soft); color: var(--club-deep); }
+
+/* ── Mobile (< 600px) ────────────────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  .brand      { margin-bottom: 24px; }
+  .brandEmoji { font-size: 40px; }
+  .brandName  { font-size: 20px; }
+
+  .card { padding: 24px 20px; border-radius: 18px; width: 100%; }
+
+  /* Modale changement de mot de passe */
+  .changePwdModal { padding: 28px 24px; border-radius: 18px; }
+
+  /* Tiroir gestionnaire de comptes : pleine largeur */
+  .drawerPanel { width: 100%; }
+}

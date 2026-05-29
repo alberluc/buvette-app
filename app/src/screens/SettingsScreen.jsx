@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppHeader, Icon } from '../components/UI';
 import { formatDate } from '../lib/storage';
 import { fmtEUR } from '../lib/data';
@@ -16,6 +16,7 @@ const PRESET_EMOJIS = ['🍺', '🍷', '🥤', '🍿', '☕', '🧃', '🥪', '�
 export function SettingsScreen({
   t, setTweak,
   licenseInfo,
+  clubName, onClubNameChange,
   cashFloat, onCashFloatChange,
   products, onProductsChange,
   opSuggestions, onOpSuggestionsChange,
@@ -83,6 +84,17 @@ export function SettingsScreen({
                     <div className={styles.infoCardSub}>
                       Licence {licenseInfo.plan === 'annual' ? 'annuelle' : 'mensuelle'} · expire le {formatDate(licenseInfo.licenseExpires)}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {isAdmin && (
+                <div className={styles.card}>
+                  <div className={styles.cardTitle}>Identité du club</div>
+                  <div className={styles.fieldLabel}>Nom du club</div>
+                  <ClubNameInput value={clubName ?? ''} onChange={onClubNameChange} />
+                  <div className={styles.hint}>
+                    Affiché dans la barre de statut de l'application.
                   </div>
                 </div>
               )}
@@ -211,6 +223,29 @@ function CashFloatInput({ value, onChange }) {
       />
       <span className={styles.cashFloatEuro}>€</span>
     </div>
+  );
+}
+
+function ClubNameInput({ value, onChange }) {
+  const [local, setLocal] = useState(value);
+  useEffect(() => { setLocal(value); }, [value]);
+
+  const handleSave = () => {
+    const trimmed = local.trim();
+    if (trimmed && trimmed !== value) onChange(trimmed);
+    else setLocal(value);
+  };
+
+  return (
+    <input
+      type="text"
+      value={local}
+      onChange={e => setLocal(e.target.value)}
+      onBlur={handleSave}
+      onKeyDown={e => { if (e.key === 'Enter') { handleSave(); e.target.blur(); } }}
+      placeholder="Ex : AS Bellecourt"
+      className={styles.clubNameInput}
+    />
   );
 }
 
