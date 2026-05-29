@@ -4,7 +4,7 @@ import { OperationModal } from '../components/OperationModal';
 import { fmtEUR, summarize } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
-export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, cashFloat, archived, onAddOperation, onRemoveOperation }) {
+export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, cashFloat, archived, onAddOperation, onRemoveOperation, opSuggestions }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const summary = useMemo(() => summarize(orders, products), [orders, products]);
@@ -215,6 +215,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
         <OperationModal
           onClose={() => setOperationOpen(false)}
           onValidate={onAddOperation}
+          suggestions={opSuggestions}
         />
       )}
     </div>

@@ -9,7 +9,7 @@
 .list {
   flex: 1;
   overflow: auto;
-  padding: 16px 24px 120px;
+  padding: 16px 24px 220px;
 }
 .orderListInner { display: flex; flex-direction: column; gap: 10px; }
 
@@ -22,6 +22,7 @@
 .orderRow {
   background: var(--paper);
   border: 1px solid var(--line-soft);
+  border-left-width: 4px;
   border-radius: 14px;
   padding: 16px 22px;
   display: grid;
@@ -60,21 +61,18 @@
 
 /* ── OperationRow ───────────────────────────────────────────────────────────── */
 .operationRow {
-  background: var(--cream);
+  background: var(--paper);
   border: 1px solid var(--line-soft);
-  border-left-width: 3px;
+  border-left-width: 4px;
   border-radius: 14px;
   padding: 16px 22px;
   display: grid;
-  grid-template-columns: 76px 1fr auto auto;
+  grid-template-columns: 76px 1fr auto auto auto;
   align-items: center;
   gap: 18px;
 }
-.operationLabel { font-size: 17px; font-weight: 600; color: var(--ink); }
-.operationKind  {
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 0.9px; text-transform: uppercase;
-  color: var(--ink-mute); margin-top: 3px;
+.operationLabel {
+  font-size: 17px; font-weight: 500; color: var(--ink);
 }
 .operationAmount {
   font-size: 22px; font-weight: 700;
@@ -82,6 +80,16 @@
   min-width: 80px; text-align: right;
   letter-spacing: -0.3px;
 }
+.opBadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; font-weight: 700;
+  padding: 5px 10px; font-size: 14px;
+}
+.opBadgePos { background: var(--ok-soft);     color: var(--ok); }
+.opBadgeNeg { background: var(--danger-soft); color: var(--danger); }
+.opDot      { width: 8px; height: 8px; border-radius: 999px; }
+.opDotPos   { background: var(--ok); }
+.opDotNeg   { background: var(--danger); }
 
 /* ── FAB ────────────────────────────────────────────────────────────────────── */
 .fab {

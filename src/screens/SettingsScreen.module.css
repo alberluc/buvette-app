@@ -112,6 +112,28 @@
 .iconBtnDanger   { color: var(--danger); }
 .iconBtnDisabled { color: var(--ink-mute); cursor: not-allowed; }
 
+/* ── Operation suggestions ───────────────────────────────────────────────────── */
+.suggestionGroup { display: flex; flex-direction: column; gap: 8px; }
+.suggestionGroupLabel { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+.suggestionDivider { height: 1px; background: var(--line-soft); margin: 14px 0; }
+.suggestionList { display: flex; flex-direction: column; gap: 6px; }
+.suggestionItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--cream); border: 1px solid var(--line-soft); border-radius: 10px;
+}
+.suggestionText { flex: 1; font-size: 15px; font-weight: 500; color: var(--ink); }
+.suggestionAdd { display: flex; gap: 8px; align-items: stretch; margin-top: 4px; }
+.suggestionInput {
+  flex: 1; height: 52px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 0 16px;
+  font-size: 15px; font-family: inherit; color: var(--ink); outline: none;
+  box-sizing: border-box; background: var(--paper);
+  transition: border-color 120ms;
+}
+.suggestionInput:focus { border-color: var(--club); }
+
 /* ── Install ─────────────────────────────────────────────────────────────────── */
 .installBtn {
   appearance: none; border: none;

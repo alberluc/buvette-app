@@ -76,6 +76,24 @@
 }
 .labelInput:focus { border-color: var(--club); }
 
+.chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 10px;
+}
+.chip {
+  appearance: none;
+  padding: 6px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: transparent;
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 100ms;
+}
+.chip:hover { border-color: var(--club); color: var(--club); background: var(--club-soft, color-mix(in srgb, var(--club) 10%, transparent)); }
+.chipActive { border-color: var(--club); color: var(--club); background: var(--club-soft, color-mix(in srgb, var(--club) 10%, transparent)); font-weight: 700; }
+
 .actions {
   padding: 16px 24px 20px;
   background: var(--paper);

@@ -3,7 +3,7 @@ import { Icon, BigButton } from './UI';
 import { fmtEUR } from '../lib/data';
 import styles from './OperationModal.module.css';
 
-export function OperationModal({ onClose, onValidate }) {
+export function OperationModal({ onClose, onValidate, suggestions = {} }) {
   const [type, setType] = useState('sortie');
   const [amount, setAmount] = useState('');
   const [label, setLabel] = useState('');
@@ -77,6 +77,20 @@ export function OperationModal({ onClose, onValidate }) {
               placeholder={type === 'sortie' ? 'Achat glaçons, petite caisse…' : 'Appoint monnaie, dépôt…'}
               className={styles.labelInput}
             />
+            {(suggestions[type] ?? []).length > 0 && (
+              <div className={styles.chips}>
+                {(suggestions[type] ?? []).map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setLabel(s)}
+                    className={`${styles.chip} ${label === s ? styles.chipActive : ''}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -90,7 +104,7 @@ export function OperationModal({ onClose, onValidate }) {
             onClick={handleValidate}
             style={{ flex: 1, fontSize: 20, height: 68 }}
           >
-            Enregistrer · {valid ? fmtEUR(amountNum) : '—'}
+            Enregistrer · {valid ? (type === 'sortie' ? '−' : '+') + fmtEUR(amountNum) : '—'}
           </BigButton>
         </div>
       </div>

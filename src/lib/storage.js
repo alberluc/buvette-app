@@ -119,12 +119,18 @@ export async function saveTweaks(tweaks) {
 
 const SETTINGS_KEY = 'settings';
 
+export const DEFAULT_OP_SUGGESTIONS = {
+  sortie: ['Achat glaçons', 'Petite caisse', 'Monnaie rendue'],
+  entree: ['Appoint monnaie', 'Dépôt espèces', 'Remboursement'],
+};
+
 export async function loadSettings() {
   try {
     const record = await db.state.get(SETTINGS_KEY);
-    return record?.data ?? { cashFloat: 0 };
+    const data = record?.data ?? {};
+    return { cashFloat: 0, ...data, opSuggestions: data.opSuggestions ?? DEFAULT_OP_SUGGESTIONS };
   } catch {
-    return { cashFloat: 0 };
+    return { cashFloat: 0, opSuggestions: DEFAULT_OP_SUGGESTIONS };
   }
 }
 

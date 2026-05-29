@@ -18,11 +18,13 @@ export function SettingsScreen({
   licenseInfo,
   cashFloat, onCashFloatChange,
   products, onProductsChange,
+  opSuggestions, onOpSuggestionsChange,
   currentUser, sessionToken,
   onManageAccounts,
 }) {
   const isAdmin = currentUser?.role === 'admin';
   const [editingProduct, setEditingProduct] = useState(null);
+  const [newSuggestion, setNewSuggestion] = useState({ sortie: '', entree: '' });
 
   const handleSaveProduct = updated => {
     const id = updated.id || (updated.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now());
@@ -93,6 +95,31 @@ export function SettingsScreen({
                   <div className={styles.hint}>
                     Montant d'espèces toujours présent en caisse avant le début des ventes. Utilisé pour le calcul du contrôle de caisse.
                   </div>
+                </div>
+              )}
+
+              {isAdmin && (
+                <div className={styles.card}>
+                  <div className={styles.cardTitle}>Libellés d'opération</div>
+                  <SuggestionGroup
+                    label="− Sorties"
+                    color="var(--danger)"
+                    items={(opSuggestions?.sortie) ?? []}
+                    newValue={newSuggestion.sortie ?? ''}
+                    onNewValueChange={v => setNewSuggestion(s => ({ ...s, sortie: v }))}
+                    onAdd={label => onOpSuggestionsChange({ ...opSuggestions, sortie: [...((opSuggestions?.sortie) ?? []), label] })}
+                    onRemove={i => onOpSuggestionsChange({ ...opSuggestions, sortie: ((opSuggestions?.sortie) ?? []).filter((_, j) => j !== i) })}
+                  />
+                  <div className={styles.suggestionDivider} />
+                  <SuggestionGroup
+                    label="+ Entrées"
+                    color="var(--ok)"
+                    items={(opSuggestions?.entree) ?? []}
+                    newValue={newSuggestion.entree ?? ''}
+                    onNewValueChange={v => setNewSuggestion(s => ({ ...s, entree: v }))}
+                    onAdd={label => onOpSuggestionsChange({ ...opSuggestions, entree: [...((opSuggestions?.entree) ?? []), label] })}
+                    onRemove={i => onOpSuggestionsChange({ ...opSuggestions, entree: ((opSuggestions?.entree) ?? []).filter((_, j) => j !== i) })}
+                  />
                 </div>
               )}
 
@@ -204,6 +231,40 @@ function TrashSvg() {
       <path d="M10 11v6M14 11v6" />
       <path d="M9 6V4h6v2" />
     </svg>
+  );
+}
+
+function SuggestionGroup({ label, color, items, newValue, onNewValueChange, onAdd, onRemove }) {
+  const handleAdd = () => {
+    if (newValue.trim()) { onAdd(newValue.trim()); onNewValueChange(''); }
+  };
+  return (
+    <div className={styles.suggestionGroup}>
+      <div className={styles.suggestionGroupLabel} style={{ color }}>{label}</div>
+      <div className={styles.suggestionList}>
+        {items.map((s, i) => (
+          <div key={i} className={styles.suggestionItem}>
+            <span className={styles.suggestionText}>{s}</span>
+            <button onClick={() => onRemove(i)} className={`${styles.iconBtn} ${styles.iconBtnDanger}`} aria-label="Supprimer">
+              <TrashSvg />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className={styles.suggestionAdd}>
+        <input
+          type="text"
+          value={newValue}
+          onChange={e => onNewValueChange(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+          placeholder="Nouveau libellé…"
+          className={styles.suggestionInput}
+        />
+        <button onClick={handleAdd} className={styles.btn} style={{ whiteSpace: 'nowrap', width: 'auto', paddingInline: 20 }}>
+          + Ajouter
+        </button>
+      </div>
+    </div>
   );
 }
 

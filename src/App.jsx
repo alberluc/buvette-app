@@ -8,7 +8,7 @@ import { OrdersScreen } from './screens/OrdersScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts, loadSettings, saveSettings, loadTweaks, saveTweaks } from './lib/storage';
+import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts, loadSettings, saveSettings, loadTweaks, saveTweaks, DEFAULT_OP_SUGGESTIONS } from './lib/storage';
 import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushOperation, deleteOperation } from './lib/api';
 import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
@@ -36,6 +36,7 @@ export default function App() {
   const [autoCloseNotice, setAutoCloseNotice] = useState(null);
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
   const [cashFloat, setCashFloat] = useState(0);
+  const [opSuggestions, setOpSuggestions] = useState({ ...DEFAULT_OP_SUGGESTIONS });
 
   // ── Licence ───────────────────────────────────────────────────────────────
   const [licenseStatus, setLicenseStatus] = useState('checking');
@@ -64,6 +65,7 @@ export default function App() {
         loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(), loadProducts(), loadSettings(), loadTweaks(),
       ]);
       setCashFloat(savedSettings.cashFloat ?? 0);
+      setOpSuggestions(savedSettings.opSuggestions ?? DEFAULT_OP_SUGGESTIONS);
       if (savedTweaks) setTweak(savedTweaks);
 
       const resolvedProducts = savedProducts || DEFAULT_PRODUCTS;
@@ -245,8 +247,14 @@ export default function App() {
 
   const updateCashFloat = val => {
     setCashFloat(val);
-    saveSettings({ cashFloat: val });
-    if (sessionToken) pushSettings(sessionToken, { cashFloat: val }).catch(() => {});
+    saveSettings({ cashFloat: val, opSuggestions });
+    if (sessionToken) pushSettings(sessionToken, { cashFloat: val, opSuggestions }).catch(() => {});
+  };
+
+  const updateOpSuggestions = val => {
+    setOpSuggestions(val);
+    saveSettings({ cashFloat, opSuggestions: val });
+    if (sessionToken) pushSettings(sessionToken, { cashFloat, opSuggestions: val }).catch(() => {});
   };
 
   const updateProducts = async newProducts => {
@@ -364,14 +372,15 @@ export default function App() {
       {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
-        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
-        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} />}
+        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
+        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
         {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
         {tab === 'settings' && <SettingsScreen
           t={t} setTweak={setTweak}
           licenseInfo={licenseInfo}
           cashFloat={cashFloat} onCashFloatChange={updateCashFloat}
           products={products} onProductsChange={updateProducts}
+          opSuggestions={opSuggestions} onOpSuggestionsChange={updateOpSuggestions}
           currentUser={currentUser} sessionToken={sessionToken}
           onManageAccounts={() => setShowAccountManager(true)}
         />}

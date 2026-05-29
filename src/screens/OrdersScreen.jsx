@@ -4,7 +4,7 @@ import { OperationModal } from '../components/OperationModal';
 import { fmtEUR } from '../lib/data';
 import styles from './OrdersScreen.module.css';
 
-export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation }) {
+export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation, opSuggestions }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
@@ -101,6 +101,7 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
         <OperationModal
           onClose={() => setOperationOpen(false)}
           onValidate={onAddOperation}
+          suggestions={opSuggestions}
         />
       )}
 
@@ -127,17 +128,12 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
 function OperationRow({ operation, dayClosed, onRemove }) {
   const isPos = operation.amount >= 0;
   return (
-    <div
-      className={styles.operationRow}
-      style={{ borderLeftColor: isPos ? 'var(--ok)' : 'var(--danger)' }}
-    >
+    <div className={styles.operationRow} style={{ borderLeftColor: isPos ? 'var(--ok)' : 'var(--danger)' }}>
       <div className={styles.orderTime}>{operation.time}</div>
-      <div>
-        <div className={styles.operationLabel}>{operation.label}</div>
-        <div className={styles.operationKind}>{isPos ? 'Entrée caisse' : 'Sortie caisse'}</div>
-      </div>
+      <div className={styles.operationLabel}>{operation.label}</div>
+      <OpBadge isPos={isPos} />
       <div className={styles.operationAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
-        {isPos ? '+' : ''}{fmtEUR(operation.amount)}
+        {isPos ? '+' : '−'}{fmtEUR(Math.abs(operation.amount))}
       </div>
       {!dayClosed ? (
         <button
@@ -154,11 +150,20 @@ function OperationRow({ operation, dayClosed, onRemove }) {
   );
 }
 
+function OpBadge({ isPos }) {
+  return (
+    <span className={`${styles.opBadge} ${isPos ? styles.opBadgePos : styles.opBadgeNeg}`}>
+      <span className={`${styles.opDot} ${isPos ? styles.opDotPos : styles.opDotNeg}`} />
+      {isPos ? 'Entrée' : 'Sortie'}
+    </span>
+  );
+}
+
 function OrderRow({ order, orderIndex, dayClosed, onRemove, products }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <>
-      <div className={styles.orderRow}>
+      <div className={styles.orderRow} style={{ borderLeftColor: order.payment === 'especes' ? 'var(--amber)' : 'var(--blue)' }}>
         <div className={styles.orderTime}>{order.time}</div>
         <div className={styles.orderItems}>
           {order.items.map(([pid, q]) => {
