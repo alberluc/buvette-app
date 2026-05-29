@@ -127,25 +127,55 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
 
 function OperationRow({ operation, dayClosed, onRemove }) {
   const isPos = operation.amount >= 0;
+  const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <div className={styles.operationRow} style={{ borderLeftColor: isPos ? 'var(--ok)' : 'var(--danger)' }}>
-      <div className={styles.orderTime}>{operation.time}</div>
-      <div className={styles.operationLabel}>{operation.label}</div>
-      <OpBadge isPos={isPos} />
-      <div className={styles.operationAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
-        {isPos ? '+' : '−'}{fmtEUR(Math.abs(operation.amount))}
+    <>
+      <div className={styles.operationRow} style={{ borderLeftColor: isPos ? 'var(--ok)' : 'var(--danger)' }}>
+        <div className={styles.orderTime}>{operation.time}</div>
+        <div className={styles.operationLabel}>{operation.label}</div>
+        <OpBadge isPos={isPos} />
+        <div className={styles.operationAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
+          {isPos ? '+' : '−'}{fmtEUR(Math.abs(operation.amount))}
+        </div>
+        {!dayClosed ? (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            aria-label="Supprimer l'opération"
+            className={styles.deleteBtn}
+          >
+            <Icon.Trash size={20} />
+          </button>
+        ) : (
+          <div className={styles.deletePlaceholder} />
+        )}
       </div>
-      {!dayClosed ? (
-        <button
-          onClick={() => onRemove(operation.id)}
-          aria-label="Supprimer l'opération"
-          className={styles.deleteBtn}
-        >
-          <Icon.Trash size={20} />
-        </button>
-      ) : (
-        <div className={styles.deletePlaceholder} />
+
+      {confirmDelete && (
+        <DeleteOperationModal
+          operation={operation}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() => { setConfirmDelete(false); onRemove(operation.id); }}
+        />
       )}
+    </>
+  );
+}
+
+function DeleteOperationModal({ operation, onCancel, onConfirm }) {
+  const isPos = operation.amount >= 0;
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <div className={styles.modalTitle}>Supprimer cette opération ?</div>
+        <div className={styles.modalSub}>{operation.time} · {operation.label}</div>
+        <div className={styles.modalAmount} style={{ color: isPos ? 'var(--ok)' : 'var(--danger)' }}>
+          {isPos ? '+' : '−'}{fmtEUR(Math.abs(operation.amount))}
+        </div>
+        <div className={styles.modalActions}>
+          <button onClick={onCancel} className={styles.btnCancel}>Annuler</button>
+          <button onClick={onConfirm} className={styles.btnDanger}>Supprimer</button>
+        </div>
+      </div>
     </div>
   );
 }
