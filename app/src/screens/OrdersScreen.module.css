@@ -319,27 +319,28 @@
 @media (max-width: 599px) {
   .list { padding: 10px 10px 160px; }
 
-  /* OrderRow + OperationRow : layout 2 lignes via grid-areas */
+  /* OrderRow + OperationRow : heure+badge+total+del en ligne 1, produits pleine largeur en ligne 2 */
   .orderRow,
   .operationRow {
-    grid-template-columns: 48px 1fr auto;
+    grid-template-columns: auto auto 1fr auto auto;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "time content amount"
-      "time badge   del   ";
+      "time badge . amount del"
+      "content content content content content";
     gap: 4px 8px;
-    padding: 10px 12px;
+    padding: 12px 14px;
   }
-  .orderTime        { grid-area: time;    font-size: 14px; align-self: center; }
+  .orderTime        { grid-area: time;    font-size: 13px; align-self: center; color: var(--ink-mute); }
   .orderItems       { grid-area: content; }
   .orderItem        { font-size: 15px; }
-  .orderTotal       { grid-area: amount;  font-size: 16px; min-width: unset; align-self: start; }
+  .orderTotal       { grid-area: amount;  font-size: 17px; min-width: unset; align-self: center; }
   .operationLabel   { grid-area: content; font-size: 15px; }
-  .operationAmount  { grid-area: amount;  font-size: 16px; min-width: unset; align-self: start; }
+  .operationAmount  { grid-area: amount;  font-size: 17px; min-width: unset; align-self: center; }
   /* 3ème enfant = badge (PayBadge ou OpBadge) */
   .orderRow > :nth-child(3),
-  .operationRow > :nth-child(3) { grid-area: badge; align-self: center; }
-  .deleteBtn, .deletePlaceholder { grid-area: del; }
+  .operationRow > :nth-child(3) { grid-area: badge; align-self: center; justify-self: start; }
+  .deleteBtn, .deletePlaceholder { grid-area: del; align-self: center; justify-self: end; width: 32px; height: 32px; border-radius: 8px; }
+
 
   /* Modal suppression */
   .modal { min-width: unset; width: calc(100vw - 32px); padding: 24px 20px; }
