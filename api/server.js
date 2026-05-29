@@ -30,6 +30,8 @@ app.use((req, res, next) => {
   next()
 })
 
+app.get('/', (req, res) => res.json({ ok: true, service: 'buvette-api' }))
+
 app.use('/', licensesRouter)
 app.use('/', authRouter)
 app.use('/', accountsRouter)

@@ -2,6 +2,8 @@ services:
   app:
     build:
       context: ./app
+      args:
+        VITE_API_URL: https://api.petanquedutelegraphe.fr
     restart: unless-stopped
     ports:
       - "8080:80"
