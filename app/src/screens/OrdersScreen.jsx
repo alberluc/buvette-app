@@ -278,7 +278,7 @@ function NewOrderModal({ products, onClose, onValidate }) {
           <div>
             <div className={styles.paymentLabel}>Mode de paiement</div>
             <div className={styles.paymentOptions}>
-              <PaymentChoice value="especes" current={payment} onSelect={setPayment} label="Espèces" hint="(par défaut)" />
+              <PaymentChoice value="especes" current={payment} onSelect={setPayment} label="Espèces" />
               <PaymentChoice value="carte"   current={payment} onSelect={setPayment} label="Carte" />
             </div>
           </div>

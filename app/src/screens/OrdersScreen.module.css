@@ -361,16 +361,34 @@
   .clearAllBtn { padding: 0 12px; height: 38px; font-size: 14px; }
   .closeBtn { width: 42px; height: 42px; }
 
+  /* Products grid — colonnes réellement compressibles */
   .productsGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 12px 14px;
   }
-  .productEmoji { width: 40px; height: 40px; font-size: 20px; }
-  .productName  { font-size: 16px; }
+  /* Product card — layout colonne sur mobile pour éviter l'overflow horizontal */
+  .productCard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: 10px;
+    gap: 4px;
+    position: relative;
+  }
+  .productEmoji { width: 36px; height: 36px; font-size: 18px; }
+  .productName  { font-size: 14px; }
+  .productPrice { font-size: 11px; }
+  .qtyBadge {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 13px; padding: 0 8px; height: 26px;
+  }
 
   /* Footer : une ligne [paiement | compteur] — le total est déjà dans le bouton Valider */
   .modalFooter {
+    display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -391,8 +409,9 @@
     padding: 10px 14px 16px;
     gap: 8px;
   }
-  /* Force les boutons à pleine largeur sur mobile (override inline styles) */
-  .modalActions2 > * { width: 100% !important; min-width: 0 !important; }
+  /* Force les boutons à pleine largeur + taille lisible sur mobile (override inline styles) */
+  .modalActions2 > * { width: 100% !important; min-width: 0 !important; flex: none !important; font-size: 18px !important; height: 70px !important; }
+  .modalActions2 > *:first-child { font-size: 15px !important; height: 52px !important; }
 
   /* FAB — plus petit + safe area */
   .fab {
