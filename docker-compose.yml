@@ -1,8 +1,7 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: docker/Dockerfile
+      context: ./app
     restart: unless-stopped
     ports:
       - "8080:80"
