@@ -3,6 +3,7 @@ import { AppHeader, Icon } from '../components/UI';
 import { formatDate } from '../lib/storage';
 import { fmtEUR } from '../lib/data';
 import { ACCENT_SWATCHES } from '../lib/theme';
+import { sendTestReport } from '../lib/api';
 import styles from './SettingsScreen.module.css';
 
 const PRESET_COLORS = [
@@ -26,6 +27,19 @@ export function SettingsScreen({
   const isAdmin = currentUser?.role === 'admin';
   const [editingProduct, setEditingProduct] = useState(null);
   const [newSuggestion, setNewSuggestion] = useState({ sortie: '', entree: '' });
+  const [testReportStatus, setTestReportStatus] = useState(null); // null | 'loading' | 'sent' | 'error'
+
+  const handleSendTestReport = async () => {
+    setTestReportStatus('loading');
+    try {
+      await sendTestReport(sessionToken);
+      setTestReportStatus('sent');
+      setTimeout(() => setTestReportStatus(null), 4000);
+    } catch {
+      setTestReportStatus('error');
+      setTimeout(() => setTestReportStatus(null), 4000);
+    }
+  };
 
   const handleSaveProduct = updated => {
     const id = updated.id || (updated.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now());
@@ -176,6 +190,22 @@ export function SettingsScreen({
                   <div className={styles.cardTitle}>Équipe</div>
                   <button onClick={onManageAccounts} className={styles.btn}>
                     👥 Gérer les comptes
+                  </button>
+                </div>
+
+                <div className={styles.card}>
+                  <div className={styles.cardTitle}>Test &amp; développement</div>
+                  <div className={styles.hint} style={{ marginBottom: 12 }}>
+                    Génère un bilan mensuel avec des données fictives et l'envoie à l'adresse email de la licence.
+                  </div>
+                  <button
+                    onClick={handleSendTestReport}
+                    disabled={testReportStatus === 'loading'}
+                    className={styles.btn}>
+                    {testReportStatus === 'loading' && '⏳ Génération en cours…'}
+                    {testReportStatus === 'sent'    && '✓ Email envoyé !'}
+                    {testReportStatus === 'error'   && '✗ Erreur — voir les logs'}
+                    {testReportStatus === null      && '📧 Envoyer un bilan de test'}
                   </button>
                 </div>
 

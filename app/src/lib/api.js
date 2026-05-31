@@ -226,3 +226,13 @@ export async function updateDay(sessionToken, dayKey, patch) {
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')
   return data
 }
+
+export async function sendTestReport(sessionToken) {
+  const res = await fetch(`${API_URL}/report/test`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}

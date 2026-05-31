@@ -22,9 +22,22 @@ services:
       - DB_NAME=buvette
       - DB_USER=buvette
       - DB_PASS=${DB_PASS}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - REPORT_FROM=${REPORT_FROM:-}
     depends_on:
       db:
         condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    profiles: [dev]
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
   db:
     image: postgres:16-alpine
@@ -46,3 +59,7 @@ services:
 
 volumes:
   db_data:
+
+networks:
+  default:
+    driver: bridge

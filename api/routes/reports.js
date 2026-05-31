@@ -1,0 +1,131 @@
+import { Router } from 'express'
+import { db } from '../db.js'
+import { requireSession } from '../middleware/auth.js'
+import { generatePdf, monthLabel } from '../lib/reportPdf.js'
+import { sendReport } from '../lib/mailer.js'
+
+const router = Router()
+
+router.post('/report/test', requireSession, async (req, res) => {
+  if (req.session.role !== 'admin')
+    return res.status(403).json({ error: 'Réservé aux administrateurs.' })
+
+  const { licenseKey } = req.session
+  const license = await db('licenses').where({ key: licenseKey }).first()
+  if (!license?.email)
+    return res.status(400).json({ error: 'Aucun email configuré sur cette licence.' })
+
+  const now = new Date()
+  const month = now.getMonth() === 0 ? 12 : now.getMonth()
+  const year  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const label = monthLabel(year, month)
+
+  const data = buildMockData(license, year, month)
+
+  try {
+    const pdf = await generatePdf(data)
+    await sendReport({
+      to: license.email,
+      clubName: license.club_name,
+      monthLabel: label,
+      html: `
+        <p>Bonjour,</p>
+        <p>Voici un <strong>bilan de test</strong> pour <strong>${label}</strong> — les données sont fictives.</p>
+        <ul>
+          <li>Journées : <strong>${data.days.length}</strong></li>
+          <li>Commandes : <strong>${data.grandOrderCount}</strong></li>
+          <li>Total : <strong>${data.grandTotal.toFixed(2).replace('.', ',')} €</strong></li>
+        </ul>
+        <p style="color:#888;font-size:12px">Buvette Club · email de test automatique</p>`,
+      pdfBuffer: pdf,
+    })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[report/test]', err)
+    res.status(500).json({ error: 'Erreur lors de la génération ou de l\'envoi.' })
+  }
+})
+
+function rng(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function eur(n) {
+  return (Math.round(n * 100) / 100).toFixed(2).replace('.', ',') + ' €'
+}
+
+function buildMockData(license, year, month) {
+  const products = license.products || [
+    { id: 'biere', name: 'Bière',      price: 2 },
+    { id: 'vin',   name: 'Vin',        price: 1 },
+    { id: 'soda',  name: 'Soda / Eau', price: 1 },
+    { id: 'box',   name: 'Box',        price: 1 },
+  ]
+
+  const MONTH_DAYS = new Date(year, month, 0).getDate()
+  const WEEKENDS = []
+  for (let d = 1; d <= MONTH_DAYS; d++) {
+    const dow = new Date(year, month - 1, d).getDay()
+    if ((dow === 6 || dow === 0) && Math.random() < 0.6) WEEKENDS.push(d)
+    else if (dow === 5 && Math.random() < 0.25) WEEKENDS.push(d)
+  }
+
+  const EVENT_LABELS = ['Tournoi', 'Finale', 'Concours amical', 'Fête du club', '']
+  const grandProducts = {}
+  for (const p of products) grandProducts[p.id] = { name: p.name, qty: 0, total: 0 }
+
+  const days = WEEKENDS.map(d => {
+    const date = new Date(year, month - 1, d)
+    const dayKey = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const displayDate = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    const orderCount = rng(15, 65)
+    const productMap = {}
+    for (const p of products) productMap[p.id] = { name: p.name, qty: 0, total: 0 }
+
+    let dayTotal = 0
+    let especes = 0
+    let carte = 0
+
+    for (let i = 0; i < orderCount; i++) {
+      const p = products[rng(0, products.length - 1)]
+      const qty = rng(1, 3)
+      productMap[p.id].qty   += qty
+      productMap[p.id].total += p.price * qty
+      const t = p.price * qty
+      dayTotal += t
+      if (Math.random() < 0.7) especes += t
+      else carte += t
+    }
+
+    for (const p of products) {
+      grandProducts[p.id].qty   += productMap[p.id].qty
+      grandProducts[p.id].total += productMap[p.id].total
+    }
+
+    return {
+      dayKey,
+      date: displayDate,
+      label: Math.random() < 0.3 ? EVENT_LABELS[rng(0, EVENT_LABELS.length - 1)] : '',
+      orderCount,
+      dayTotal,
+      especes,
+      carte,
+      products: productMap,
+    }
+  })
+
+  const grandTotal       = days.reduce((s, d) => s + d.dayTotal, 0)
+  const grandEspeces     = days.reduce((s, d) => s + d.especes, 0)
+  const grandCarte       = days.reduce((s, d) => s + d.carte, 0)
+  const grandOrderCount  = days.reduce((s, d) => s + d.orderCount, 0)
+
+  return {
+    licenseKey: license.key,
+    clubName: license.club_name,
+    email: license.email,
+    year, month, products, days,
+    grandTotal, grandEspeces, grandCarte, grandOrderCount, grandProducts,
+  }
+}
+
+export default router

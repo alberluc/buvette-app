@@ -38,7 +38,13 @@ function weightedPick(products) {
   return products[0]
 }
 
-function generateOrder(products, index) {
+function randomTime(startHour = 10, endHour = 22) {
+  const h = rng(startHour, endHour - 1)
+  const m = rng(0, 59)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+function generateOrder(products, index, timeOpts = {}) {
   const numProducts = rng(1, Math.min(3, products.length))
   const selected = new Map()
 
@@ -55,6 +61,7 @@ function generateOrder(products, index) {
 
   return {
     id: `demo-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+    time: randomTime(timeOpts.startHour ?? 10, timeOpts.endHour ?? 22),
     items,
     payment: Math.random() < 0.7 ? 'especes' : 'carte',
     total,
@@ -82,6 +89,42 @@ function generateDemoDay(licenseKey, date, products) {
   }
 }
 
+function generateCurrentDay(licenseKey, products) {
+  const now = new Date()
+  const dayKey = toDayKey(now)
+  const currentHour = now.getHours()
+  const startHour = Math.max(9, currentHour - 3)
+  const endHour = Math.max(startHour + 1, currentHour)
+  const orderCount = rng(8, 22)
+  const orders = Array.from({ length: orderCount }, (_, i) => generateOrder(products, i, { startHour, endHour }))
+
+  const mouvements = [
+    {
+      id: `demo-op-1`,
+      time: '09:00',
+      label: 'Fond de caisse',
+      amount: 100,
+    },
+    {
+      id: `demo-op-2`,
+      time: '11:30',
+      label: 'Achat glace',
+      amount: -rng(10, 25),
+    },
+  ]
+
+  return {
+    license_key: licenseKey,
+    day_key: dayKey,
+    date: formatDate(dayKey),
+    label: '',
+    orders: JSON.stringify(orders),
+    mouvements: JSON.stringify(mouvements),
+    day_closed: false,
+    auto_closed: false,
+  }
+}
+
 export async function seedDemoData(licenseKey, products = DEFAULT_PRODUCTS) {
   const now = new Date()
   const rows = []
@@ -104,6 +147,8 @@ export async function seedDemoData(licenseKey, products = DEFAULT_PRODUCTS) {
   }
 
   if (rows.length > 0) await db('days').insert(rows)
+
+  await db('days').insert(generateCurrentDay(licenseKey, products))
 
   return rows.length
 }

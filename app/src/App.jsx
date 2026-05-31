@@ -318,6 +318,17 @@ export default function App() {
     refreshCachedAccounts();
   };
 
+  const handleLeaveLicense = async () => {
+    await saveLicense(null);
+    await deleteSession();
+    setSessionToken(null);
+    setCurrentUser(null);
+    setCachedAccounts([]);
+    setLicenseToken(null);
+    setLicenseInfo(null);
+    setLicenseStatus('missing');
+  };
+
   // ── PWA install ───────────────────────────────────────────────────────────
   const [installable, setInstallable] = useState(!!window.__pwaInstallEvent);
   const [installed, setInstalled] = useState(false);
@@ -362,8 +373,10 @@ export default function App() {
       <LoginScreen
         accounts={cachedAccounts}
         licenseToken={licenseToken}
+        clubName={licenseInfo?.club}
         onLoginSuccess={handleLoginSuccess}
         onResetData={handleReset}
+        onLeaveLicense={handleLeaveLicense}
       />
     );
   }

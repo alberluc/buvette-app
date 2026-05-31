@@ -58,7 +58,7 @@ function ResetConfirmModal({ onCancel, onConfirm }) {
 }
 
 // ── Configuration initiale ─────────────────────────────────────────────────────
-function SetupScreen({ licenseToken, onSuccess }) {
+function SetupScreen({ licenseToken, onSuccess, onLeaveLicense, clubName }) {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -104,12 +104,19 @@ function SetupScreen({ licenseToken, onSuccess }) {
           {loading ? 'Création…' : 'Créer le compte'}
         </button>
       </div>
+      {onLeaveLicense && (
+        <div className={styles.bottomLinks}>
+          <button onClick={onLeaveLicense} className={styles.leaveBtn}>
+            Changer de licence{clubName ? ` · ${clubName}` : ''}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Écran de connexion ─────────────────────────────────────────────────────────
-export function LoginScreen({ accounts, licenseToken, onLoginSuccess, onResetData }) {
+export function LoginScreen({ accounts, licenseToken, clubName, onLoginSuccess, onResetData, onLeaveLicense }) {
   const [selected, setSelected] = useState(accounts.length === 1 ? accounts[0] : null)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -122,7 +129,7 @@ export function LoginScreen({ accounts, licenseToken, onLoginSuccess, onResetDat
   }, [selected?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (accounts.length === 0) {
-    return <SetupScreen licenseToken={licenseToken} onSuccess={onLoginSuccess} />
+    return <SetupScreen licenseToken={licenseToken} onSuccess={onLoginSuccess} onLeaveLicense={onLeaveLicense} clubName={clubName} />
   }
 
   const handleSelect = (acc) => { setSelected(acc); setPassword(''); setError('') }
@@ -186,9 +193,16 @@ export function LoginScreen({ accounts, licenseToken, onLoginSuccess, onResetDat
         )}
       </div>
 
-      <button onClick={() => setShowReset(true)} className={styles.resetBtn}>
-        Réinitialiser les données locales
-      </button>
+      <div className={styles.bottomLinks}>
+        {onLeaveLicense && (
+          <button onClick={onLeaveLicense} className={styles.leaveBtn}>
+            Changer de licence{clubName ? ` · ${clubName}` : ''}
+          </button>
+        )}
+        <button onClick={() => setShowReset(true)} className={styles.resetBtn}>
+          Réinitialiser les données locales
+        </button>
+      </div>
 
       {showReset && <ResetConfirmModal onCancel={() => setShowReset(false)} onConfirm={onResetData} />}
     </div>
