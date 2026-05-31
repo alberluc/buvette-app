@@ -7,6 +7,7 @@ import productsRouter from './routes/products.js'
 import settingsRouter from './routes/settings.js'
 import adminRouter from './routes/admin.js'
 import { startMonthlyReportJob } from './jobs/monthlyReport.js'
+import demoRouter from './routes/demo.js'
 
 if (!process.env.JWT_SECRET || !process.env.ADMIN_SECRET) {
   console.error('JWT_SECRET et ADMIN_SECRET sont requis')
@@ -40,6 +41,7 @@ app.use('/', daysRouter)
 app.use('/', productsRouter)
 app.use('/', settingsRouter)
 app.use('/admin', adminRouter)
+app.use('/', demoRouter)
 
 app.listen(3000, () => {
   console.log('API buvette démarrée sur :3000')
