@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { randomUUID } from 'crypto'
 import { db } from '../db.js'
 import { requireLicenseToken, requireSession } from '../middleware/auth.js'
+import { loginLimiter } from '../middleware/rateLimiter.js'
 import { hashPassword, generateSalt } from '../lib/crypto.js'
 import { makeSessionToken } from '../lib/tokens.js'
 
@@ -25,7 +26,7 @@ router.post('/auth/setup', requireLicenseToken, async (req, res) => {
   }
 })
 
-router.post('/auth/login', requireLicenseToken, async (req, res) => {
+router.post('/auth/login', loginLimiter, requireLicenseToken, async (req, res) => {
   const { accountId, password } = req.body
   if (!accountId || !password) return res.status(400).json({ error: 'Données manquantes' })
   try {
@@ -39,7 +40,7 @@ router.post('/auth/login', requireLicenseToken, async (req, res) => {
   }
 })
 
-router.post('/auth/verify', requireSession, async (req, res) => {
+router.post('/auth/verify', loginLimiter, requireSession, async (req, res) => {
   const { password } = req.body
   if (!password) return res.status(400).json({ error: 'Mot de passe requis' })
   try {

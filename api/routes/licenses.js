@@ -2,10 +2,11 @@ import { Router } from 'express'
 import jwt from 'jsonwebtoken'
 import { db } from '../db.js'
 import { makeLicenseToken, checkLicense } from '../lib/tokens.js'
+import { activateLimiter } from '../middleware/rateLimiter.js'
 
 const router = Router()
 
-router.post('/activate', async (req, res) => {
+router.post('/activate', activateLimiter, async (req, res) => {
   const { key } = req.body
   if (!key || typeof key !== 'string') return res.status(400).json({ error: 'Clé manquante' })
   try {

@@ -37,9 +37,18 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.2px;
 }
-.orderItems    { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.orderItems    { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
 .orderItem     { font-size: 17px; color: var(--ink); font-weight: 500; display: inline-flex; align-items: baseline; gap: 6px; }
 .orderItemQty  { font-weight: 800; color: var(--club); font-variant-numeric: tabular-nums; }
+.orderBy {
+  font-size: 12px;
+  color: var(--ink-mute);
+  font-weight: 500;
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  white-space: nowrap;
+}
 .orderTotal    { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; letter-spacing: -0.3px; }
 .deletePlaceholder { width: 44px; }
 .deleteBtn {
@@ -303,6 +312,7 @@
 
 /* ── Header right (stat) ────────────────────────────────────────────────────── */
 .headerRight   { text-align: right; }
+.headerStats   { display: flex; gap: 28px; align-items: flex-start; justify-content: flex-end; }
 .headerStatLabel {
   font-size: 12px; font-weight: 700;
   letter-spacing: 1.4px; color: var(--ink-mute);
@@ -313,7 +323,113 @@
   color: var(--club); letter-spacing: -0.6px;
   font-variant-numeric: tabular-nums;
 }
+.headerCash    { text-align: right; padding-left: 28px; border-left: 1px solid var(--line); }
+.headerCashValue {
+  font-size: 28px; font-weight: 800;
+  color: var(--amber); letter-spacing: -0.4px;
+  font-variant-numeric: tabular-nums;
+}
 .headerStatSub { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+
+/* ── List quick-mode (padding réduit, pas de FABs) ──────────────────────────── */
+.listQuick { padding-bottom: 16px; }
+
+/* ── FAB toggle (mode rapide / standard) ────────────────────────────────────── */
+.fabToggle {
+  position: absolute;
+  left: 28px; bottom: 28px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+.fabToggle:hover   { background: var(--cream-deep); color: var(--ink); }
+.fabToggleActive   { background: var(--club); color: white; border-color: var(--club); box-shadow: 0 6px 18px rgba(31,111,63,0.35); }
+.fabToggleActive:hover { background: var(--club-deep); }
+
+/* ── QuickOrderPanel ─────────────────────────────────────────────────────────── */
+.quickPanel {
+  flex-shrink: 0;
+  border-top: 2px solid var(--line);
+  background: var(--paper);
+  padding: 12px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.quickProducts {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.quickProdBtn {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--cream);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: border-color 80ms, background 80ms;
+  user-select: none;
+}
+.quickProdBtn:hover  { background: var(--cream-deep); }
+.quickProdBtn:active { transform: scale(0.97); }
+.quickProdBtnActive  { /* border/bg set inline (couleur produit) */ }
+.quickProdEmoji { font-size: 22px; }
+.quickProdName  { font-size: 16px; font-weight: 700; color: var(--ink); }
+.quickProdPrice { font-size: 13px; color: var(--ink-mute); font-weight: 500; }
+.quickProdBadge {
+  position: absolute;
+  top: -9px; right: -9px;
+  min-width: 26px; height: 26px;
+  border-radius: 999px;
+  color: white;
+  font-family: inherit; font-weight: 800; font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 6px;
+  cursor: pointer;
+  border: 2px solid var(--paper);
+  transition: filter 80ms;
+}
+.quickProdBadge:hover { filter: brightness(0.85); }
+.quickOpsBtn {
+  appearance: none;
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--cream);
+  color: var(--ink-soft);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+  margin-left: 8px;
+}
+.quickOpsBtn:hover { background: var(--cream-deep); color: var(--ink); }
+.quickFooter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.quickPayment { display: flex; gap: 8px; flex-shrink: 0; }
+.quickTotal   { flex: 1; text-align: center; }
+.quickTotalAmt {
+  font-size: 30px; font-weight: 800;
+  color: var(--club); letter-spacing: -0.4px;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {

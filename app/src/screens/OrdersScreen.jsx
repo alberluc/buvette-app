@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
 import { OperationModal } from '../components/OperationModal';
-import { fmtEUR } from '../lib/data';
+import { fmtEUR, estimatedCash, summarize } from '../lib/data';
 import styles from './OrdersScreen.module.css';
 
-export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation, opSuggestions }) {
+export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation, opSuggestions, cashFloat, archived }) {
   const orders = day.orders;
   const dayClosed = day.dayClosed;
   const [modalOpen, setModalOpen] = useState(false);
@@ -15,6 +15,12 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
     const opsTotal = (day.mouvements || []).reduce((s, op) => s + op.amount, 0);
     return { total: total + opsTotal, count: orders.length };
   }, [orders, day.mouvements]);
+  const dayEspeces = useMemo(() => summarize(orders, products).especes, [orders, products]);
+  const cashEstimate = useMemo(
+    () => estimatedCash(cashFloat, archived, dayEspeces, day.mouvements),
+    [cashFloat, archived, dayEspeces, day.mouvements]
+  );
+  const [quickMode, setQuickMode] = useState(false);
   const listRef = useRef(null);
 
   const display = useMemo(() => {
@@ -32,21 +38,32 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
         title="Journal"
         right={
           <div className={styles.headerRight}>
-            <div className={styles.headerStatLabel}>Total du jour</div>
-            <div className={styles.headerStatValue}>{fmtEUR(summary.total)}</div>
-            <div className={styles.headerStatSub}>
-              {summary.count} commande{summary.count > 1 ? 's' : ''}{day.label ? ` · ${day.label}` : ''}
+            <div className={styles.headerStats}>
+              <div>
+                <div className={styles.headerStatLabel}>Total du jour</div>
+                <div className={styles.headerStatValue}>{fmtEUR(summary.total)}</div>
+                <div className={styles.headerStatSub}>
+                  {summary.count} commande{summary.count > 1 ? 's' : ''}
+                </div>
+              </div>
+              <div className={styles.headerCash}>
+                <div className={styles.headerStatLabel}>Caisse espèces</div>
+                <div className={styles.headerCashValue}>{fmtEUR(cashEstimate)}</div>
+                <div className={styles.headerStatSub}>estimé</div>
+              </div>
             </div>
           </div>
         }
       />
 
-      <div ref={listRef} className={styles.list}>
+      <div ref={listRef} className={`${styles.list} ${quickMode ? styles.listQuick : ''}`}>
         {display.length === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyTitle}>Aucune opération pour l'instant</div>
             <div className={styles.emptyText}>
-              Appuyez sur « + » pour enregistrer une commande, ou sur le bouton ↑↓ pour ajouter une opération de caisse.
+              {quickMode
+                ? 'Tapez les produits dans le panneau ci-dessous pour enregistrer une commande.'
+                : 'Appuyez sur « + » pour enregistrer une commande, ou sur le bouton ↑↓ pour ajouter une opération de caisse.'}
             </div>
           </div>
         )}
@@ -71,24 +88,39 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
         </div>
       </div>
 
-      {!dayClosed && (
+      {!dayClosed && !quickMode && (
         <>
-          <button
-            onClick={() => setOperationOpen(true)}
-            className={styles.fabSecondary}
-            aria-label="Opération de caisse"
-            title="Opération de caisse"
-          >
+          <button onClick={() => setOperationOpen(true)} className={styles.fabSecondary}
+            aria-label="Opération de caisse" title="Opération de caisse">
             <TransferSvg />
           </button>
-          <button
-            onClick={() => setModalOpen(true)}
-            className={styles.fab}
-            aria-label="Nouvelle commande"
-          >
+          <button onClick={() => setModalOpen(true)} className={styles.fab} aria-label="Nouvelle commande">
             <Icon.Plus size={44} />
           </button>
         </>
+      )}
+
+      {!dayClosed && (
+        <button
+          onClick={() => setQuickMode(q => !q)}
+          className={`${styles.fabToggle} ${quickMode ? styles.fabToggleActive : ''}`}
+          title={quickMode ? 'Retour au mode standard' : 'Mode commande rapide'}
+        >
+          {quickMode ? <StandardSvg /> : <BoltSvg />}
+        </button>
+      )}
+
+      {!dayClosed && quickMode && (
+        <QuickOrderPanel
+          products={products}
+          onValidate={(items, payment) => {
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const total = items.reduce((s,[pid,q]) => { const p=products.find(x=>x.id===pid); return s+(p?p.price:0)*q; }, 0);
+            onAddOrder({ id: crypto.randomUUID(), time, items, payment, total });
+          }}
+          onOperationOpen={() => setOperationOpen(true)}
+        />
       )}
 
       {dayClosed && (
@@ -206,6 +238,7 @@ function OrderRow({ order, orderIndex, dayClosed, onRemove, products }) {
               </span>
             );
           })}
+          {order.by && <span className={styles.orderBy}>{order.by}</span>}
         </div>
         <PayBadge kind={order.payment} />
         <div className={styles.orderTotal}>{fmtEUR(order.total)}</div>
@@ -371,6 +404,102 @@ function TransferSvg() {
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M7 16V4m0 0L3 8m4-4l4 4" />
       <path d="M17 8v12m0 0l4-4m-4 4l-4-4" />
+    </svg>
+  );
+}
+
+function QuickOrderPanel({ products, onValidate, onOperationOpen }) {
+  const [cart, setCart] = useState({});
+  const [payment, setPayment] = useState('especes');
+
+  const bump = (pid, delta) => setCart(c => {
+    const next = { ...c };
+    next[pid] = Math.max(0, (next[pid] || 0) + delta);
+    if (next[pid] === 0) delete next[pid];
+    return next;
+  });
+
+  const items = Object.entries(cart);
+  const total = items.reduce((s, [pid, q]) => {
+    const p = products.find(x => x.id === pid);
+    return s + (p ? p.price : 0) * q;
+  }, 0);
+
+  const validate = () => {
+    if (items.length === 0) return;
+    onValidate(items, payment);
+    setCart({});
+  };
+
+  return (
+    <div className={styles.quickPanel}>
+      <div className={styles.quickProducts}>
+        {products.map(p => (
+          <QuickProductBtn
+            key={p.id} product={p} qty={cart[p.id] || 0}
+            onTap={() => bump(p.id, 1)}
+            onDecrement={() => bump(p.id, -1)}
+          />
+        ))}
+        <button onClick={onOperationOpen} className={styles.quickOpsBtn}
+          title="Opération de caisse" aria-label="Opération de caisse">
+          <TransferSvg />
+        </button>
+      </div>
+      <div className={styles.quickFooter}>
+        <div className={styles.quickPayment}>
+          <PaymentChoice value="especes" current={payment} onSelect={setPayment} label="Espèces" />
+          <PaymentChoice value="carte"   current={payment} onSelect={setPayment} label="Carte" />
+        </div>
+        <div className={styles.quickTotal}>
+          {items.length > 0 && <span className={styles.quickTotalAmt}>{fmtEUR(total)}</span>}
+        </div>
+        <BigButton variant="primary" icon={<Icon.Check size={22} />}
+          disabled={items.length === 0} onClick={validate}
+          style={{ height: 64, fontSize: 18, minWidth: 180 }}>
+          Valider
+        </BigButton>
+      </div>
+    </div>
+  );
+}
+
+function QuickProductBtn({ product, qty, onTap, onDecrement }) {
+  const active = qty > 0;
+  return (
+    <button
+      className={`${styles.quickProdBtn} ${active ? styles.quickProdBtnActive : ''}`}
+      style={active ? { borderColor: product.color, background: product.color + '18' } : {}}
+      onClick={onTap}
+    >
+      <span className={styles.quickProdEmoji}>{product.emoji}</span>
+      <span className={styles.quickProdName}>{product.name}</span>
+      <span className={styles.quickProdPrice}>{fmtEUR(product.price)}</span>
+      {active && (
+        <span
+          className={styles.quickProdBadge}
+          style={{ background: product.color }}
+          onClick={e => { e.stopPropagation(); onDecrement(); }}
+        >
+          {qty}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function BoltSvg() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  );
+}
+
+function StandardSvg() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <path d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   );
 }

@@ -51,6 +51,11 @@ export default function App() {
   // ── Sync ──────────────────────────────────────────────────────────────────
   const [apiOnline, setApiOnline] = useState(true);
   const wasOfflineRef = useRef(false);
+  // Ref miroir de `day` — accessible dans les closures de setInterval sans dépendance
+  const dayRef = useRef(null);
+  useEffect(() => { dayRef.current = day; }, [day]);
+  // IDs des commandes/opérations dont le push est en cours (évite les doubles envois)
+  const pushingRef = useRef(new Set());
 
   // ── UI ────────────────────────────────────────────────────────────────────
   const [pendingClose, setPendingClose] = useState(null);
@@ -175,7 +180,9 @@ export default function App() {
   // ── Polling (sync inter-tablettes, toutes les 10 s) ──────────────────────
   useEffect(() => {
     if (!loaded || !sessionToken) return;
-    const id = setInterval(async () => {
+
+    async function poll() {
+      if (document.hidden) return; // pause si onglet/app en arrière-plan
       try {
         const apiDay = await fetchCurrentDay(sessionToken);
         const wasOffline = wasOfflineRef.current;
@@ -195,20 +202,67 @@ export default function App() {
         setDay(prev => {
           if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
           if (prev.dayKey !== apiDay.dayKey) return prev;
-          return { mouvements: [], ...apiDay };
+          // Merge : réintègre les commandes/opérations locales pas encore confirmées par l'API
+          const apiOrderIds = new Set(apiDay.orders.map(o => o.id));
+          const apiMouvIds  = new Set((apiDay.mouvements || []).map(m => m.id));
+          const pendingOrders = prev.orders.filter(o => o.id && !apiOrderIds.has(o.id));
+          const pendingMouv   = (prev.mouvements || []).filter(m => m.id && !apiMouvIds.has(m.id));
+          return {
+            ...apiDay,
+            orders:     pendingOrders.length ? [...apiDay.orders, ...pendingOrders] : apiDay.orders,
+            mouvements: pendingMouv.length   ? [...(apiDay.mouvements || []), ...pendingMouv] : (apiDay.mouvements || []),
+          };
         });
+
+        // Retry : repousse les items locaux pas encore sur le serveur
+        const localDay = dayRef.current;
+        if (localDay && localDay.dayKey === apiDay.dayKey) {
+          const apiOrderIds = new Set(apiDay.orders.map(o => o.id));
+          for (const order of localDay.orders) {
+            if (order.id && !apiOrderIds.has(order.id) && !pushingRef.current.has(order.id)) {
+              pushingRef.current.add(order.id);
+              pushOrder(sessionToken, localDay.dayKey, order)
+                .then(() => pushingRef.current.delete(order.id))
+                .catch(() => pushingRef.current.delete(order.id));
+            }
+          }
+          const apiMouvIds = new Set((apiDay.mouvements || []).map(m => m.id));
+          for (const mouv of (localDay.mouvements || [])) {
+            if (mouv.id && !apiMouvIds.has(mouv.id) && !pushingRef.current.has(mouv.id)) {
+              pushingRef.current.add(mouv.id);
+              pushOperation(sessionToken, localDay.dayKey, mouv)
+                .then(() => pushingRef.current.delete(mouv.id))
+                .catch(() => pushingRef.current.delete(mouv.id));
+            }
+          }
+        }
       } catch {
         wasOfflineRef.current = true;
         setApiOnline(false);
       }
-    }, 10000);
-    return () => clearInterval(id);
+    }
+
+    const id = setInterval(poll, 10000);
+    // Resync immédiat au retour au premier plan (rattrape les mises à jour manquées)
+    const onVisible = () => { if (!document.hidden) poll(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [loaded, sessionToken, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Journée ───────────────────────────────────────────────────────────────
   const addOrder = o => {
-    setDay(d => ({ ...d, orders: [...d.orders, o] }));
-    if (sessionToken) pushOrder(sessionToken, day.dayKey, o).catch(() => {});
+    const order = currentUser ? { ...o, by: currentUser.name } : o;
+    setDay(d => ({ ...d, orders: [...d.orders, order] }));
+    if (sessionToken) {
+      pushingRef.current.add(order.id);
+      pushOrder(sessionToken, day.dayKey, order)
+        .then(() => pushingRef.current.delete(order.id))
+        .catch(() => pushingRef.current.delete(order.id));
+    }
   };
   const removeOrder = (order, orderIndex) => {
     setDay(d => ({ ...d, orders: d.orders.filter((_, i) => i !== orderIndex) }));
@@ -237,7 +291,12 @@ export default function App() {
 
   const addOperation = op => {
     setDay(d => ({ ...d, mouvements: [...(d.mouvements || []), op] }));
-    if (sessionToken) pushOperation(sessionToken, day.dayKey, op).catch(() => {});
+    if (sessionToken) {
+      pushingRef.current.add(op.id);
+      pushOperation(sessionToken, day.dayKey, op)
+        .then(() => pushingRef.current.delete(op.id))
+        .catch(() => pushingRef.current.delete(op.id));
+    }
   };
 
   const removeOperation = id => {
@@ -394,7 +453,7 @@ export default function App() {
       {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
-        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
+        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} cashFloat={cashFloat} archived={archived} />}
         {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
         {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
         {tab === 'settings' && <SettingsScreen

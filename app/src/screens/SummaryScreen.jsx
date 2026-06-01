@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
 import { OperationModal } from '../components/OperationModal';
-import { fmtEUR, summarize } from '../lib/data';
+import { fmtEUR, summarize, estimatedCash } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
 export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, cashFloat, archived, onAddOperation, onRemoveOperation, opSuggestions }) {
@@ -23,18 +23,12 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
     let report = 0;
     let reportDays = 0;
     for (const a of (archived || [])) {
-      if (a.cashCounted !== null) {
-        base = a.cashCounted;
-        baseFromFloat = false;
-        break;
-      }
-      report += a.especes;
-      report += (a.mouvements || []).reduce((s, m) => s + m.amount, 0);
+      if (a.cashCounted !== null) { base = a.cashCounted; baseFromFloat = false; break; }
+      report += a.especes + (a.mouvements || []).reduce((s, m) => s + m.amount, 0);
       reportDays++;
     }
-    const dayOperations = day.mouvements || [];
-    const opsTotal = dayOperations.reduce((s, op) => s + op.amount, 0);
-    return { expectedCash: base + report + summary.especes + opsTotal, base, report, reportDays, opsTotal, baseFromFloat };
+    const opsTotal = (day.mouvements || []).reduce((s, op) => s + op.amount, 0);
+    return { expectedCash: estimatedCash(cashFloat, archived, summary.especes, day.mouvements), base, report, reportDays, opsTotal, baseFromFloat };
   }, [cashFloat, archived, summary.especes, day.mouvements]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const operations = day.mouvements || [];

@@ -8,6 +8,21 @@
 .headerLabel    { font-size: 12px; font-weight: 700; letter-spacing: 1.4px; color: var(--ink-mute); text-transform: uppercase; margin-bottom: 6px; }
 .headerValue    { font-size: 32px; font-weight: 800; color: var(--ink); letter-spacing: -0.4px; font-variant-numeric: tabular-nums; }
 .headerSub      { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+.exportBtn {
+  appearance: none;
+  margin-top: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; height: 34px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: border-color 100ms, color 100ms, background 100ms;
+}
+.exportBtn:hover { border-color: var(--club); color: var(--club); background: var(--club-soft); }
 
 /* ── Empty state ────────────────────────────────────────────────────────────── */
 .emptyState { margin: 80px auto; max-width: 420px; text-align: center; color: var(--ink-soft); }

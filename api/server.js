@@ -16,6 +16,7 @@ if (!process.env.JWT_SECRET || !process.env.ADMIN_SECRET) {
 }
 
 const app = express()
+app.set('trust proxy', 1) // derrière Caddy — utilise X-Forwarded-For pour les vraies IPs clients
 app.use(express.json())
 
 app.use((req, res, next) => {

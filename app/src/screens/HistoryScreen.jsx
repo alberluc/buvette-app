@@ -3,6 +3,51 @@ import { AppHeader, Icon } from '../components/UI';
 import { fmtEUR } from '../lib/data';
 import styles from './HistoryScreen.module.css';
 
+function buildCsv(daysComputed, products) {
+  const n = v => (v == null ? '' : Number(v).toFixed(2).replace('.', ','));
+  const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+  const header = [
+    'Date', 'Jour', 'Libellé', 'Commandes',
+    'Total ventes (€)', 'Espèces (€)', 'Carte (€)', 'Opérations (€)', 'Grand total (€)',
+    'Caisse attendue (€)', 'Caisse comptée (€)', 'Écart (€)', 'Clôture',
+    ...products.map(p => `${p.name} (qté)`),
+  ].map(cell).join(';');
+
+  const rows = daysComputed.map(day => {
+    const cloture = day.autoClosed ? 'Auto' : (day.closed ? 'Manuelle' : 'Non clôturée');
+    const productQtys = products.map(p => (day.products || {})[p.id] ?? 0);
+    return [
+      day.dayKey,
+      cell(day.date),
+      cell(day.label || ''),
+      day.orderCount,
+      n(day.total),
+      n(day.especes),
+      n(day.carte),
+      n(day._mouvTotal),
+      n(day._grandTotal),
+      n(day._attendu),
+      n(day.cashCounted),
+      n(day._ecart),
+      cell(cloture),
+      ...productQtys,
+    ].join(';');
+  });
+
+  return [header, ...rows].join('\r\n');
+}
+
+function downloadCsv(content, filename) {
+  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function HistoryScreen({ archived, products, cashFloat }) {
   const [openId, setOpenId] = useState(null);
   const days = archived || [];
@@ -22,6 +67,11 @@ export function HistoryScreen({ archived, products, cashFloat }) {
     return result;
   }, [days, cashFloat]);
 
+  const handleExport = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    downloadCsv(buildCsv(daysComputed, products), `buvette-historique-${today}.csv`);
+  };
+
   return (
     <div className={styles.screen}>
       <AppHeader
@@ -36,6 +86,11 @@ export function HistoryScreen({ archived, products, cashFloat }) {
             <div className={styles.headerSub}>
               {days.length} journées · {days.reduce((s, d) => s + d.orderCount, 0)} commandes
             </div>
+            {days.length > 0 && (
+              <button onClick={handleExport} className={styles.exportBtn} title="Exporter en CSV">
+                <DownloadSvg /> CSV
+              </button>
+            )}
           </div>
         }
       />
@@ -197,6 +252,15 @@ function DayDetail({ day, products }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function DownloadSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v10M7 15l5 5 5-5" />
+      <path d="M4 20h16" />
+    </svg>
   );
 }
 
