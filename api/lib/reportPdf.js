@@ -137,7 +137,7 @@ function buildHtmlGrid(data) {
     .map(pid => `<th class="num">${grandProducts[pid]?.name ?? pid}</th>`)
     .join('')
 
-  const extraCols = 2
+  const extraCols = 1
   const labelColspan = activeProductIds.length + extraCols
 
   const bodyGroups = days.map(day => {
@@ -149,7 +149,8 @@ function buildHtmlGrid(data) {
     const mouvTotal = mouvements.reduce((s, m) => s + m.amount, 0)
     const openBalance = day._base ?? 0
     const theoreticalBalance = day._attendu ?? (openBalance + day.especes + mouvTotal)
-    const totalRowspan = 1 + dayOrders.length + mouvements.length + 1 + 1 + (hasCash ? 2 : 0)
+    const especesOrders = dayOrders.filter(o => o.payment === 'especes')
+    const totalRowspan = 1 + especesOrders.length + mouvements.length + 1 + 1 + (hasCash ? 2 : 0)
     const { weekday, dateStr } = gridDateLabel(day.dayKey)
 
     const openRow = `<tr class="balance-row open-balance-row">
@@ -158,17 +159,14 @@ function buildHtmlGrid(data) {
       <td class="num balance-amount">${eur(openBalance)}</td>
     </tr>`
 
-    const orderRows = dayOrders.map(order => {
+    const orderRows = especesOrders.map(order => {
       const cells = activeProductIds
         .map(pid => `<td class="num">${order.items[pid] ? order.items[pid] : ''}</td>`)
         .join('')
-      const payClass = order.payment === 'especes' ? 'pay-esp' : 'pay-crt'
-      const payLabel = order.payment === 'especes' ? 'E' : 'C'
       return `<tr>
         <td class="num time-cell">${order.time ?? ''}</td>
-        <td class="num pay-cell ${payClass}">${payLabel}</td>
         ${cells}
-        <td class="num total-cell">${order.payment === 'especes' ? eur(order.total) : ''}</td>
+        <td class="num total-cell">${eur(order.total)}</td>
       </tr>`
     })
 
@@ -286,7 +284,6 @@ function buildHtmlGrid(data) {
       <tr>
         <th>Date</th>
         <th class="num">Heure</th>
-        <th class="num">Pmt</th>
         ${productHeaders}
         <th class="num total-col">Total</th>
       </tr>
