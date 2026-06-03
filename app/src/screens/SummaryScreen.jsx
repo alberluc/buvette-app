@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
 import { OperationModal } from '../components/OperationModal';
+import { CashCountModal } from '../components/CashCountModal';
 import { fmtEUR, summarize, estimatedCash } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
@@ -11,6 +12,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
 
   const [counted, setCounted] = useState(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
   const [operationOpen, setOperationOpen] = useState(false);
+  const [countingOpen, setCountingOpen] = useState(false);
 
   useEffect(() => {
     setCounted(cashCounted == null ? '' : String(cashCounted).replace('.', ','));
@@ -161,7 +163,14 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
                 <BreakdownLine label="Total attendu en caisse" value={expectedCash} total />
               </div>
 
-              <label className={styles.cashLabel}>Montant compté en caisse</label>
+              <div className={styles.cashLabelRow}>
+                <label className={styles.cashLabel}>Montant compté en caisse</label>
+                {!dayClosed && (
+                  <button className={styles.countByDenomBtn} onClick={() => setCountingOpen(true)}>
+                    Compter par coupures
+                  </button>
+                )}
+              </div>
               <div className={styles.cashInputWrap}>
                 <input
                   type="text" inputMode="decimal" value={counted}
@@ -205,6 +214,12 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
         </div>
       </div>
 
+      {countingOpen && (
+        <CashCountModal
+          onClose={() => setCountingOpen(false)}
+          onValidate={(total) => setCounted(String(total).replace('.', ','))}
+        />
+      )}
       {operationOpen && (
         <OperationModal
           onClose={() => setOperationOpen(false)}

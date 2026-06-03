@@ -100,13 +100,13 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
         </>
       )}
 
-      {!dayClosed && (
+      {!dayClosed && !quickMode && (
         <button
-          onClick={() => setQuickMode(q => !q)}
-          className={`${styles.fabToggle} ${quickMode ? styles.fabToggleActive : ''}`}
-          title={quickMode ? 'Retour au mode standard' : 'Mode commande rapide'}
+          onClick={() => setQuickMode(true)}
+          className={styles.fabToggle}
+          title="Mode commande rapide"
         >
-          {quickMode ? <StandardSvg /> : <BoltSvg />}
+          <BoltSvg />
         </button>
       )}
 
@@ -120,6 +120,7 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
             onAddOrder({ id: crypto.randomUUID(), time, items, payment, total });
           }}
           onOperationOpen={() => setOperationOpen(true)}
+          onExitQuickMode={() => setQuickMode(false)}
         />
       )}
 
@@ -408,7 +409,7 @@ function TransferSvg() {
   );
 }
 
-function QuickOrderPanel({ products, onValidate, onOperationOpen }) {
+function QuickOrderPanel({ products, onValidate, onOperationOpen, onExitQuickMode }) {
   const [cart, setCart] = useState({});
   const [payment, setPayment] = useState('especes');
 
@@ -447,6 +448,13 @@ function QuickOrderPanel({ products, onValidate, onOperationOpen }) {
         </button>
       </div>
       <div className={styles.quickFooter}>
+        <button
+          onClick={onExitQuickMode}
+          className={styles.quickExitBtn}
+          title="Retour au mode standard"
+        >
+          <StandardSvg />
+        </button>
         <div className={styles.quickPayment}>
           <PaymentChoice value="especes" current={payment} onSelect={setPayment} label="Espèces" />
           <PaymentChoice value="carte"   current={payment} onSelect={setPayment} label="Carte" />
@@ -454,6 +462,11 @@ function QuickOrderPanel({ products, onValidate, onOperationOpen }) {
         <div className={styles.quickTotal}>
           {items.length > 0 && <span className={styles.quickTotalAmt}>{fmtEUR(total)}</span>}
         </div>
+        {items.length > 0 && (
+          <button className={styles.quickClearBtn} onClick={() => setCart({})}>
+            Tout vider
+          </button>
+        )}
         <BigButton variant="primary" icon={<Icon.Check size={22} />}
           disabled={items.length === 0} onClick={validate}
           style={{ height: 64, fontSize: 18, minWidth: 180 }}>
@@ -476,13 +489,22 @@ function QuickProductBtn({ product, qty, onTap, onDecrement }) {
       <span className={styles.quickProdName}>{product.name}</span>
       <span className={styles.quickProdPrice}>{fmtEUR(product.price)}</span>
       {active && (
-        <span
-          className={styles.quickProdBadge}
-          style={{ background: product.color }}
-          onClick={e => { e.stopPropagation(); onDecrement(); }}
-        >
-          {qty}
-        </span>
+        <>
+          <span
+            className={styles.quickProdBadge}
+            style={{ background: product.color }}
+          >
+            {qty}
+          </span>
+          <span
+            className={styles.quickProdDecrement}
+            onClick={e => { e.stopPropagation(); onDecrement(); }}
+            role="button"
+            aria-label={`Retirer un ${product.name}`}
+          >
+            −
+          </span>
+        </>
       )}
     </button>
   );
