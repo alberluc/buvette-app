@@ -363,7 +363,7 @@ a { color: inherit; text-decoration: none; }
 
 /* =================== Multi-appareils =================== */
 .devices { background: var(--club-soft); }
-.devices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.devices-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
 @media (max-width: 940px) { .devices-grid { grid-template-columns: 1fr; gap: 48px; } }
 .devices-copy h2 { font-size: clamp(28px, 3.7vw, 42px); font-weight: 800; margin-top: 16px; }
 .devices-copy .lead-p { margin-top: 16px; font-size: 18px; color: var(--ink-soft); max-width: 42ch; }
@@ -401,12 +401,18 @@ a { color: inherit; text-decoration: none; }
 .mini-prods span { background: var(--paper); border: 1px solid var(--line); border-radius: 7px; aspect-ratio: 1; display: grid; place-items: center; font-size: 15px; }
 .mini-tot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 7px; font-size: 10px; color: var(--ink-soft); font-weight: 600; }
 .mini-tot strong { font-size: 14px; color: var(--ink); }
+/* 2-column layout: scale down and drop the third device to fit the column */
+@media (min-width: 941px) {
+  .tablet-mini { width: 270px; }
+  .phone-mini { width: 100px; }
+  .phone-b { display: none; }
+}
 @media (max-width: 620px) {
   .devices-visual { gap: 10px; }
   .tablet-mini { width: 210px; }
   .phone-mini { width: 90px; }
 }
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .phone-b { display: none; }
 }
 

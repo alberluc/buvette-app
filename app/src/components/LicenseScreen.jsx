@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { activateLicense, refreshLicense } from '../lib/api'
 import styles from './LicenseScreen.module.css'
 
+const BUY_URL = 'https://assolyte.fr/#price'
+
 const ERROR_LABELS = {
   'Clé invalide': "Cette clé de licence n'existe pas.",
   'Licence révoquée': 'Licence révoquée. Contactez le support.',
@@ -161,6 +163,15 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
             </button>
           </>
         )}
+      </div>
+
+      <div className={styles.buySection}>
+        <p className={styles.buyText}>
+          {mode === 'expired' ? 'Besoin de renouveler votre abonnement ?' : 'Pas encore de licence ?'}
+        </p>
+        <a href={BUY_URL} target="_blank" rel="noopener noreferrer" className={styles.buyBtn}>
+          Obtenir une licence →
+        </a>
       </div>
     </div>
   )
