@@ -33,7 +33,7 @@ export function SettingsDrawer({ currentUser, onLogout, onChangePassword, onClos
               🛠 Tweaks (dev)
             </DrawerButton>
           )}
-          <div className={styles.version}>Buvette Club · v1.0</div>
+          <div className={styles.version}>Assolyte · v1.0</div>
         </div>
       </div>
     </div>

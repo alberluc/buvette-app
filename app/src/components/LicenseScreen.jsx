@@ -126,7 +126,7 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
     <div className={styles.screen}>
       <div className={styles.brand}>
         <div className={styles.brandEmoji}>🍺</div>
-        <div className={styles.brandName}>Buvette Club</div>
+        <div className={styles.brandName}>Assolyte</div>
         <div className={styles.brandSub}>Caisse buvette</div>
       </div>
 

@@ -112,7 +112,7 @@ function buildHtml(data) {
   <div class="grand-total">TOTAL MOIS : ${eur(grandTotal)}</div>
   `}
 
-  <div class="footer">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · Buvette Club</div>
+  <div class="footer">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · Assolyte</div>
 </body>
 </html>`
 }

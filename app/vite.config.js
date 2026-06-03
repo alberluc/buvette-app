@@ -8,8 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Buvette Club',
-        short_name: 'Buvette',
+        name: 'Assolyte',
+        short_name: 'Assolyte',
         description: 'Caisse de buvette pour club sportif — usage tablette',
         start_url: '/',
         display: 'standalone',

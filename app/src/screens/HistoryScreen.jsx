@@ -69,7 +69,7 @@ export function HistoryScreen({ archived, products, cashFloat }) {
 
   const handleExport = () => {
     const today = new Date().toISOString().slice(0, 10);
-    downloadCsv(buildCsv(daysComputed, products), `buvette-historique-${today}.csv`);
+    downloadCsv(buildCsv(daysComputed, products), `assolyte-historique-${today}.csv`);
   };
 
   return (
