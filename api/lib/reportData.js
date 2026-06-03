@@ -12,9 +12,16 @@ export async function buildMonthReport(licenseKey, year, month) {
     .whereLike('day_key', `${monthPrefix}-%`)
     .orderBy('day_key', 'asc')
 
-  const days = rows
-    .map(row => aggregateDay(row, products))
-    .filter(d => d.orderCount > 0)
+  let cashBase = license.cash_float ?? 0
+  const allDays = rows.map(row => {
+    const day = aggregateDay(row, products)
+    const mouvTotal = day.mouvements.reduce((s, m) => s + m.amount, 0)
+    day._attendu = cashBase + day.especes + mouvTotal
+    day._ecart = day.cashCounted != null ? day.cashCounted - day._attendu : null
+    cashBase = day.cashCounted != null ? day.cashCounted : day._attendu
+    return day
+  })
+  const days = allDays.filter(d => d.orderCount > 0)
 
   const grandTotal    = days.reduce((s, d) => s + d.dayTotal, 0)
   const grandEspeces  = days.reduce((s, d) => s + d.especes, 0)
@@ -89,5 +96,6 @@ function aggregateDay(row, products) {
     products: productMap,
     orders: enrichedOrders,
     mouvements: row.mouvements || [],
+    cashCounted: row.cash_counted !== null && row.cash_counted !== undefined ? Number(row.cash_counted) : null,
   }
 }

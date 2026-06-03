@@ -142,7 +142,8 @@ function buildHtmlGrid(data) {
     if (dayOrders.length === 0) return []
 
     const mouvements = day.mouvements || []
-    const totalRowspan = dayOrders.length + 1 + mouvements.length
+    const hasCash = day.cashCounted != null
+    const totalRowspan = dayOrders.length + 1 + mouvements.length + (hasCash ? 2 : 0)
     const { weekday, dateStr } = gridDateLabel(day.dayKey)
 
     const orderRows = dayOrders.map((order, i) => {
@@ -168,12 +169,29 @@ function buildHtmlGrid(data) {
     const daySumCells = activeProductIds
       .map(pid => `<td class="num day-sum-cell">${day.products[pid]?.qty || ''}</td>`)
       .join('')
-    const dayTotalRow = `<tr class="day-total-row">
+
+    const cashRows = hasCash ? (() => {
+      const ecart = day._ecart ?? (day.cashCounted - (day.especes + mouvTotal))
+      const ecartClass = ecart >= 0 ? 'surplus' : 'manque'
+      return [
+        `<tr class="caisse-row">
+          <td colspan="${activeProductIds.length}" class="caisse-label">Caisse comptée</td>
+          <td class="num caisse-amount">${eur(day.cashCounted)}</td>
+        </tr>`,
+        `<tr class="ecart-row ${ecartClass} day-end">
+          <td colspan="${activeProductIds.length}" class="ecart-label">Écart</td>
+          <td class="num ecart-amount">${ecart >= 0 ? '+' : ''}${eur(ecart)}</td>
+        </tr>`,
+      ]
+    })() : []
+
+    const lastDayTotalClass = hasCash ? 'day-total-row' : 'day-total-row day-end'
+    const dayTotalRowFinal = `<tr class="${lastDayTotalClass}">
       ${daySumCells}
       <td class="num day-sum-cell day-grand">${eur(day.dayTotal + mouvTotal)}</td>
     </tr>`
 
-    return [...orderRows, ...mouvementRows, dayTotalRow]
+    return [...orderRows, ...mouvementRows, dayTotalRowFinal, ...cashRows]
   }).join('')
 
   const grandRows = activeProductIds.map(pid => {
@@ -202,7 +220,8 @@ function buildHtmlGrid(data) {
   .date-cell strong { display: block; font-size: 9px; font-weight: bold; }
   .date-day { display: block; font-size: 8px; color: #888; }
   .total-cell { font-weight: bold; border-left: 2px solid #ddd; white-space: nowrap; }
-  .day-total-row td { background: #f0f0f0; border-top: 1px solid #ccc; border-bottom: 2px solid #aaa; }
+  .day-total-row td { background: #f0f0f0; border-top: 1px solid #ccc; border-bottom: 1px solid #eee; }
+  .day-end td, .ecart-row.day-end td, .day-total-row.day-end td { border-bottom: 3px solid #555; }
   .day-sum-cell { font-weight: bold; font-size: 9px; }
   .day-grand { border-left: 2px solid #ddd; color: #1a1a1a; }
   .mouvement-row td { border-bottom: 1px solid #eee; padding: 2px 6px; }
@@ -210,6 +229,15 @@ function buildHtmlGrid(data) {
   .mouvement-row.entree td { color: #27ae60; }
   .mouvement-label { font-size: 8px; }
   .mouvement-amount { font-size: 8px; font-weight: bold; white-space: nowrap; border-left: 2px solid #ddd; }
+  .caisse-row td, .ecart-row td { padding: 2px 6px; font-size: 8px; border-bottom: 1px solid #eee; }
+  .caisse-row td { background: #f5f5f5; color: #444; }
+  .caisse-label, .ecart-label { font-style: italic; }
+  .caisse-amount { font-weight: bold; border-left: 2px solid #ddd; white-space: nowrap; }
+  .ecart-row.surplus td { background: #f5fff8; }
+  .ecart-row.manque td { background: #fff5f5; }
+  .ecart-amount { font-weight: bold; border-left: 2px solid #ddd; white-space: nowrap; }
+  .ecart-row.surplus .ecart-amount { color: #27ae60; }
+  .ecart-row.manque .ecart-amount { color: #c0392b; }
   .grand-table th { background: #1a5276; }
   .grand-total { font-size: 12px; font-weight: bold; text-align: right; margin-top: 4mm; }
   .footer { margin-top: 8mm; font-size: 8px; color: #aaa; border-top: 1px solid #eee; padding-top: 3mm; }

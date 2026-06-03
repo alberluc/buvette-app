@@ -36,6 +36,9 @@ const mockData = {
         { id: '1', time: '18:30', label: 'Achat glaçons', amount: -5 },
         { id: '2', time: '20:00', label: 'Appoint monnaie', amount: 20 },
       ],
+      cashCounted: 27,
+      _attendu: 28,
+      _ecart: -1,
     },
     {
       dayKey: '2026-05-10', date: 'Dimanche 10 mai 2026', label: '',
