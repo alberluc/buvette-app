@@ -16,7 +16,7 @@ export async function sendMail({ to, subject, html, attachments = [] }) {
   if (!process.env.SMTP_HOST || !to) return
   const transport = createTransport()
   await transport.sendMail({
-    from: `"Buvette" <${process.env.REPORT_FROM || process.env.SMTP_USER}>`,
+    from: `"Assolyte" <${process.env.REPORT_FROM || process.env.SMTP_USER}>`,
     to,
     subject,
     html,

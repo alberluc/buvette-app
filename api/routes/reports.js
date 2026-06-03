@@ -3,6 +3,7 @@ import { db } from '../db.js'
 import { requireSession } from '../middleware/auth.js'
 import { generatePdf, monthLabel } from '../lib/reportPdf.js'
 import { sendReport } from '../lib/mailer.js'
+import { reportEmailHtml } from '../lib/emailTemplates.js'
 
 const router = Router()
 
@@ -28,15 +29,7 @@ router.post('/report/test', requireSession, async (req, res) => {
       to: license.email,
       clubName: license.club_name,
       monthLabel: label,
-      html: `
-        <p>Bonjour,</p>
-        <p>Voici un <strong>bilan de test</strong> pour <strong>${label}</strong> — les données sont fictives.</p>
-        <ul>
-          <li>Journées : <strong>${data.days.length}</strong></li>
-          <li>Commandes : <strong>${data.grandOrderCount}</strong></li>
-          <li>Total : <strong>${data.grandTotal.toFixed(2).replace('.', ',')} €</strong></li>
-        </ul>
-        <p style="color:#888;font-size:12px">Buvette Club · email de test automatique</p>`,
+      html: reportEmailHtml({ clubName: license.club_name, label, data, isTest: true }),
       pdfBuffer: pdf,
     })
     res.json({ ok: true })

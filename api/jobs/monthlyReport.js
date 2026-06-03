@@ -3,6 +3,7 @@ import { db } from '../db.js'
 import { buildMonthReport } from '../lib/reportData.js'
 import { generatePdf, monthLabel } from '../lib/reportPdf.js'
 import { sendReport } from '../lib/mailer.js'
+import { reportEmailHtml } from '../lib/emailTemplates.js'
 
 function previousMonth() {
   const now = new Date()
@@ -29,21 +30,11 @@ async function runMonthlyReports() {
       const data = await buildMonthReport(license.key, year, month)
       const pdf  = await generatePdf(data)
 
-      const emailHtml = `
-        <p>Bonjour,</p>
-        <p>Veuillez trouver en pièce jointe le bilan mensuel de votre buvette pour <strong>${label}</strong>.</p>
-        <ul>
-          <li>Journées actives : <strong>${data.days.length}</strong></li>
-          <li>Commandes : <strong>${data.grandOrderCount}</strong></li>
-          <li>Total : <strong>${(data.grandTotal).toFixed(2).replace('.', ',')} €</strong></li>
-        </ul>
-        <p style="color:#888;font-size:12px;">Buvette Club — rapport automatique mensuel</p>`
-
       await sendReport({
         to: license.email,
         clubName: license.club_name,
         monthLabel: label,
-        html: emailHtml,
+        html: reportEmailHtml({ clubName: license.club_name, label, data }),
         pdfBuffer: pdf,
       })
 

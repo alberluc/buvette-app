@@ -3,6 +3,7 @@ import { db } from '../db.js'
 import { generateKey } from '../lib/tokens.js'
 import { sendMail } from '../lib/mailer.js'
 import { seedDemoData } from '../lib/demoData.js'
+import { demoEmailHtml } from '../lib/emailTemplates.js'
 
 const router = Router()
 
@@ -65,18 +66,8 @@ router.post('/demo', async (req, res) => {
 
     await sendMail({
       to: emailNorm,
-      subject: 'Votre accès démo Buvette Club',
-      html: `
-        <p>Bonjour,</p>
-        <p>Voici votre clé d'accès pour découvrir <strong>Buvette Club</strong> :</p>
-        <p style="font-size:22px;font-family:monospace;letter-spacing:3px;background:#f5f5f5;padding:12px 24px;display:inline-block;border-radius:6px;border:1px solid #ddd">
-          <strong>${key}</strong>
-        </p>
-        <p>Entrez cette clé dans l'application pour accéder à votre espace de démo,<br>
-        déjà rempli avec <strong>${daysCount} journées</strong> de données réalistes.</p>
-        <p><strong>Validité : 3 jours</strong> — expire le ${expiresLabel}.</p>
-        <p style="color:#888;font-size:12px;margin-top:24px">Buvette Club · cet email est automatique, ne pas y répondre</p>
-      `,
+      subject: 'Votre accès démo Assolyte',
+      html: demoEmailHtml({ key, daysCount, expiresLabel }),
     })
 
     res.status(201).json({ ok: true })
