@@ -18,8 +18,9 @@ const mockData = {
   ],
   days: [
     {
-      dayKey: '2026-05-03', date: 'Samedi 3 mai 2026', label: '',
+      dayKey: '2026-05-03', date: 'Dimanche 3 mai 2026', label: '',
       orderCount: 7, dayTotal: 23, especes: 19, carte: 4,
+      _base: 0, _attendu: 19,
       products: {
         biere: { name: 'Bière',      qty: 8, total: 16 },
         vin:   { name: 'Vin',        qty: 2, total:  2 },
@@ -38,8 +39,9 @@ const mockData = {
       mouvements: [],
     },
     {
-      dayKey: '2026-05-04', date: 'Dimanche 4 mai 2026', label: '',
+      dayKey: '2026-05-04', date: 'Lundi 4 mai 2026', label: '',
       orderCount: 5, dayTotal: 14, especes: 12, carte: 2,
+      _base: 0, _attendu: 12,
       products: {
         biere: { name: 'Bière',      qty: 5, total: 10 },
         vin:   { name: 'Vin',        qty: 3, total:  3 },
@@ -56,8 +58,9 @@ const mockData = {
       mouvements: [],
     },
     {
-      dayKey: '2026-05-10', date: 'Samedi 10 mai 2026', label: 'Tournoi printemps',
+      dayKey: '2026-05-10', date: 'Dimanche 10 mai 2026', label: 'Tournoi printemps',
       orderCount: 10, dayTotal: 34, especes: 24, carte: 10,
+      _base: 0, _attendu: 44,
       products: {
         biere: { name: 'Bière',      qty: 12, total: 24 },
         vin:   { name: 'Vin',        qty:  4, total:  4 },
@@ -82,8 +85,9 @@ const mockData = {
       cashCounted: 46,
     },
     {
-      dayKey: '2026-05-17', date: 'Samedi 17 mai 2026', label: '',
+      dayKey: '2026-05-17', date: 'Dimanche 17 mai 2026', label: '',
       orderCount: 8, dayTotal: 28, especes: 20, carte: 8,
+      _base: 0, _attendu: 0,
       products: {
         biere: { name: 'Bière',      qty: 10, total: 20 },
         vin:   { name: 'Vin',        qty:  3, total:  3 },
@@ -105,8 +109,9 @@ const mockData = {
       ],
     },
     {
-      dayKey: '2026-05-24', date: 'Samedi 24 mai 2026', label: 'Finale championnat',
+      dayKey: '2026-05-24', date: 'Dimanche 24 mai 2026', label: 'Finale championnat',
       orderCount: 11, dayTotal: 41, especes: 29, carte: 12,
+      _base: 0, _attendu: 79,
       products: {
         biere: { name: 'Bière',      qty: 15, total: 30 },
         vin:   { name: 'Vin',        qty:  3, total:  3 },
@@ -132,8 +137,9 @@ const mockData = {
       cashCounted: 81,
     },
     {
-      dayKey: '2026-05-25', date: 'Dimanche 25 mai 2026', label: '',
+      dayKey: '2026-05-25', date: 'Lundi 25 mai 2026', label: '',
       orderCount: 5, dayTotal: 12, especes: 11, carte: 1,
+      _base: 0, _attendu: 11,
       products: {
         biere: { name: 'Bière',      qty: 4, total:  8 },
         vin:   { name: 'Vin',        qty: 1, total:  1 },

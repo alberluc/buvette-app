@@ -16,6 +16,7 @@ export async function buildMonthReport(licenseKey, year, month) {
   const allDays = rows.map(row => {
     const day = aggregateDay(row, products)
     const mouvTotal = day.mouvements.reduce((s, m) => s + m.amount, 0)
+    day._base = cashBase
     day._attendu = cashBase + day.especes + mouvTotal
     day._ecart = day.cashCounted != null ? day.cashCounted - day._attendu : null
     cashBase = day.cashCounted != null ? day.cashCounted : day._attendu
