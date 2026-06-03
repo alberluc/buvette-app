@@ -82,7 +82,7 @@ function aggregateDay(row, products) {
       productMap[pid].total += productMap[pid].price * qty
       itemsByPid[pid] = qty
     }
-    enrichedOrders.push({ items: itemsByPid, total: order.total, payment: order.payment })
+    enrichedOrders.push({ items: itemsByPid, total: order.total, payment: order.payment, time: order.time ?? null })
   }
 
   return {

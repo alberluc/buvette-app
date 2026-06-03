@@ -92,7 +92,9 @@ function buildMockData(license, year, month) {
       const payment = Math.random() < 0.7 ? 'especes' : 'carte'
       if (payment === 'especes') especes += t
       else carte += t
-      orders.push({ items: { [p.id]: qty }, total: t, payment })
+      const h = String(10 + Math.floor(i / 6)).padStart(2, '0')
+      const min = String((i * 7) % 60).padStart(2, '0')
+      orders.push({ items: { [p.id]: qty }, total: t, payment, time: `${h}:${min}` })
     }
 
     for (const p of products) {

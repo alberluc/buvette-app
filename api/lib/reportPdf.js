@@ -137,9 +137,13 @@ function buildHtmlGrid(data) {
     .map(pid => `<th class="num">${grandProducts[pid]?.name ?? pid}</th>`)
     .join('')
 
-  const bodyRows = days.flatMap(day => {
+  // +2 colonnes (Heure + Pmt) entre Date et les produits
+  const extraCols = 2
+  const labelColspan = activeProductIds.length + extraCols
+
+  const bodyGroups = days.map(day => {
     const dayOrders = day.orders || []
-    if (dayOrders.length === 0) return []
+    if (dayOrders.length === 0) return ''
 
     const mouvements = day.mouvements || []
     const hasCash = day.cashCounted != null
@@ -150,19 +154,21 @@ function buildHtmlGrid(data) {
       const cells = activeProductIds
         .map(pid => `<td class="num">${order.items[pid] ? order.items[pid] : ''}</td>`)
         .join('')
+      const payClass = order.payment === 'especes' ? 'pay-esp' : 'pay-crt'
+      const payLabel = order.payment === 'especes' ? 'E' : 'C'
       return `<tr>
-        ${i === 0
-          ? `<td rowspan="${totalRowspan}" class="date-cell"><strong>${dateStr}</strong><span class="date-day">${weekday}</span></td>`
-          : ''}
+        ${i === 0 ? `<td rowspan="${totalRowspan}" class="date-cell"><strong>${dateStr}</strong><span class="date-day">${weekday}</span></td>` : ''}
+        <td class="num time-cell">${order.time ?? ''}</td>
+        <td class="num pay-cell ${payClass}">${payLabel}</td>
         ${cells}
-        <td class="num total-cell">${eur(order.total)}</td>
+        <td class="num total-cell">${order.payment === 'especes' ? eur(order.total) : ''}</td>
       </tr>`
     })
 
     const mouvTotal = mouvements.reduce((s, m) => s + m.amount, 0)
 
     const mouvementRows = mouvements.map(m => `<tr class="mouvement-row ${m.amount >= 0 ? 'entree' : 'sortie'}">
-      <td colspan="${activeProductIds.length}" class="mouvement-label">${m.label}</td>
+      <td colspan="${labelColspan}" class="mouvement-label">${m.label}</td>
       <td class="num mouvement-amount">${m.amount >= 0 ? '+' : ''}${eur(m.amount)}</td>
     </tr>`)
 
@@ -175,11 +181,11 @@ function buildHtmlGrid(data) {
       const ecartClass = ecart >= 0 ? 'surplus' : 'manque'
       return [
         `<tr class="caisse-row">
-          <td colspan="${activeProductIds.length}" class="caisse-label">Caisse comptée</td>
+          <td colspan="${labelColspan}" class="caisse-label">Caisse comptée</td>
           <td class="num caisse-amount">${eur(day.cashCounted)}</td>
         </tr>`,
         `<tr class="ecart-row ${ecartClass} day-end">
-          <td colspan="${activeProductIds.length}" class="ecart-label">Écart</td>
+          <td colspan="${labelColspan}" class="ecart-label">Écart</td>
           <td class="num ecart-amount">${ecart >= 0 ? '+' : ''}${eur(ecart)}</td>
         </tr>`,
       ]
@@ -187,11 +193,13 @@ function buildHtmlGrid(data) {
 
     const lastDayTotalClass = hasCash ? 'day-total-row' : 'day-total-row day-end'
     const dayTotalRowFinal = `<tr class="${lastDayTotalClass}">
+      <td colspan="${extraCols}"></td>
       ${daySumCells}
-      <td class="num day-sum-cell day-grand">${eur(day.dayTotal + mouvTotal)}</td>
+      <td class="num day-sum-cell day-grand">${eur(day.especes + mouvTotal)}</td>
     </tr>`
 
-    return [...orderRows, ...mouvementRows, dayTotalRowFinal, ...cashRows]
+    const rows = [...orderRows, ...mouvementRows, dayTotalRowFinal, ...cashRows].join('')
+    return `<tbody class="day-group">${rows}</tbody>`
   }).join('')
 
   const grandRows = activeProductIds.map(pid => {
@@ -211,11 +219,18 @@ function buildHtmlGrid(data) {
   h1 { font-size: 16px; margin-bottom: 2px; }
   .subtitle { font-size: 11px; color: #555; margin-bottom: 8mm; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8mm; }
+  thead { display: table-header-group; }
+  tbody.day-group { page-break-inside: avoid; }
   th { background: #2c3e50; color: #fff; padding: 4px 6px; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .time-cell { width: 28px; color: #999; font-size: 8px; }
+  .pay-cell { width: 16px; font-weight: bold; font-size: 8px; }
+  .pay-esp { color: #555; }
+  .pay-crt { color: #2060b0; }
   th.num, td.num { text-align: center; }
+  th.total-col { text-align: right; }
   td { padding: 2px 6px; border-bottom: 1px solid #ebebeb; border-right: 1px solid #ddd; vertical-align: middle; }
   td:last-child { border-right: none; }
-  .total-cell, .day-grand { text-align: right; }
+  td.total-cell, td.day-grand, td.mouvement-amount, td.caisse-amount, td.ecart-amount { text-align: right; }
   .date-cell { width: 85px; border-right: 2px solid #ddd; font-size: 8px; color: #333; vertical-align: top; padding-top: 4px; background: #f8f8f8; }
   .date-cell strong { display: block; font-size: 9px; font-weight: bold; }
   .date-day { display: block; font-size: 8px; color: #888; }
@@ -245,7 +260,7 @@ function buildHtmlGrid(data) {
 </style>
 </head>
 <body>
-  <h1>Bilan mensuel — ${label} · Détail des commandes</h1>
+  <h1>Bilan mensuel — ${label} · Journal de caisse</h1>
   <div class="subtitle">${clubName} · ${grandOrderCount} commande${grandOrderCount > 1 ? 's' : ''} · Total : ${eur(grandTotal)} (Espèces : ${eur(grandEspeces)} / Carte : ${eur(grandCarte)})</div>
 
   ${days.length === 0 ? `<p class="empty">Aucune activité ce mois-ci.</p>` : `
@@ -253,13 +268,13 @@ function buildHtmlGrid(data) {
     <thead>
       <tr>
         <th>Date</th>
+        <th class="num">Heure</th>
+        <th class="num">Pmt</th>
         ${productHeaders}
-        <th class="num">Total</th>
+        <th class="num total-col">Total</th>
       </tr>
     </thead>
-    <tbody>
-      ${bodyRows}
-    </tbody>
+    ${bodyGroups}
   </table>
 
   <table class="grand-table">

@@ -28,6 +28,6 @@ export async function sendReport({ to, clubName, monthLabel, html, pdfBuffer, pd
   const slug = monthLabel.toLowerCase().replace(/\s/g, '-')
   const attachments = []
   if (pdfBuffer)     attachments.push({ filename: `bilan-${slug}.pdf`,        content: pdfBuffer,     contentType: 'application/pdf' })
-  if (pdfGridBuffer) attachments.push({ filename: `bilan-${slug}-detail.pdf`, content: pdfGridBuffer, contentType: 'application/pdf' })
+  if (pdfGridBuffer) attachments.push({ filename: `bilan-${slug}-journal.pdf`, content: pdfGridBuffer, contentType: 'application/pdf' })
   await sendMail({ to, subject: `Bilan mensuel – ${clubName} – ${monthLabel}`, html, attachments })
 }
