@@ -121,13 +121,24 @@ export function demoEmailHtml({ key, daysCount, expiresLabel }) {
       </tr>
     </table>
 
+    <!-- CTA button -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin-bottom:20px;">
+      <tr>
+        <td align="center">
+          <a href="https://app.assolyte.fr"
+             style="display:inline-block;background:#1F6F3F;color:#ffffff;font-size:16px;
+                    font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+                    text-decoration:none;padding:16px 36px;border-radius:12px;letter-spacing:-0.01em;">
+            Ouvrir l'application →
+          </a>
+        </td>
+      </tr>
+    </table>
+
     <!-- Instructions -->
-    <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1F1B16;">
-      Comment accéder à la démo ?
-    </p>
-    <p style="margin:0;font-size:14px;color:#5C544A;line-height:1.65;">
-      Ouvrez l'application Assolyte et saisissez cette clé sur l'écran d'activation.
-      Votre espace de démonstration sera immédiatement disponible.
+    <p style="margin:0;font-size:13px;color:#9A9084;text-align:center;line-height:1.6;">
+      Saisissez votre clé sur l'écran d'activation pour accéder à votre espace de démo.
     </p>
   `
 
