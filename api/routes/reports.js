@@ -24,13 +24,15 @@ router.post('/report/test', requireSession, async (req, res) => {
   const data = buildMockData(license, year, month)
 
   try {
-    const pdf = await generatePdf(data)
+    const pdf     = await generatePdf(data, 'summary')
+    const pdfGrid = await generatePdf(data, 'grid')
     await sendReport({
       to: license.email,
       clubName: license.club_name,
       monthLabel: label,
       html: reportEmailHtml({ clubName: license.club_name, label, data, isTest: true }),
       pdfBuffer: pdf,
+      pdfGridBuffer: pdfGrid,
     })
     res.json({ ok: true })
   } catch (err) {
@@ -78,6 +80,7 @@ function buildMockData(license, year, month) {
     let dayTotal = 0
     let especes = 0
     let carte = 0
+    const orders = []
 
     for (let i = 0; i < orderCount; i++) {
       const p = products[rng(0, products.length - 1)]
@@ -86,8 +89,10 @@ function buildMockData(license, year, month) {
       productMap[p.id].total += p.price * qty
       const t = p.price * qty
       dayTotal += t
-      if (Math.random() < 0.7) especes += t
+      const payment = Math.random() < 0.7 ? 'especes' : 'carte'
+      if (payment === 'especes') especes += t
       else carte += t
+      orders.push({ items: { [p.id]: qty }, total: t, payment })
     }
 
     for (const p of products) {
@@ -104,6 +109,7 @@ function buildMockData(license, year, month) {
       especes,
       carte,
       products: productMap,
+      orders,
     }
   })
 

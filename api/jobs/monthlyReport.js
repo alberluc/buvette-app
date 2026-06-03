@@ -27,8 +27,9 @@ async function runMonthlyReports() {
 
   for (const license of licenses) {
     try {
-      const data = await buildMonthReport(license.key, year, month)
-      const pdf  = await generatePdf(data)
+      const data        = await buildMonthReport(license.key, year, month)
+      const pdf         = await generatePdf(data, 'summary')
+      const pdfGrid     = await generatePdf(data, 'grid')
 
       await sendReport({
         to: license.email,
@@ -36,6 +37,7 @@ async function runMonthlyReports() {
         monthLabel: label,
         html: reportEmailHtml({ clubName: license.club_name, label, data }),
         pdfBuffer: pdf,
+        pdfGridBuffer: pdfGrid,
       })
 
       console.log(`[report] OK — ${license.club_name} <${license.email}>`)

@@ -117,8 +117,146 @@ function buildHtml(data) {
 </html>`
 }
 
-export async function generatePdf(data) {
-  const html = buildHtml(data)
+function gridDateLabel(dayKey) {
+  const [y, m, d] = dayKey.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const weekday = date.toLocaleDateString('fr-FR', { weekday: 'long' })
+  const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return { weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1), dateStr }
+}
+
+function buildHtmlGrid(data) {
+  const { clubName, year, month, products, days, grandTotal, grandEspeces, grandCarte, grandOrderCount, grandProducts } = data
+  const label = monthLabel(year, month)
+
+  const activeProductIds = products
+    .filter(p => (grandProducts[p.id]?.qty ?? 0) > 0)
+    .map(p => p.id)
+
+  const productHeaders = activeProductIds
+    .map(pid => `<th class="num">${grandProducts[pid]?.name ?? pid}</th>`)
+    .join('')
+
+  const bodyRows = days.flatMap(day => {
+    const dayOrders = day.orders || []
+    if (dayOrders.length === 0) return []
+
+    const mouvements = day.mouvements || []
+    const totalRowspan = dayOrders.length + 1 + mouvements.length
+    const { weekday, dateStr } = gridDateLabel(day.dayKey)
+
+    const orderRows = dayOrders.map((order, i) => {
+      const cells = activeProductIds
+        .map(pid => `<td class="num">${order.items[pid] ? order.items[pid] : ''}</td>`)
+        .join('')
+      return `<tr>
+        ${i === 0
+          ? `<td rowspan="${totalRowspan}" class="date-cell"><strong>${dateStr}</strong><span class="date-day">${weekday}</span></td>`
+          : ''}
+        ${cells}
+        <td class="num total-cell">${eur(order.total)}</td>
+      </tr>`
+    })
+
+    const mouvTotal = mouvements.reduce((s, m) => s + m.amount, 0)
+
+    const mouvementRows = mouvements.map(m => `<tr class="mouvement-row ${m.amount >= 0 ? 'entree' : 'sortie'}">
+      <td colspan="${activeProductIds.length}" class="mouvement-label">${m.label}</td>
+      <td class="num mouvement-amount">${m.amount >= 0 ? '+' : ''}${eur(m.amount)}</td>
+    </tr>`)
+
+    const daySumCells = activeProductIds
+      .map(pid => `<td class="num day-sum-cell">${day.products[pid]?.qty || ''}</td>`)
+      .join('')
+    const dayTotalRow = `<tr class="day-total-row">
+      ${daySumCells}
+      <td class="num day-sum-cell day-grand">${eur(day.dayTotal + mouvTotal)}</td>
+    </tr>`
+
+    return [...orderRows, ...mouvementRows, dayTotalRow]
+  }).join('')
+
+  const grandRows = activeProductIds.map(pid => {
+    const stat = grandProducts[pid]
+    if (!stat?.qty) return ''
+    return `<tr><td colspan="2">${stat.name}</td><td class="num">${stat.qty}</td><td class="num">${eur(stat.total)}</td></tr>`
+  }).join('')
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4 portrait; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #1a1a1a; padding: 12mm 10mm; }
+  h1 { font-size: 16px; margin-bottom: 2px; }
+  .subtitle { font-size: 11px; color: #555; margin-bottom: 8mm; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8mm; }
+  th { background: #2c3e50; color: #fff; padding: 4px 6px; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  th.num, td.num { text-align: center; }
+  td { padding: 2px 6px; border-bottom: 1px solid #ebebeb; border-right: 1px solid #ddd; vertical-align: middle; }
+  td:last-child { border-right: none; }
+  .total-cell, .day-grand { text-align: right; }
+  .date-cell { width: 85px; border-right: 2px solid #ddd; font-size: 8px; color: #333; vertical-align: top; padding-top: 4px; background: #f8f8f8; }
+  .date-cell strong { display: block; font-size: 9px; font-weight: bold; }
+  .date-day { display: block; font-size: 8px; color: #888; }
+  .total-cell { font-weight: bold; border-left: 2px solid #ddd; white-space: nowrap; }
+  .day-total-row td { background: #f0f0f0; border-top: 1px solid #ccc; border-bottom: 2px solid #aaa; }
+  .day-sum-cell { font-weight: bold; font-size: 9px; }
+  .day-grand { border-left: 2px solid #ddd; color: #1a1a1a; }
+  .mouvement-row td { border-bottom: 1px solid #eee; padding: 2px 6px; }
+  .mouvement-row.sortie td { color: #c0392b; }
+  .mouvement-row.entree td { color: #27ae60; }
+  .mouvement-label { font-size: 8px; }
+  .mouvement-amount { font-size: 8px; font-weight: bold; white-space: nowrap; border-left: 2px solid #ddd; }
+  .grand-table th { background: #1a5276; }
+  .grand-total { font-size: 12px; font-weight: bold; text-align: right; margin-top: 4mm; }
+  .footer { margin-top: 8mm; font-size: 8px; color: #aaa; border-top: 1px solid #eee; padding-top: 3mm; }
+  .empty { text-align: center; color: #888; padding: 20px; }
+</style>
+</head>
+<body>
+  <h1>Bilan mensuel — ${label} · Détail des commandes</h1>
+  <div class="subtitle">${clubName} · ${grandOrderCount} commande${grandOrderCount > 1 ? 's' : ''} · Total : ${eur(grandTotal)} (Espèces : ${eur(grandEspeces)} / Carte : ${eur(grandCarte)})</div>
+
+  ${days.length === 0 ? `<p class="empty">Aucune activité ce mois-ci.</p>` : `
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        ${productHeaders}
+        <th class="num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${bodyRows}
+    </tbody>
+  </table>
+
+  <table class="grand-table">
+    <thead>
+      <tr>
+        <th colspan="2">Récapitulatif mensuel</th>
+        <th class="num">Qté</th>
+        <th class="num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${grandRows}
+    </tbody>
+  </table>
+
+  <div class="grand-total">TOTAL MOIS : ${eur(grandTotal)}</div>
+  `}
+
+  <div class="footer">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · Assolyte</div>
+</body>
+</html>`
+}
+
+export async function generatePdf(data, format = 'summary') {
+  const html = format === 'grid' ? buildHtmlGrid(data) : buildHtml(data)
 
   const launchOpts = {
     headless: true,

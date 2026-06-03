@@ -19,49 +19,76 @@ const mockData = {
   days: [
     {
       dayKey: '2026-05-02', date: 'Samedi 2 mai 2026', label: 'Tournoi printemps',
-      orderCount: 38, dayTotal: 102, especes: 74, carte: 28,
+      orderCount: 4, dayTotal: 13, especes: 9, carte: 4,
       products: {
-        biere: { name: 'Bière',      qty: 42, total: 84 },
-        vin:   { name: 'Vin',        qty:  5, total:  5 },
-        soda:  { name: 'Soda / Eau', qty: 13, total: 13 },
-        box:   { name: 'Box',        qty:  0, total:  0 },
+        biere: { name: 'Bière',      qty: 4, total: 8 },
+        vin:   { name: 'Vin',        qty: 1, total: 1 },
+        soda:  { name: 'Soda / Eau', qty: 4, total: 4 },
+        box:   { name: 'Box',        qty: 0, total: 0 },
       },
+      orders: [
+        { items: { biere: 2 },         total: 4,  payment: 'especes' },
+        { items: { biere: 1, soda: 2 }, total: 4, payment: 'especes' },
+        { items: { vin: 1, soda: 1 },  total: 2,  payment: 'carte'   },
+        { items: { biere: 1, soda: 1 }, total: 3, payment: 'carte'   },
+      ],
+      mouvements: [
+        { id: '1', time: '18:30', label: 'Achat glaçons', amount: -5 },
+        { id: '2', time: '20:00', label: 'Appoint monnaie', amount: 20 },
+      ],
     },
     {
       dayKey: '2026-05-10', date: 'Dimanche 10 mai 2026', label: '',
-      orderCount: 12, dayTotal: 28, especes: 28, carte: 0,
+      orderCount: 3, dayTotal: 9, especes: 9, carte: 0,
       products: {
-        biere: { name: 'Bière',      qty: 10, total: 20 },
-        vin:   { name: 'Vin',        qty:  3, total:  3 },
-        soda:  { name: 'Soda / Eau', qty:  5, total:  5 },
-        box:   { name: 'Box',        qty:  0, total:  0 },
+        biere: { name: 'Bière',      qty: 3, total: 6 },
+        vin:   { name: 'Vin',        qty: 1, total: 1 },
+        soda:  { name: 'Soda / Eau', qty: 2, total: 2 },
+        box:   { name: 'Box',        qty: 0, total: 0 },
       },
+      orders: [
+        { items: { biere: 2 },         total: 4, payment: 'especes' },
+        { items: { vin: 1 },           total: 1, payment: 'especes' },
+        { items: { biere: 1, soda: 2 }, total: 4, payment: 'especes' },
+      ],
     },
     {
       dayKey: '2026-05-24', date: 'Dimanche 24 mai 2026', label: 'Finale championnat',
-      orderCount: 65, dayTotal: 187, especes: 120, carte: 67,
+      orderCount: 5, dayTotal: 19, especes: 12, carte: 7,
       products: {
-        biere: { name: 'Bière',      qty: 71, total: 142 },
-        vin:   { name: 'Vin',        qty: 12, total:  12 },
-        soda:  { name: 'Soda / Eau', qty: 23, total:  23 },
-        box:   { name: 'Box',        qty: 10, total:  10 },
+        biere: { name: 'Bière',      qty: 6, total: 12 },
+        vin:   { name: 'Vin',        qty: 2, total:  2 },
+        soda:  { name: 'Soda / Eau', qty: 3, total:  3 },
+        box:   { name: 'Box',        qty: 2, total:  2 },
       },
+      orders: [
+        { items: { biere: 2, box: 1 },        total: 5,  payment: 'especes' },
+        { items: { biere: 1, soda: 1 },       total: 3,  payment: 'especes' },
+        { items: { vin: 2 },                  total: 2,  payment: 'carte'   },
+        { items: { biere: 2, soda: 2 },       total: 6,  payment: 'carte'   },
+        { items: { biere: 1, soda: 0, box: 1 }, total: 3, payment: 'especes' },
+      ],
     },
   ],
-  grandTotal: 317,
-  grandEspeces: 222,
-  grandCarte: 95,
-  grandOrderCount: 115,
+  grandTotal: 41,
+  grandEspeces: 30,
+  grandCarte: 11,
+  grandOrderCount: 12,
   grandProducts: {
-    biere: { name: 'Bière',      qty: 123, total: 246 },
-    vin:   { name: 'Vin',        qty:  20, total:  20 },
-    soda:  { name: 'Soda / Eau', qty:  41, total:  41 },
-    box:   { name: 'Box',        qty:  10, total:  10 },
+    biere: { name: 'Bière',      qty: 13, total: 26 },
+    vin:   { name: 'Vin',        qty:  4, total:  4 },
+    soda:  { name: 'Soda / Eau', qty:  9, total:  9 },
+    box:   { name: 'Box',        qty:  2, total:  2 },
   },
 }
 
-const out = '/tmp/buvette-report-preview.pdf'
-console.log('Génération du PDF…')
-const pdf = await generatePdf(mockData)
-writeFileSync(out, pdf)
-console.log(`PDF généré : ${out}`)
+console.log('Génération des PDFs…')
+const [pdf, pdfGrid] = await Promise.all([
+  generatePdf(mockData, 'summary'),
+  generatePdf(mockData, 'grid'),
+])
+writeFileSync('/tmp/buvette-report-preview.pdf', pdf)
+writeFileSync('/tmp/buvette-report-preview-detail.pdf', pdfGrid)
+console.log('PDFs générés :')
+console.log('  /tmp/buvette-report-preview.pdf')
+console.log('  /tmp/buvette-report-preview-detail.pdf')

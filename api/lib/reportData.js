@@ -58,12 +58,14 @@ function aggregateDay(row, products) {
   let dayTotal = 0
   let especes = 0
   let carte = 0
+  const enrichedOrders = []
 
   for (const order of orders) {
     dayTotal += order.total
     if (order.payment === 'especes') especes += order.total
     else carte += order.total
 
+    const itemsByPid = {}
     for (const [pid, qty] of order.items) {
       if (!productMap[pid]) {
         const p = products.find(x => x.id === pid)
@@ -71,7 +73,9 @@ function aggregateDay(row, products) {
       }
       productMap[pid].qty   += qty
       productMap[pid].total += productMap[pid].price * qty
+      itemsByPid[pid] = qty
     }
+    enrichedOrders.push({ items: itemsByPid, total: order.total, payment: order.payment })
   }
 
   return {
@@ -83,5 +87,7 @@ function aggregateDay(row, products) {
     especes,
     carte,
     products: productMap,
+    orders: enrichedOrders,
+    mouvements: row.mouvements || [],
   }
 }
