@@ -22,8 +22,9 @@ app.use(express.json())
 app.use((req, res, next) => {
   const origin = req.headers.origin
   const allowed = [
-    'https://buvette.petanquedutelegraphe.fr',
     'https://app.assolyte.fr',
+    'https://assolyte.fr',
+    'https://www.assolyte.fr',
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:4173',
