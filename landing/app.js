@@ -132,10 +132,38 @@
     var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
     if (!ok) { email.classList.add("err"); email.focus(); return; }
     email.classList.remove("err");
-    var name = v.split("@")[0];
-    doneMsg.innerHTML = "Votre accès de test part vers <strong>" + v + "</strong>. Pensez à vérifier vos spams — à tout de suite sur Assolyte&nbsp;!";
-    formWrap.style.display = "none";
-    doneWrap.style.display = "";
+
+    var btn = form.querySelector("button[type=submit]");
+    btn.disabled = true;
+    btn.textContent = "Envoi en cours…";
+
+    fetch("https://api.assolyte.fr/demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: v })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          btn.disabled = false;
+          btn.textContent = "Recevoir mon accès démo";
+          var msg = res.data.error || "Une erreur est survenue, réessayez.";
+          email.classList.add("err");
+          email.setCustomValidity(msg);
+          email.reportValidity();
+          return;
+        }
+        doneMsg.innerHTML = "Votre accès de test part vers <strong>" + v + "</strong>. Pensez à vérifier vos spams — à tout de suite sur Assolyte&nbsp;!";
+        formWrap.style.display = "none";
+        doneWrap.style.display = "";
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = "Recevoir mon accès démo";
+        email.classList.add("err");
+        email.setCustomValidity("Impossible de contacter le serveur, réessayez.");
+        email.reportValidity();
+      });
   });
 
   /* ---------- Reveal on scroll ---------- */

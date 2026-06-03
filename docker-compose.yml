@@ -1,9 +1,17 @@
 services:
+  landing:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
+    ports:
+      - "8081:80"
+
   app:
     build:
       context: ./app
       args:
-        VITE_API_URL: https://api.petanquedutelegraphe.fr
+        VITE_API_URL: https://api.assolyte.fr
     restart: unless-stopped
     ports:
       - "8080:80"
