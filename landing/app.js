@@ -171,6 +171,66 @@
       });
   });
 
+  /* ---------- Formulaire ambassadeur ---------- */
+  var ambForm = document.getElementById("ambassadorForm");
+  var ambDone = document.getElementById("ambassadorDone");
+
+  if (ambForm) {
+    var ambInputs = ambForm.querySelectorAll("input, select");
+    ambInputs.forEach(function (el) {
+      el.addEventListener("input", function () { el.classList.remove("err"); });
+    });
+
+    ambForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      var clubInput     = document.getElementById("ambClub");
+      var sportInput    = document.getElementById("ambSport");
+      var cityInput     = document.getElementById("ambCity");
+      var volSel        = document.getElementById("ambVolunteers");
+      var ambEmailInput = document.getElementById("ambEmail");
+
+      var valid = true;
+      [clubInput, sportInput, cityInput, ambEmailInput].forEach(function (inp) {
+        var ok = inp.value.trim().length > 0 && (inp.type !== "email" || inp.value.includes("@"));
+        inp.classList.toggle("err", !ok);
+        if (!ok) valid = false;
+      });
+      if (!volSel.value) { volSel.classList.add("err"); valid = false; }
+      if (!valid) return;
+
+      var btn = ambForm.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.textContent = "Envoi en cours…";
+
+      fetch("https://api.assolyte.fr/ambassador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          club_name:  clubInput.value.trim(),
+          sport:      sportInput.value.trim(),
+          city:       cityInput.value.trim(),
+          volunteers: volSel.value,
+          email:      ambEmailInput.value.trim(),
+        }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+          if (!res.ok) {
+            btn.disabled = false;
+            btn.textContent = "Candidater comme club ambassadeur →";
+            return;
+          }
+          ambForm.style.display = "none";
+          ambDone.style.display = "";
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = "Candidater comme club ambassadeur →";
+        });
+    });
+  }
+
   /* ---------- Reveal on scroll ---------- */
   if ("IntersectionObserver" in window) {
     var io = new IntersectionObserver(function (entries) {

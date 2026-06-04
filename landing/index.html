@@ -20,7 +20,7 @@
     <nav class="nav-links">
       <a href="#features">Fonctionnalités</a>
       <a href="#how">Comment ça marche</a>
-      <a href="#price">Tarif</a>
+      <a href="#price">Ambassadeurs</a>
       <a href="https://app.assolyte.fr" target="_blank" rel="noopener noreferrer" class="nav-app">Accéder à l'app ↗</a>
     </nav>
     <button class="btn btn-primary" data-demo>Essayer la démo</button>
@@ -273,52 +273,72 @@
   </div>
 </section>
 
-<!-- ===================== TARIF ===================== -->
-<section class="section" id="price">
+<!-- ===================== AMBASSADEURS ===================== -->
+<section class="section amb-section" id="price">
   <div class="wrap">
     <div class="sec-head center reveal">
-      <span class="kicker">Tarif simple et honnête</span>
-      <h2>La formule qui colle à votre budget</h2>
-      <p>Une licence annuelle, sans abonnement mensuel ni surprise. Renouvellement toujours optionnel.</p>
+      <span class="kicker">Accès anticipé — gratuit</span>
+      <h2>Devenez club ambassadeur</h2>
+      <p>Assolyte est en phase de lancement. On cherche des clubs pilotes prêts à tester l'app en conditions réelles et à façonner le produit final.</p>
     </div>
 
-    <div class="pricing-tiers reveal">
-      <!-- Essentiel -->
-      <div class="tier">
-        <div class="tier-name">Essentiel</div>
-        <p class="tier-tag">Pour les petites associations au budget serré.</p>
-        <div class="tier-price"><span class="num">49&nbsp;€</span><span class="per">/ an</span></div>
-        <p class="tier-sub">L'essentiel pour encaisser et clôturer sans erreur.</p>
-        <ul class="tier-list">
-          <li><span class="ck yes">✓</span>Encaissement rapide &amp; 100 % hors-ligne</li>
-          <li><span class="ck yes">✓</span>Bilan du jour &amp; caisse estimée en direct</li>
-          <li><span class="ck yes">✓</span>Clôture de caisse vérifiée</li>
-          <li class="no"><span class="ck">✕</span>Multi-appareils (un seul appareil)</li>
-          <li class="no"><span class="ck">✕</span>Export CSV &amp; historique complet</li>
-          <li class="no"><span class="ck">✕</span>Rapport mensuel automatique</li>
-        </ul>
-        <button class="btn btn-ghost btn-block btn-lg" data-demo>Choisir l'Essentiel</button>
+    <div class="amb-perks reveal">
+      <div class="amb-perk">
+        <span class="ap-icon">🎁</span>
+        <div><strong>Accès complet gratuit</strong><span>6 mois d'accès à toutes les fonctionnalités, sans engagement ni carte bancaire.</span></div>
       </div>
-
-      <!-- Complet -->
-      <div class="tier tier-featured">
-        <span class="tier-badge">Le plus choisi</span>
-        <div class="tier-name">Complète</div>
-        <p class="tier-tag">Tout le confort, pour tout le club.</p>
-        <div class="tier-price"><span class="num">149&nbsp;€</span><span class="per">/ an · tout le club</span></div>
-        <p class="tier-sub">Quel que soit le nombre de bénévoles ou d'appareils.</p>
-        <ul class="tier-list">
-          <li><span class="ck yes">✓</span><strong>Tout l'Essentiel</strong>, et en plus&nbsp;:</li>
-          <li><span class="ck yes">✓</span>Multi-appareils&nbsp;: tablette + téléphones, synchro temps réel</li>
-          <li><span class="ck yes">✓</span>Historique complet &amp; export CSV</li>
-          <li><span class="ck yes">✓</span>Rapport mensuel automatique par e-mail</li>
-          <li><span class="ck yes">✓</span>Mises à jour &amp; support inclus</li>
-        </ul>
-        <button class="btn btn-primary btn-block btn-lg" data-demo>Obtenir une licence</button>
+      <div class="amb-perk">
+        <span class="ap-icon">🤝</span>
+        <div><strong>Accompagnement direct</strong><span>On vous aide à configurer l'app pour votre club et on reste disponibles à chaque étape.</span></div>
+      </div>
+      <div class="amb-perk">
+        <span class="ap-icon">🛠️</span>
+        <div><strong>Votre retour compte</strong><span>Vos remarques influencent directement les prochaines fonctionnalités. Vous façonnez le produit.</span></div>
       </div>
     </div>
 
-    <p class="price-foot reveal">Pas encore décidé&nbsp;? <a href="#" data-demo>Essayez la démo d'abord →</a></p>
+    <div class="amb-form-card reveal">
+      <form id="ambassadorForm" novalidate>
+        <div class="amb-fields-row">
+          <div class="field">
+            <label for="ambClub">Nom du club</label>
+            <input type="text" id="ambClub" name="club_name" placeholder="FC Les Lilas" autocomplete="organization">
+          </div>
+          <div class="field">
+            <label for="ambSport">Sport pratiqué</label>
+            <input type="text" id="ambSport" name="sport" placeholder="Football, rugby, tennis…">
+          </div>
+        </div>
+        <div class="amb-fields-row">
+          <div class="field">
+            <label for="ambCity">Localisation</label>
+            <input type="text" id="ambCity" name="city" placeholder="Ville ou département">
+          </div>
+          <div class="field">
+            <label for="ambVolunteers">Bénévoles à la buvette</label>
+            <select id="ambVolunteers" name="volunteers">
+              <option value="">Sélectionner…</option>
+              <option value="1-3">1 à 3 bénévoles</option>
+              <option value="4-10">4 à 10 bénévoles</option>
+              <option value="10+">Plus de 10 bénévoles</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ambEmail">Votre e-mail</label>
+          <input type="email" id="ambEmail" name="email" placeholder="contact@monclub.fr" autocomplete="email">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:24px;">Candidater comme club ambassadeur →</button>
+      </form>
+      <div id="ambassadorDone" style="display:none;">
+        <div class="amb-done">
+          <div class="amb-done-emo">🎽</div>
+          <h3>Candidature reçue !</h3>
+          <p>On revient vers vous sous 48h pour mettre en place votre accès ambassadeur personnalisé.</p>
+        </div>
+      </div>
+      <p class="amb-foot">Réponse sous 48h. Aucun engagement, aucune carte bancaire.</p>
+    </div>
   </div>
 </section>
 
@@ -350,7 +370,7 @@
           <span class="ttl">Produit</span>
           <a href="#features">Fonctionnalités</a>
           <a href="#how">Comment ça marche</a>
-          <a href="#price">Tarif</a>
+          <a href="#price">Ambassadeurs</a>
           <a href="#" data-demo>Essayer la démo</a>
         </div>
         <div class="f-col">
