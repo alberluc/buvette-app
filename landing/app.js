@@ -153,7 +153,12 @@
           email.reportValidity();
           return;
         }
-        doneMsg.innerHTML = "Votre accès de test part vers <strong>" + v + "</strong>. Pensez à vérifier vos spams — à tout de suite sur Assolyte&nbsp;!";
+        doneMsg.textContent = "";
+        doneMsg.append("Votre accès de test part vers ");
+        var strong = document.createElement("strong");
+        strong.textContent = v;
+        doneMsg.appendChild(strong);
+        doneMsg.append(". Pensez à vérifier vos spams — à tout de suite sur Assolyte !");
         formWrap.style.display = "none";
         doneWrap.style.display = "";
       })
