@@ -39,7 +39,7 @@ function wrapper(preheader, bodyHtml) {
               <tr>
                 <!-- Logo mark -->
                 <td style="width:32px;height:32px;vertical-align:middle;">
-                  <img src="https://assolyte.fr/logo_transparent.png" width="32" height="32" alt="Assolyte" style="display:block;border:0;" />
+                  <img src="https://assolyte.fr/logo_sans_titre.png" width="32" height="32" alt="Assolyte" style="display:block;border:0;" />
                 </td>
                 <td style="padding-left:11px;vertical-align:middle;">
                   <span style="color:#fff;font-size:17px;font-weight:800;letter-spacing:-0.02em;">Assolyte</span>
