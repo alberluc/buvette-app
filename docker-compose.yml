@@ -7,6 +7,14 @@ services:
     ports:
       - "8081:80"
 
+  admin:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./admin:/usr/share/nginx/html:ro
+    ports:
+      - "8082:80"
+
   app:
     build:
       context: ./app

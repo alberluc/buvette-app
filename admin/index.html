@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assolyte — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:      #F6F1E8;
+  --paper:      #FFFCF6;
+  --cream-deep: #ECE3D2;
+  --ink:        #1F1B16;
+  --ink-soft:   #5C544A;
+  --ink-mute:   #9A9084;
+  --line:       #E1D8C5;
+  --club:       #1F6F3F;
+  --club-deep:  #144D2B;
+  --club-soft:  #E3EFE7;
+  --amber:      #B47A1E;
+  --amber-soft: #F3E6CC;
+  --danger:     #B33A2B;
+  --danger-soft:#FBEEEC;
+  --blue:       #2F6BBB;
+  --blue-soft:  #DCE7F6;
+  --shadow-sm:  0 2px 6px rgba(31,27,22,.08);
+  --shadow-md:  0 6px 20px rgba(31,27,22,.10);
+  --r:          14px;
+  --ease:       cubic-bezier(.2,.7,.3,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.55;
+  min-height: 100dvh;
+}
+
+h1,h2,h3 { margin: 0; line-height: 1.1; letter-spacing: -.02em; }
+p { margin: 0; }
+
+/* ── Layout ─────────────────────────────────────── */
+.wrap { max-width: 1080px; margin-inline: auto; padding-inline: 24px; }
+
+header {
+  background: rgba(246,241,232,.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 40;
+}
+.nav { display: flex; align-items: center; gap: 16px; height: 60px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; text-decoration: none; color: var(--ink); }
+.brand .logo {
+  width: 30px; height: 30px; border-radius: 9px; background: var(--club);
+  display: grid; place-items: center; flex: none; position: relative;
+}
+.brand .logo::after {
+  content: ""; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--cream); box-shadow: inset 0 0 0 2px var(--club);
+}
+.brand .admin-badge {
+  font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  background: var(--amber-soft); color: var(--amber); padding: 3px 8px; border-radius: 6px;
+}
+.nav .spacer { flex: 1; }
+#logoutBtn {
+  font: 700 13px "Inter", sans-serif; color: var(--ink-soft);
+  background: transparent; border: 1.5px solid var(--line); border-radius: 9px;
+  padding: 6px 14px; cursor: pointer; transition: border-color .14s, color .14s;
+}
+#logoutBtn:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+main { padding-block: 36px 64px; }
+
+/* ── Login ───────────────────────────────────────── */
+#loginScreen {
+  min-height: calc(100dvh - 60px);
+  display: grid; place-items: center; padding: 24px;
+}
+.login-card {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 22px;
+  box-shadow: var(--shadow-md); padding: 40px 36px; width: 100%; max-width: 400px;
+}
+.login-card .emo { font-size: 36px; }
+.login-card h2 { font-size: 24px; font-weight: 800; margin-top: 12px; }
+.login-card p { color: var(--ink-soft); font-size: 14.5px; margin-top: 8px; }
+
+/* ── Form controls ───────────────────────────────── */
+.field { display: grid; gap: 6px; margin-top: 20px; }
+.field label { font-weight: 700; font-size: 13px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.field input, .field select {
+  height: 48px; border-radius: var(--r); border: 1.5px solid var(--line);
+  background: var(--cream); padding: 0 14px;
+  font-family: inherit; font-size: 15px; color: var(--ink);
+  transition: border-color .14s, box-shadow .14s;
+  appearance: none; -webkit-appearance: none;
+}
+.field input:focus, .field select:focus {
+  outline: 0; border-color: var(--club); box-shadow: 0 0 0 3px var(--club-soft);
+}
+.field input.err { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(179,58,43,.1); }
+.field .hint { font-size: 12.5px; color: var(--ink-mute); }
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit; font-weight: 700; font-size: 15px; border: 0; cursor: pointer;
+  border-radius: var(--r); padding: 0 20px; height: 48px; white-space: nowrap;
+  transition: transform .12s var(--ease), background .14s, box-shadow .14s;
+}
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--club); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--club-deep); }
+.btn-primary:disabled { background: var(--ink-mute); cursor: not-allowed; }
+.btn-danger { background: var(--danger-soft); color: var(--danger); }
+.btn-danger:hover { background: #f5dbd7; }
+.btn-ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn-ghost:hover { background: var(--paper); }
+.btn-sm { height: 34px; font-size: 13px; padding: 0 13px; border-radius: 9px; }
+.btn-block { width: 100%; }
+
+/* ── Admin screen ────────────────────────────────── */
+#adminScreen { display: none; }
+
+.section-head {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 20px;
+}
+.section-head h2 { font-size: 20px; font-weight: 800; }
+
+/* ── New license card ────────────────────────────── */
+.card {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow-sm); padding: 26px 28px;
+}
+.card-title { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 9px; }
+.card-title .icon { font-size: 19px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+.form-actions { margin-top: 22px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ── Toast ───────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: var(--ink); color: var(--cream); font-weight: 700; font-size: 13.5px;
+  padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow-md);
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s var(--ease);
+  display: flex; align-items: center; gap: 8px; white-space: nowrap; z-index: 99;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.ok  { background: var(--club); }
+#toast.err { background: var(--danger); }
+
+/* ── Licenses table ──────────────────────────────── */
+.table-wrap {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  padding: 18px 22px; border-bottom: 1px solid var(--line);
+}
+.table-header h2 { font-size: 16px; font-weight: 800; }
+.count-badge {
+  font-size: 12px; font-weight: 800; background: var(--cream-deep); color: var(--ink-soft);
+  padding: 3px 10px; border-radius: 999px;
+}
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; font-size: 11.5px; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-mute);
+  padding: 12px 16px; background: var(--cream-deep); border-bottom: 1px solid var(--line);
+}
+tbody tr { border-bottom: 1px solid var(--line); transition: background .12s; }
+tbody tr:last-child { border-bottom: 0; }
+tbody tr:hover { background: var(--cream); }
+td { padding: 13px 16px; font-size: 14px; vertical-align: middle; }
+td.key-cell {
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; color: var(--ink);
+}
+.copy-btn {
+  background: transparent; border: 0; cursor: pointer; color: var(--ink-mute); font-size: 15px; padding: 2px 4px;
+  border-radius: 5px; transition: color .12s, background .12s; vertical-align: middle; margin-left: 4px;
+}
+.copy-btn:hover { color: var(--ink); background: var(--cream-deep); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+}
+.pill.active  { background: var(--club-soft);  color: var(--club-deep); }
+.pill.expired { background: var(--amber-soft); color: var(--amber); }
+.pill.revoked { background: var(--danger-soft); color: var(--danger); }
+.pill.demo    { background: var(--blue-soft); color: var(--blue); }
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.plan-tag { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+
+.empty-state {
+  text-align: center; padding: 52px 24px; color: var(--ink-mute);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state .emo { font-size: 36px; }
+.empty-state p { font-size: 14.5px; }
+
+.loading { padding: 40px; text-align: center; color: var(--ink-mute); font-size: 14px; }
+
+@media (max-width: 700px) {
+  .col-email, .col-created { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="brand">
+      <span class="logo"></span>
+      Assolyte
+      <span class="admin-badge">Admin</span>
+    </a>
+    <span class="spacer"></span>
+    <button id="logoutBtn" style="display:none">Déconnexion</button>
+  </div>
+</header>
+
+<!-- ── LOGIN ──────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="emo">🔐</div>
+    <h2>Accès admin</h2>
+    <p>Entre ton secret administrateur pour accéder au tableau de bord.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="secretInput">Secret admin</label>
+        <input type="password" id="secretInput" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <div class="form-actions" style="margin-top:18px">
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Connexion</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── ADMIN ──────────────────────────────────────── -->
+<div id="adminScreen">
+<main>
+<div class="wrap">
+
+  <!-- New license form -->
+  <div style="margin-bottom:28px">
+    <div class="section-head">
+      <h2>Nouvelle licence</h2>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">➕</span> Créer une licence</div>
+      <form id="newLicenseForm">
+        <div class="form-row" style="margin-top:18px">
+          <div class="field" style="margin-top:0">
+            <label for="clubName">Nom du club <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="clubName" placeholder="FC Exemple" required>
+          </div>
+          <div class="field" style="margin-top:0">
+            <label for="clubEmail">Email de contact</label>
+            <input type="email" id="clubEmail" placeholder="contact@club.fr">
+            <span class="hint">Optionnel — pour l'envoi futur de la clé</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field" style="margin-top:0">
+            <label for="planSelect">Plan</label>
+            <select id="planSelect">
+              <option value="annual">Annuel (365 jours)</option>
+              <option value="monthly">Mensuel (30 jours)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="createBtn">Créer la licence</button>
+          <span id="createStatus" style="font-size:13.5px;color:var(--ink-mute)"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Licenses list -->
+  <div class="table-wrap">
+    <div class="table-header">
+      <h2>Licences</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="count-badge" id="countBadge">—</span>
+        <button class="btn btn-ghost btn-sm" id="refreshBtn">↻ Actualiser</button>
+      </div>
+    </div>
+    <div id="tableContainer">
+      <div class="loading">Chargement…</div>
+    </div>
+  </div>
+
+</div>
+</main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const API = 'https://api.assolyte.fr'
+let adminSecret = ''
+
+// ── Helpers ──────────────────────────────────────────
+function apiUrl(path) {
+  return `${API}${path}`
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(apiUrl(path), {
+    ...opts,
+    headers: { 'x-admin-secret': adminSecret, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`)
+  return data
+}
+
+let toastTimer
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.className = 'show ' + type
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { t.className = '' }, 3200)
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function statusPill(row) {
+  if (row.is_demo) return `<span class="pill demo"><span class="dot"></span>Démo</span>`
+  if (row.revoked) return `<span class="pill revoked"><span class="dot"></span>Révoquée</span>`
+  const now = new Date()
+  const exp = new Date(row.expires_at)
+  if (exp < now) return `<span class="pill expired"><span class="dot"></span>Expirée</span>`
+  return `<span class="pill active"><span class="dot"></span>Active</span>`
+}
+
+function planLabel(plan) {
+  return plan === 'annual' ? 'Annuel' : 'Mensuel'
+}
+
+// ── Login ─────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault()
+  const secret = document.getElementById('secretInput').value.trim()
+  const btn = document.getElementById('loginBtn')
+  btn.disabled = true
+  btn.textContent = 'Connexion…'
+  try {
+    adminSecret = secret
+    await apiFetch('/admin/licenses')
+    sessionStorage.setItem('adminSecret', secret)
+    showAdminScreen()
+  } catch {
+    adminSecret = ''
+    document.getElementById('secretInput').classList.add('err')
+    showToast('Secret incorrect', 'err')
+    btn.disabled = false
+    btn.textContent = 'Connexion'
+  }
+})
+
+document.getElementById('secretInput').addEventListener('input', () => {
+  document.getElementById('secretInput').classList.remove('err')
+})
+
+function showAdminScreen() {
+  document.getElementById('loginScreen').style.display = 'none'
+  document.getElementById('adminScreen').style.display = ''
+  document.getElementById('logoutBtn').style.display = ''
+  loadLicenses()
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  adminSecret = ''
+  sessionStorage.removeItem('adminSecret')
+  document.getElementById('loginScreen').style.display = ''
+  document.getElementById('adminScreen').style.display = 'none'
+  document.getElementById('logoutBtn').style.display = 'none'
+  document.getElementById('secretInput').value = ''
+})
+
+// ── Load licenses ─────────────────────────────────────
+async function loadLicenses() {
+  const container = document.getElementById('tableContainer')
+  container.innerHTML = '<div class="loading">Chargement…</div>'
+  try {
+    const licenses = await apiFetch('/admin/licenses')
+    document.getElementById('countBadge').textContent = licenses.length
+    renderTable(licenses)
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state"><div class="emo">⚠️</div><p>${err.message}</p></div>`
+  }
+}
+
+function renderTable(licenses) {
+  const container = document.getElementById('tableContainer')
+  if (licenses.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emo">🏷️</div><p>Aucune licence pour l'instant.</p></div>`
+    return
+  }
+  container.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Clé</th>
+          <th>Club</th>
+          <th class="col-email">Email</th>
+          <th>Plan</th>
+          <th class="col-created">Créée le</th>
+          <th>Expire le</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="licenseRows"></tbody>
+    </table>
+    </div>
+  `
+  const tbody = document.getElementById('licenseRows')
+  licenses.forEach(lic => {
+    const tr = document.createElement('tr')
+    tr.dataset.key = lic.key
+    tr.innerHTML = `
+      <td class="key-cell">
+        ${lic.key}
+        <button class="copy-btn" title="Copier la clé" onclick="copyKey('${lic.key}')">⎘</button>
+      </td>
+      <td><strong>${escHtml(lic.club_name)}</strong></td>
+      <td class="col-email" style="color:var(--ink-soft)">${escHtml(lic.email || '—')}</td>
+      <td><span class="plan-tag">${planLabel(lic.plan)}</span></td>
+      <td class="col-created" style="color:var(--ink-soft)">${fmtDate(lic.created_at)}</td>
+      <td style="color:var(--ink-soft)">${fmtDate(lic.expires_at)}</td>
+      <td>${statusPill(lic)}</td>
+      <td>
+        ${!lic.revoked && !lic.is_demo ? `<button class="btn btn-danger btn-sm" onclick="revokeLicense('${lic.key}')">Révoquer</button>` : ''}
+      </td>
+    `
+    tbody.appendChild(tr)
+  })
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(() => showToast('Clé copiée ✓', 'ok')).catch(() => showToast('Copie impossible', 'err'))
+}
+
+// ── Revoke ────────────────────────────────────────────
+async function revokeLicense(key) {
+  if (!confirm(`Révoquer la licence ${key} ?\n\nLe club ne pourra plus se connecter.`)) return
+  try {
+    await apiFetch(`/admin/licenses/${key}`, { method: 'DELETE' })
+    showToast('Licence révoquée', 'ok')
+    loadLicenses()
+  } catch (err) {
+    showToast(err.message, 'err')
+  }
+}
+
+// ── Create ────────────────────────────────────────────
+document.getElementById('newLicenseForm').addEventListener('submit', async e => {
+  e.preventDefault()
+  const clubName = document.getElementById('clubName').value.trim()
+  const email    = document.getElementById('clubEmail').value.trim()
+  const plan     = document.getElementById('planSelect').value
+  const btn      = document.getElementById('createBtn')
+  const status   = document.getElementById('createStatus')
+
+  if (!clubName) {
+    document.getElementById('clubName').classList.add('err')
+    return
+  }
+
+  btn.disabled = true
+  btn.textContent = 'Création…'
+  status.textContent = ''
+
+  try {
+    const lic = await apiFetch('/admin/licenses', {
+      method: 'POST',
+      body: JSON.stringify({ club_name: clubName, email: email || undefined, plan }),
+    })
+    showToast(`Licence créée : ${lic.key}`, 'ok')
+    document.getElementById('newLicenseForm').reset()
+    loadLicenses()
+  } catch (err) {
+    showToast(err.message, 'err')
+    status.textContent = err.message
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Créer la licence'
+  }
+})
+
+document.getElementById('clubName').addEventListener('input', () => {
+  document.getElementById('clubName').classList.remove('err')
+})
+
+document.getElementById('refreshBtn').addEventListener('click', loadLicenses)
+
+// ── Auto-login from sessionStorage ───────────────────
+const saved = sessionStorage.getItem('adminSecret')
+if (saved) {
+  adminSecret = saved
+  apiFetch('/admin/licenses')
+    .then(() => showAdminScreen())
+    .catch(() => { adminSecret = ''; sessionStorage.removeItem('adminSecret') })
+}
+</script>
+</body>
+</html>

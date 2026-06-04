@@ -24,9 +24,11 @@ app.use((req, res, next) => {
   const allowed = [
     'https://buvette.petanquedutelegraphe.fr',
     'https://app.assolyte.fr',
+    'https://admin.assolyte.fr',
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:4173',
+    'http://localhost:8082',
   ]
   if (allowed.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin)
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')

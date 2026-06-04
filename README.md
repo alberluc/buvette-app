@@ -70,25 +70,16 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-### Reverse proxy (Caddy)
+### Reverse proxy
 
-Ajouter ces deux blocs dans le `Caddyfile` du Caddy central :
+Le reverse proxy (Caddy) est géré dans un projet séparé. Exposer les ports suivants depuis ce projet :
 
-```
-buvette.petanquedutelegraphe.fr {
-    reverse_proxy host.docker.internal:8080
-}
-
-api.petanquedutelegraphe.fr {
-    reverse_proxy host.docker.internal:3001
-}
-```
-
-Puis recharger Caddy :
-
-```bash
-docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
-```
+| Service | Port local | Domaine à pointer |
+|---------|-----------|-------------------|
+| app     | 8080      | `app.assolyte.fr` |
+| api     | 3001      | `api.assolyte.fr` |
+| landing | 8081      | `assolyte.fr`     |
+| admin   | 8082      | `admin.assolyte.fr` |
 
 ### Mises à jour
 
