@@ -420,14 +420,15 @@ a { color: inherit; text-decoration: none; }
 .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
 @media (max-width: 860px) { .steps { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .steps { grid-template-columns: 1fr; } }
-.step { position: relative; padding-top: 8px; }
+.step { position: relative; padding-top: 8px; text-align: center; }
 .step .num {
   width: 44px; height: 44px; border-radius: 13px; background: var(--club); color: #fff;
   display: grid; place-items: center; font-weight: 800; font-size: 19px; box-shadow: var(--shadow-sm);
+  margin: 0 auto;
 }
 .step h3 { font-size: 17.5px; font-weight: 800; margin-top: 18px; }
 .step p { margin-top: 8px; font-size: 14.5px; color: var(--ink-soft); }
-.step .connector { position:absolute; top: 30px; left: 56px; right: -8px; height: 2px; background: var(--line); }
+.step .connector { position:absolute; top: 30px; left: calc(50% + 22px); right: -8px; height: 2px; background: var(--line); }
 @media (max-width: 860px) { .step .connector { display:none; } }
 
 /* =================== Ambassadeurs =================== */
