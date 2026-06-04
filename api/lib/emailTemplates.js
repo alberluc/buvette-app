@@ -148,7 +148,75 @@ export function demoEmailHtml({ key, daysCount, expiresLabel }) {
   )
 }
 
-/* ─── Template 2 : bilan mensuel (réel ou de test) ───────────────────────── */
+/* ─── Template 2 : nouvelle licence ──────────────────────────────────────── */
+export function licenseEmailHtml({ key, clubName, plan, expiresLabel }) {
+  const planLabel = plan === 'annual' ? 'Annuel (365 jours)' : 'Mensuel (30 jours)'
+  const body = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#1F1B16;letter-spacing:-0.02em;">
+      Votre licence Assolyte
+    </h1>
+    <p style="margin:0 0 28px;font-size:15px;color:#5C544A;line-height:1.65;">
+      Bonjour,<br>
+      Voici la clé de licence pour <strong style="color:#1F1B16;">${clubName}</strong>.
+      Saisissez-la sur l'écran d'activation pour accéder à votre espace.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin-bottom:16px;">
+      <tr>
+        <td style="background:#F6F1E8;border:1.5px solid #E1D8C5;border-radius:12px;
+                   padding:22px 24px;text-align:center;">
+          <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;
+                    text-transform:uppercase;color:#9A9084;">
+            Clé de licence
+          </p>
+          <p style="margin:0;font-size:26px;font-family:'Courier New',Courier,monospace;
+                    font-weight:700;letter-spacing:6px;color:#1F1B16;">
+            ${key}
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin-bottom:28px;">
+      <tr>
+        <td style="background:#E3EFE7;border-radius:10px;padding:13px 18px;">
+          <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1F6F3F;">
+            ✓&nbsp; Plan ${planLabel}
+          </p>
+          <p style="margin:0;font-size:13px;color:#1F6F3F;">
+            Expire le ${expiresLabel}
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin-bottom:20px;">
+      <tr>
+        <td align="center">
+          <a href="https://app.assolyte.fr"
+             style="display:inline-block;background:#1F6F3F;color:#ffffff;font-size:16px;
+                    font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+                    text-decoration:none;padding:16px 36px;border-radius:12px;letter-spacing:-0.01em;">
+            Ouvrir l'application →
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;font-size:13px;color:#9A9084;text-align:center;line-height:1.6;">
+      Conservez cet e-mail — votre clé sera nécessaire à chaque nouvelle installation.
+    </p>
+  `
+  return wrapper(
+    `Votre clé de licence Assolyte pour ${clubName} — plan ${planLabel}.`,
+    body,
+  )
+}
+
+/* ─── Template 3 : bilan mensuel (réel ou de test) ───────────────────────── */
 export function reportEmailHtml({ clubName, label, data, isTest = false }) {
   const total   = fmtEUR(data.grandTotal)
   const especes = fmtEUR(data.grandEspeces)

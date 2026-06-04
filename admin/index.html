@@ -207,6 +207,10 @@ td.key-cell {
 
 .plan-tag { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
 
+.filter-btn { background: transparent; color: var(--ink-soft); box-shadow: inset 0 0 0 1.5px var(--line); }
+.filter-btn:hover { background: var(--cream-deep); }
+.filter-btn.active { background: var(--ink); color: var(--cream); box-shadow: none; }
+
 .empty-state {
   text-align: center; padding: 52px 24px; color: var(--ink-mute);
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -272,9 +276,8 @@ td.key-cell {
             <input type="text" id="clubName" placeholder="FC Exemple" required>
           </div>
           <div class="field" style="margin-top:0">
-            <label for="clubEmail">Email de contact</label>
-            <input type="email" id="clubEmail" placeholder="contact@club.fr">
-            <span class="hint">Optionnel — pour l'envoi futur de la clé</span>
+            <label for="clubEmail">Email de contact <span style="color:var(--danger)">*</span></label>
+            <input type="email" id="clubEmail" placeholder="contact@club.fr" required>
           </div>
         </div>
         <div class="form-row">
@@ -298,7 +301,12 @@ td.key-cell {
   <div class="table-wrap">
     <div class="table-header">
       <h2>Licences</h2>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm filter-btn active" data-filter="all">Toutes</button>
+          <button class="btn btn-sm filter-btn" data-filter="real">Réelles</button>
+          <button class="btn btn-sm filter-btn" data-filter="demo">Démos</button>
+        </div>
         <span class="count-badge" id="countBadge">—</span>
         <button class="btn btn-ghost btn-sm" id="refreshBtn">↻ Actualiser</button>
       </div>
@@ -388,7 +396,7 @@ document.getElementById('secretInput').addEventListener('input', () => {
 
 function showAdminScreen() {
   document.getElementById('loginScreen').style.display = 'none'
-  document.getElementById('adminScreen').style.display = ''
+  document.getElementById('adminScreen').style.display = 'block'
   document.getElementById('logoutBtn').style.display = ''
   loadLicenses()
 }
@@ -403,17 +411,38 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 })
 
 // ── Load licenses ─────────────────────────────────────
+let allLicenses = []
+let activeFilter = 'all'
+
 async function loadLicenses() {
   const container = document.getElementById('tableContainer')
   container.innerHTML = '<div class="loading">Chargement…</div>'
   try {
-    const licenses = await apiFetch('/admin/licenses')
-    document.getElementById('countBadge').textContent = licenses.length
-    renderTable(licenses)
+    allLicenses = await apiFetch('/admin/licenses')
+    applyFilter()
   } catch (err) {
     container.innerHTML = `<div class="empty-state"><div class="emo">⚠️</div><p>${err.message}</p></div>`
   }
 }
+
+function applyFilter() {
+  const filtered = allLicenses.filter(l => {
+    if (activeFilter === 'demo') return l.is_demo
+    if (activeFilter === 'real') return !l.is_demo
+    return true
+  })
+  document.getElementById('countBadge').textContent = filtered.length
+  renderTable(filtered)
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeFilter = btn.dataset.filter
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    applyFilter()
+  })
+})
 
 function renderTable(licenses) {
   const container = document.getElementById('tableContainer')
@@ -456,7 +485,11 @@ function renderTable(licenses) {
       <td style="color:var(--ink-soft)">${fmtDate(lic.expires_at)}</td>
       <td>${statusPill(lic)}</td>
       <td>
-        ${!lic.revoked && !lic.is_demo ? `<button class="btn btn-danger btn-sm" onclick="revokeLicense('${lic.key}')">Révoquer</button>` : ''}
+        ${lic.is_demo
+          ? `<button class="btn btn-danger btn-sm" onclick="deleteLicense('${lic.key}')">Supprimer</button>`
+          : !lic.revoked
+            ? `<button class="btn btn-danger btn-sm" onclick="revokeLicense('${lic.key}')">Révoquer</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="restoreLicense('${lic.key}')">Réactiver</button>`}
       </td>
     `
     tbody.appendChild(tr)
@@ -483,6 +516,28 @@ async function revokeLicense(key) {
   }
 }
 
+async function deleteLicense(key) {
+  if (!confirm(`Supprimer définitivement la démo ${key} et toutes ses données ?`)) return
+  try {
+    await apiFetch(`/admin/licenses/${key}/permanent`, { method: 'DELETE' })
+    showToast('Démo supprimée', 'ok')
+    loadLicenses()
+  } catch (err) {
+    showToast(err.message, 'err')
+  }
+}
+
+async function restoreLicense(key) {
+  if (!confirm(`Réactiver la licence ${key} ?`)) return
+  try {
+    await apiFetch(`/admin/licenses/${key}/restore`, { method: 'POST' })
+    showToast('Licence réactivée', 'ok')
+    loadLicenses()
+  } catch (err) {
+    showToast(err.message, 'err')
+  }
+}
+
 // ── Create ────────────────────────────────────────────
 document.getElementById('newLicenseForm').addEventListener('submit', async e => {
   e.preventDefault()
@@ -496,6 +551,10 @@ document.getElementById('newLicenseForm').addEventListener('submit', async e => 
     document.getElementById('clubName').classList.add('err')
     return
   }
+  if (!email) {
+    document.getElementById('clubEmail').classList.add('err')
+    return
+  }
 
   btn.disabled = true
   btn.textContent = 'Création…'
@@ -504,7 +563,7 @@ document.getElementById('newLicenseForm').addEventListener('submit', async e => 
   try {
     const lic = await apiFetch('/admin/licenses', {
       method: 'POST',
-      body: JSON.stringify({ club_name: clubName, email: email || undefined, plan }),
+      body: JSON.stringify({ club_name: clubName, email, plan }),
     })
     showToast(`Licence créée : ${lic.key}`, 'ok')
     document.getElementById('newLicenseForm').reset()
@@ -520,6 +579,9 @@ document.getElementById('newLicenseForm').addEventListener('submit', async e => 
 
 document.getElementById('clubName').addEventListener('input', () => {
   document.getElementById('clubName').classList.remove('err')
+})
+document.getElementById('clubEmail').addEventListener('input', () => {
+  document.getElementById('clubEmail').classList.remove('err')
 })
 
 document.getElementById('refreshBtn').addEventListener('click', loadLicenses)
