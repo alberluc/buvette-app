@@ -189,6 +189,7 @@
       var cityInput     = document.getElementById("ambCity");
       var volSel        = document.getElementById("ambVolunteers");
       var ambEmailInput = document.getElementById("ambEmail");
+      var ambMessage    = document.getElementById("ambMessage");
 
       var valid = true;
       [clubInput, sportInput, cityInput, ambEmailInput].forEach(function (inp) {
@@ -212,6 +213,7 @@
           city:       cityInput.value.trim(),
           volunteers: volSel.value,
           email:      ambEmailInput.value.trim(),
+          message:    ambMessage.value.trim() || undefined,
         }),
       })
         .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })

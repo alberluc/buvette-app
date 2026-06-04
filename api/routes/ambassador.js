@@ -7,10 +7,13 @@ const FIELDS = ['club_name', 'sport', 'city', 'volunteers', 'email']
 const VOLUNTEERS_VALUES = ['1-3', '4-10', '10+']
 
 router.post('/ambassador', async (req, res) => {
-  const { club_name, sport, city, volunteers, email } = req.body
+  const { club_name, sport, city, volunteers, email, message } = req.body
 
   if (FIELDS.some(f => !req.body[f] || typeof req.body[f] !== 'string')) {
     return res.status(400).json({ error: 'Tous les champs sont requis.' })
+  }
+  if (message !== undefined && typeof message !== 'string') {
+    return res.status(400).json({ error: 'Message invalide.' })
   }
   if (!email.includes('@')) {
     return res.status(400).json({ error: 'Email invalide.' })
@@ -33,6 +36,7 @@ router.post('/ambassador', async (req, res) => {
           <tr><td><strong>Bénévoles buvette</strong></td><td>${escHtml(volunteers)}</td></tr>
           <tr><td><strong>Email</strong></td><td>${escHtml(email)}</td></tr>
         </table>
+        ${message ? `<h3>Message</h3><p>${escHtml(message)}</p>` : ''}
       `,
     })
     res.status(201).json({ ok: true })

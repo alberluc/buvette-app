@@ -534,6 +534,13 @@ a { color: inherit; text-decoration: none; }
 }
 .field input:focus { outline: 0; border-color: var(--club); box-shadow: 0 0 0 4px var(--club-soft); }
 .field input.err { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(179,58,43,.12); }
+.field textarea {
+  border-radius: var(--r-btn); border: 1.5px solid var(--line); background: #fff;
+  padding: 12px 16px; font-family: inherit; font-size: 16px; color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease; resize: vertical; width: 100%;
+}
+.field textarea:focus { outline: 0; border-color: var(--club); box-shadow: 0 0 0 4px var(--club-soft); }
+.field-optional { font-weight: 400; font-size: 12px; color: var(--ink-mute); margin-left: 4px; }
 .modal .submitted { text-align: center; padding: 14px 0 6px; }
 .modal .submitted .big { font-size: 46px; }
 .modal .fineprint { font-size: 12.5px; color: var(--ink-mute); margin-top: 14px; text-align:center; }
