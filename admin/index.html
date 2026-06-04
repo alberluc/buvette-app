@@ -59,12 +59,7 @@ header {
 .nav { display: flex; align-items: center; gap: 16px; height: 60px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; text-decoration: none; color: var(--ink); }
 .brand .logo {
-  width: 30px; height: 30px; border-radius: 9px; background: var(--club);
-  display: grid; place-items: center; flex: none; position: relative;
-}
-.brand .logo::after {
-  content: ""; width: 13px; height: 13px; border-radius: 50%;
-  background: var(--cream); box-shadow: inset 0 0 0 2px var(--club);
+  width: 30px; height: 30px; flex: none; display: block; object-fit: contain;
 }
 .brand .admin-badge {
   font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
@@ -230,7 +225,7 @@ td.key-cell {
 <header>
   <div class="wrap nav">
     <a href="#" class="brand">
-      <span class="logo"></span>
+      <img src="logo_transparent.png" class="logo" alt="Assolyte" />
       Assolyte
       <span class="admin-badge">Admin</span>
     </a>

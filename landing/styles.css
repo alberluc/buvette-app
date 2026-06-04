@@ -103,13 +103,7 @@ a { color: inherit; text-decoration: none; }
 .nav { display: flex; align-items: center; gap: 24px; height: 72px; }
 .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
 .brand .logo {
-  width: 34px; height: 34px; border-radius: 10px; background: var(--club);
-  display: grid; place-items: center; box-shadow: var(--shadow-sm); flex: none;
-  position: relative;
-}
-.brand .logo::after {
-  content: ""; width: 15px; height: 15px; border-radius: 50%;
-  background: var(--cream); box-shadow: inset 0 0 0 2.5px var(--club);
+  width: 34px; height: 34px; flex: none; display: block; object-fit: contain;
 }
 .nav .spacer { flex: 1; }
 .nav-links { display: flex; align-items: center; gap: 26px; }
@@ -499,7 +493,7 @@ a { color: inherit; text-decoration: none; }
 /* =================== Footer =================== */
 .footer { background: var(--ink); color: var(--cream); padding-block: 56px 40px; }
 .footer-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 28px; }
-.footer .brand .logo { box-shadow: none; }
+.footer .brand .logo { opacity: 0.9; }
 .footer .f-tag { color: rgba(246,241,232,.6); font-size: 15px; max-width: 34ch; margin-top: 16px; }
 .footer .f-links { display: flex; gap: 30px; flex-wrap: wrap; }
 .footer .f-col { display: grid; gap: 10px; align-content: start; }

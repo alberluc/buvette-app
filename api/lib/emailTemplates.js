@@ -38,9 +38,8 @@ function wrapper(preheader, bodyHtml) {
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <!-- Logo mark -->
-                <td style="width:32px;height:32px;background:rgba(255,255,255,0.18);border-radius:9px;
-                            text-align:center;vertical-align:middle;font-size:17px;line-height:32px;">
-                  🍺
+                <td style="width:32px;height:32px;vertical-align:middle;">
+                  <img src="https://assolyte.fr/logo_transparent.png" width="32" height="32" alt="Assolyte" style="display:block;border:0;" />
                 </td>
                 <td style="padding-left:11px;vertical-align:middle;">
                   <span style="color:#fff;font-size:17px;font-weight:800;letter-spacing:-0.02em;">Assolyte</span>
