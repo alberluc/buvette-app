@@ -93,6 +93,32 @@
 
   render();
 
+  /* ---------- Menu hamburger ---------- */
+  var navToggle = document.getElementById("navToggle");
+  var navMenu = document.getElementById("navMenu");
+
+  function closeNav() {
+    navMenu.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "Ouvrir le menu");
+    document.body.style.overflow = "";
+  }
+
+  navToggle.addEventListener("click", function () {
+    var isOpen = navMenu.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    navToggle.setAttribute("aria-label", isOpen ? "Fermer le menu" : "Ouvrir le menu");
+    document.body.style.overflow = isOpen ? "hidden" : "";
+  });
+
+  navMenu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", closeNav);
+  });
+
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 820) closeNav();
+  });
+
   /* ---------- Modale démo ---------- */
   var back = document.getElementById("modalBack");
   var closeBtn = document.getElementById("modalClose");

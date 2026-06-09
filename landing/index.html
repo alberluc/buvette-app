@@ -5,6 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assolyte — La caisse pour votre buvette de club</title>
 <meta name="description" content="Assolyte : la caisse enregistreuse pour les buvettes de clubs sportifs. Simple, intuitive, 100 % hors-ligne. Pensée pour tous les bénévoles.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://assolyte.fr">
+<meta property="og:title" content="Assolyte — La caisse pour votre buvette de club">
+<meta property="og:description" content="La caisse enregistreuse pour les buvettes de clubs sportifs. Simple, hors-ligne, pensée pour les bénévoles.">
+<meta property="og:image" content="https://assolyte.fr/logo.svg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://assolyte.fr">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://assolyte.fr/#organization",
+      "name": "Assolyte",
+      "url": "https://assolyte.fr",
+      "logo": "https://assolyte.fr/logo.svg",
+      "email": "bonjour@assolyte.fr",
+      "description": "Éditeur de logiciels de caisse pour buvettes de clubs sportifs."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://assolyte.fr/#app",
+      "name": "Assolyte",
+      "url": "https://assolyte.fr",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "6 mois d'accès gratuit pour les clubs ambassadeurs."
+      },
+      "publisher": { "@id": "https://assolyte.fr/#organization" },
+      "description": "Caisse enregistreuse hors-ligne pour buvettes de clubs sportifs. Encaissement espèces et carte, bilan automatique, rapport mensuel.",
+      "featureList": [
+        "Fonctionne 100% hors-ligne",
+        "Encaissement espèces et carte bancaire",
+        "Bilan automatique en temps réel",
+        "Export CSV de l'historique",
+        "Rapport mensuel par e-mail",
+        "Vérification du fond de caisse"
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://assolyte.fr/#webpage",
+      "url": "https://assolyte.fr",
+      "name": "Assolyte — La caisse pour votre buvette de club",
+      "description": "La caisse enregistreuse pour les buvettes de clubs sportifs. Simple, hors-ligne, pensée pour les bénévoles.",
+      "isPartOf": { "@id": "https://assolyte.fr/#organization" },
+      "inLanguage": "fr-FR"
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,450;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
@@ -15,15 +71,18 @@
 <!-- ===================== HEADER ===================== -->
 <header class="site-header" id="siteHeader">
   <div class="wrap nav">
-    <a href="#top" class="brand"><img src="logo.png" class="logo" alt="Assolyte" />Assolyte</a>
+    <a href="#top" class="brand"><img src="logo.svg" class="logo" alt="Assolyte" />Assolyte</a>
     <span class="spacer"></span>
-    <nav class="nav-links">
+    <nav class="nav-links" id="navMenu">
       <a href="#features">Fonctionnalités</a>
       <a href="#how">Comment ça marche</a>
       <a href="#price">Ambassadeurs</a>
       <a href="https://app.assolyte.fr" target="_blank" rel="noopener noreferrer" class="nav-app">Accéder à l'app ↗</a>
     </nav>
-    <button class="btn btn-primary" data-demo>Essayer la démo</button>
+    <button class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navMenu">
+      <span></span><span></span><span></span>
+    </button>
+    <button class="btn btn-primary nav-demo-btn" data-demo>Essayer la démo</button>
   </div>
 </header>
 
@@ -69,12 +128,12 @@
             </div>
 
             <div class="a2-prods" id="a2Prods">
-              <button class="a2-prod" data-name="Bière" data-price="2.00"><span class="a2-ic tan">🍺</span><span class="a2-info"><span class="a2-nm">Bière</span><span class="a2-pr">2,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
-              <button class="a2-prod" data-name="Vin" data-price="1.00"><span class="a2-ic pink">🍷</span><span class="a2-info"><span class="a2-nm">Vin</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
-              <button class="a2-prod" data-name="Soda / Eau" data-price="1.00"><span class="a2-ic blue">🥤</span><span class="a2-info"><span class="a2-nm">Soda / Eau</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
-              <button class="a2-prod" data-name="Box" data-price="1.00"><span class="a2-ic purple">🍿</span><span class="a2-info"><span class="a2-nm">Box</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
-              <button class="a2-prod" data-name="Café" data-price="1.00"><span class="a2-ic tan">☕</span><span class="a2-info"><span class="a2-nm">Café</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
-              <button class="a2-prod" data-name="Sandwich" data-price="3.00"><span class="a2-ic pink">🥪</span><span class="a2-info"><span class="a2-nm">Sandwich</span><span class="a2-pr">3,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Bière" data-price="2.00"><span class="a2-ic tan" aria-hidden="true">🍺</span><span class="a2-info"><span class="a2-nm">Bière</span><span class="a2-pr">2,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Vin" data-price="1.00"><span class="a2-ic pink" aria-hidden="true">🍷</span><span class="a2-info"><span class="a2-nm">Vin</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Soda / Eau" data-price="1.00"><span class="a2-ic blue" aria-hidden="true">🥤</span><span class="a2-info"><span class="a2-nm">Soda / Eau</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Box" data-price="1.00"><span class="a2-ic purple" aria-hidden="true">🍿</span><span class="a2-info"><span class="a2-nm">Box</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Café" data-price="1.00"><span class="a2-ic tan" aria-hidden="true">☕</span><span class="a2-info"><span class="a2-nm">Café</span><span class="a2-pr">1,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
+              <button class="a2-prod" data-name="Sandwich" data-price="3.00"><span class="a2-ic pink" aria-hidden="true">🥪</span><span class="a2-info"><span class="a2-nm">Sandwich</span><span class="a2-pr">3,00 € l'unité</span></span><span class="a2-q">0&nbsp;×</span></button>
             </div>
 
             <div class="a2-foot">
@@ -92,7 +151,7 @@
               </div>
             </div>
 
-            <button class="a2-validate" id="a2Validate"><span class="chk">✓</span> Valider la commande · <span id="a2Btn">0,00 €</span></button>
+            <button class="a2-validate" id="a2Validate"><span class="chk" aria-hidden="true">✓</span> Valider la commande · <span id="a2Btn">0,00 €</span></button>
           </div>
         </div>
         <div class="toast" id="toast"></div>
@@ -119,9 +178,9 @@
       <p class="lead" style="margin-top:18px;">Vous gérez encore la buvette avec <span class="strike">un carnet et une calculette&nbsp;?</span></p>
     </div>
     <div class="pains">
-      <div class="pain reveal"><div class="pemo">🤯</div><h3>La caisse ne tombe jamais juste</h3><p>Un verre oublié, une erreur d'addition à 18h… et le fond de caisse ne correspond plus. On recompte, on s'agace.</p></div>
-      <div class="pain reveal"><div class="pemo">📊</div><h3>Faire le bilan, c'est la corvée</h3><p>Combien de bières vendues&nbsp;? Espèces ou carte&nbsp;? Le trésorier passe sa soirée à reconstituer les chiffres à la main.</p></div>
-      <div class="pain reveal"><div class="pemo">🔄</div><h3>Les bénévoles changent chaque année</h3><p>Le système « maison » repose toujours sur la même personne. Quand elle part, tout est à réexpliquer.</p></div>
+      <div class="pain reveal"><div class="pemo" aria-hidden="true">🤯</div><h3>La caisse ne tombe jamais juste</h3><p>Un verre oublié, une erreur d'addition à 18h… et le fond de caisse ne correspond plus. On recompte, on s'agace.</p></div>
+      <div class="pain reveal"><div class="pemo" aria-hidden="true">📊</div><h3>Faire le bilan, c'est la corvée</h3><p>Combien de bières vendues&nbsp;? Espèces ou carte&nbsp;? Le trésorier passe sa soirée à reconstituer les chiffres à la main.</p></div>
+      <div class="pain reveal"><div class="pemo" aria-hidden="true">🔄</div><h3>Les bénévoles changent chaque année</h3><p>Le système « maison » repose toujours sur la même personne. Quand elle part, tout est à réexpliquer.</p></div>
     </div>
   </div>
 </section>
@@ -136,37 +195,37 @@
     </div>
     <div class="features-grid">
       <div class="feat reveal">
-        <div class="ficon">⚡</div>
+        <div class="ficon" aria-hidden="true">⚡</div>
         <h3>Encaissement rapide</h3>
         <p>Une commande en 3 taps, des produits gros et lisibles. Le mode express va encore plus vite pour les bénévoles aguerris.</p>
         <span class="tag">Mode commande rapide</span>
       </div>
       <div class="feat reveal">
-        <div class="ficon">📴</div>
+        <div class="ficon" aria-hidden="true">📴</div>
         <h3>100 % hors-ligne</h3>
         <p>Aucun Wi-Fi, aucune 4G&nbsp;? Aucun souci. Tout fonctionne sur la tablette, même au fond du terrain.</p>
         <span class="tag">Zéro réseau requis</span>
       </div>
       <div class="feat amber reveal">
-        <div class="ficon">💶</div>
+        <div class="ficon" aria-hidden="true">💶</div>
         <h3>Bilan automatique</h3>
         <p>Total du jour, répartition espèces vs carte, quantités par produit, et l'estimation de caisse en direct pour clôturer sereinement.</p>
         <span class="tag">Caisse estimée en temps réel</span>
       </div>
       <div class="feat reveal">
-        <div class="ficon">📚</div>
+        <div class="ficon" aria-hidden="true">📚</div>
         <h3>Historique complet</h3>
         <p>Retrouvez les chiffres de n'importe quelle journée passée. Exportable en CSV pour votre tableur en un clic.</p>
         <span class="tag">Export CSV</span>
       </div>
       <div class="feat reveal">
-        <div class="ficon">📩</div>
+        <div class="ficon" aria-hidden="true">📩</div>
         <h3>Rapport mensuel par e-mail</h3>
         <p>Chaque fin de mois, un bilan PDF part automatiquement vers le trésorier. Zéro manipulation, zéro oubli.</p>
         <span class="tag">100 % automatique</span>
       </div>
       <div class="feat amber reveal">
-        <div class="ficon">🔒</div>
+        <div class="ficon" aria-hidden="true">🔒</div>
         <h3>Clôture sereine</h3>
         <p>En fin de journée, vérifiez le fond de caisse en un geste. L'app compare l'attendu et le réel&nbsp;: plus de recomptage à l'aveugle.</p>
         <span class="tag">Vérification du fond de caisse</span>
@@ -207,9 +266,9 @@
       <h2>Votre caisse d'espèces, sous contrôle</h2>
       <p class="lead-p">Assolyte n'enregistre pas seulement les commandes&nbsp;: elle gère votre tiroir-caisse. À tout instant, vous savez exactement combien d'espèces vous devez avoir — et la clôture devient une formalité.</p>
       <ul class="dev-list">
-        <li><span class="de amber">💶</span><div><strong>Estimation en temps réel</strong><span>Fond de caisse + ventes espèces = le montant attendu, affiché en permanence pendant le service.</span></div></li>
-        <li><span class="de amber">⚖️</span><div><strong>Clôture vérifiée</strong><span>Comparez le comptage réel à l'estimation. L'écart saute aux yeux, au centime près.</span></div></li>
-        <li><span class="de amber">🔀</span><div><strong>Espèces et carte séparées</strong><span>Chaque encaissement est ventilé automatiquement. Plus aucun calcul à la main.</span></div></li>
+        <li><span class="de amber" aria-hidden="true">💶</span><div><strong>Estimation en temps réel</strong><span>Fond de caisse + ventes espèces = le montant attendu, affiché en permanence pendant le service.</span></div></li>
+        <li><span class="de amber" aria-hidden="true">⚖️</span><div><strong>Clôture vérifiée</strong><span>Comparez le comptage réel à l'estimation. L'écart saute aux yeux, au centime près.</span></div></li>
+        <li><span class="de amber" aria-hidden="true">🔀</span><div><strong>Espèces et carte séparées</strong><span>Chaque encaissement est ventilé automatiquement. Plus aucun calcul à la main.</span></div></li>
       </ul>
     </div>
   </div>
@@ -223,9 +282,9 @@
       <h2>Un poste fixe, ou une caisse dans la poche de chaque bénévole</h2>
       <p class="lead-p">Installez Assolyte sur une tablette posée dans le local de la buvette, comme une vraie caisse fixe. Ou laissez chaque bénévole encaisser depuis son propre téléphone — au bar, en terrasse, au bord du terrain.</p>
       <ul class="dev-list">
-        <li><span class="de">🏠</span><div><strong>Le poste fixe du local</strong><span>Une tablette branchée en permanence, prête dès l'ouverture.</span></div></li>
-        <li><span class="de">📱</span><div><strong>Le téléphone de chaque bénévole</strong><span>Chacun encaisse depuis sa poche, sans matériel à acheter.</span></div></li>
-        <li><span class="de">🔄</span><div><strong>Un seul bilan, en temps réel</strong><span>Tablette et téléphones se synchronisent&nbsp;: les ventes se rejoignent dans la même caisse.</span></div></li>
+        <li><span class="de" aria-hidden="true">🏠</span><div><strong>Le poste fixe du local</strong><span>Une tablette branchée en permanence, prête dès l'ouverture.</span></div></li>
+        <li><span class="de" aria-hidden="true">📱</span><div><strong>Le téléphone de chaque bénévole</strong><span>Chacun encaisse depuis sa poche, sans matériel à acheter.</span></div></li>
+        <li><span class="de" aria-hidden="true">🔄</span><div><strong>Un seul bilan, en temps réel</strong><span>Tablette et téléphones se synchronisent&nbsp;: les ventes se rejoignent dans la même caisse.</span></div></li>
       </ul>
     </div>
 
@@ -284,15 +343,15 @@
 
     <div class="amb-perks reveal">
       <div class="amb-perk">
-        <span class="ap-icon">🎁</span>
+        <span class="ap-icon" aria-hidden="true">🎁</span>
         <div><strong>Accès complet gratuit</strong><span>6 mois d'accès à toutes les fonctionnalités, sans engagement ni carte bancaire.</span></div>
       </div>
       <div class="amb-perk">
-        <span class="ap-icon">🤝</span>
+        <span class="ap-icon" aria-hidden="true">🤝</span>
         <div><strong>Accompagnement direct</strong><span>On vous aide à configurer l'app pour votre club et on reste disponibles à chaque étape.</span></div>
       </div>
       <div class="amb-perk">
-        <span class="ap-icon">🛠️</span>
+        <span class="ap-icon" aria-hidden="true">🛠️</span>
         <div><strong>Votre retour compte</strong><span>Vos remarques influencent directement les prochaines fonctionnalités. Vous façonnez le produit.</span></div>
       </div>
     </div>
@@ -336,7 +395,7 @@
       </form>
       <div id="ambassadorDone" style="display:none;">
         <div class="amb-done">
-          <div class="amb-done-emo">🎽</div>
+          <div class="amb-done-emo" aria-hidden="true">🎽</div>
           <h3>Candidature reçue !</h3>
           <p>On revient vers vous sous 48h pour mettre en place votre accès ambassadeur personnalisé.</p>
         </div>
@@ -352,7 +411,7 @@
     <div class="mark">“</div>
     <p class="quote">Le soir du tournoi, la caisse était juste au centime. Notre trésorier ne m'a jamais autant remercié.</p>
     <div class="who">
-      <span class="ph">🎽</span>
+      <span class="ph" aria-hidden="true">🎽</span>
       <div>
         <div class="nm">Lucien A.</div>
         <div class="rl">Président · Pétanque du télégraphe</div>
@@ -366,7 +425,7 @@
   <div class="wrap">
     <div class="footer-top">
       <div>
-        <a href="#top" class="brand" style="color:var(--cream)"><img src="logo.png" class="logo" alt="Assolyte" />Assolyte</a>
+        <a href="#top" class="brand" style="color:var(--cream)"><img src="logo.svg" class="logo" alt="Assolyte" />Assolyte</a>
         <p class="f-tag">La caisse enregistreuse des buvettes de clubs sportifs. Simple, hors-ligne, pensée pour les bénévoles.</p>
       </div>
       <div class="f-links">
@@ -385,7 +444,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Assolyte — Fait avec ❤️ pour les buvettes de club</span>
+      <span>© 2026 Assolyte — Fait avec <span aria-hidden="true">❤️</span> pour les buvettes de club</span>
       <span>Mentions légales · Confidentialité</span>
     </div>
   </div>
@@ -398,7 +457,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <button class="close" id="modalClose" aria-label="Fermer">✕</button>
     <div id="modalForm">
-      <div class="m-emo">🍻</div>
+      <div class="m-emo" aria-hidden="true">🍻</div>
       <h3 id="modalTitle">Essayez Assolyte gratuitement</h3>
       <p>Recevez un accès de test par e-mail, avec des données réalistes. Aucune carte bancaire, aucun engagement.</p>
       <form id="demoForm" novalidate>
@@ -412,7 +471,7 @@
     </div>
     <div id="modalDone" style="display:none;">
       <div class="submitted">
-        <div class="big">📬</div>
+        <div class="big" aria-hidden="true">📬</div>
         <h3 style="margin-top:10px;">C'est envoyé&nbsp;!</h3>
         <p id="doneMsg" style="margin-top:12px;">Votre accès de test arrive dans quelques minutes. Pensez à vérifier vos spams.</p>
       </div>
