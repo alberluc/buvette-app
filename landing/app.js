@@ -96,12 +96,14 @@
   /* ---------- Menu hamburger ---------- */
   var navToggle = document.getElementById("navToggle");
   var navMenu = document.getElementById("navMenu");
+  var navOverlay = document.getElementById("navOverlay");
 
   function closeNav() {
     navMenu.classList.remove("open");
     navToggle.setAttribute("aria-expanded", "false");
     navToggle.setAttribute("aria-label", "Ouvrir le menu");
     document.body.style.overflow = "";
+    if (navOverlay) navOverlay.classList.remove("active");
   }
 
   navToggle.addEventListener("click", function () {
@@ -109,7 +111,10 @@
     navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
     navToggle.setAttribute("aria-label", isOpen ? "Fermer le menu" : "Ouvrir le menu");
     document.body.style.overflow = isOpen ? "hidden" : "";
+    if (navOverlay) navOverlay.classList.toggle("active", isOpen);
   });
+
+  if (navOverlay) navOverlay.addEventListener("click", closeNav);
 
   navMenu.querySelectorAll("a").forEach(function (link) {
     link.addEventListener("click", closeNav);
@@ -206,6 +211,10 @@
     ambInputs.forEach(function (el) {
       el.addEventListener("input", function () { el.classList.remove("err"); });
     });
+    var consentEl = document.getElementById("ambConsent");
+    if (consentEl) consentEl.addEventListener("change", function () {
+      consentEl.closest(".field-check").classList.remove("err");
+    });
 
     ambForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -217,6 +226,8 @@
       var ambEmailInput = document.getElementById("ambEmail");
       var ambMessage    = document.getElementById("ambMessage");
 
+      var consentCheck = document.getElementById("ambConsent");
+
       var valid = true;
       [clubInput, sportInput, cityInput, ambEmailInput].forEach(function (inp) {
         var ok = inp.value.trim().length > 0 && (inp.type !== "email" || inp.value.includes("@"));
@@ -224,6 +235,10 @@
         if (!ok) valid = false;
       });
       if (!volSel.value) { volSel.classList.add("err"); valid = false; }
+      if (consentCheck && !consentCheck.checked) {
+        consentCheck.closest(".field-check").classList.add("err");
+        valid = false;
+      }
       if (!valid) return;
 
       var btn = ambForm.querySelector("button[type=submit]");

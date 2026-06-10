@@ -79,6 +79,7 @@
       <a href="#how">Comment ça marche</a>
       <a href="#price">Ambassadeurs</a>
       <a href="https://app.assolyte.fr" target="_blank" rel="noopener noreferrer" class="nav-app">Accéder à l'app ↗</a>
+      <button class="btn btn-primary nav-mobile-demo" data-demo>Essayer la démo</button>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navMenu">
       <span></span><span></span><span></span>
@@ -86,6 +87,7 @@
     <button class="btn btn-primary nav-demo-btn" data-demo>Essayer la démo</button>
   </div>
 </header>
+<div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
 
 <main id="top">
 
@@ -392,6 +394,12 @@
           <label for="ambMessage">Message <span class="field-optional">facultatif</span></label>
           <textarea id="ambMessage" name="message" rows="3" placeholder="Contexte, question, particularité de votre buvette…"></textarea>
         </div>
+        <div class="field-check">
+          <label class="check-label">
+            <input type="checkbox" id="ambConsent" name="consent" required>
+            <span>J'ai lu et j'accepte les <a href="/legal.html" target="_blank">CGU et la politique de confidentialité</a></span>
+          </label>
+        </div>
         <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:24px;">Candidater comme club ambassadeur →</button>
       </form>
       <div id="ambassadorDone" style="display:none;">
@@ -446,7 +454,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 Assolyte — Fait avec <span aria-hidden="true">❤️</span> pour les buvettes de club</span>
-      <span>Mentions légales · Confidentialité</span>
+      <a href="/legal.html">Mentions légales · Confidentialité</a>
     </div>
   </div>
 </footer>
