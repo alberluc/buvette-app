@@ -183,10 +183,13 @@
 .breakdownRow  { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--line-soft); }
 .breakdownRow:last-child { border-bottom: none; }
 .breakdownRow:has(+ .breakdownRowTotal) { border-bottom: none; }
+.breakdownRow:has(+ .breakdownRowSubtotal) { border-bottom: none; }
 .breakdownRowTotal { border-top: 1px solid var(--line); border-bottom: none; padding-top: 8px; }
+.breakdownRowSubtotal { border-top: 1px dashed var(--line); border-bottom: none; padding-top: 6px; }
 .breakdownLabel { font-size: 13px; color: var(--ink-soft); }
 .breakdownValue { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
 .breakdownValueTotal { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.4px; }
+.breakdownValueSubtotal { font-size: 17px; font-weight: 700; }
 
 /* ── Actions bar ────────────────────────────────────────────────────────────── */
 .actions { margin-top: 22px; display: flex; justify-content: flex-end; gap: 12px; }

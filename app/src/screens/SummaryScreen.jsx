@@ -69,7 +69,7 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
 
       <div className={styles.scrollArea}>
         <div className={styles.metricsGrid}>
-          <MetricCard label="Total attendu" value={fmtEUR(summary.total + opsTotal)} accent />
+          <MetricCard label="Total ventes" value={fmtEUR(summary.total)} accent />
           <MetricCard label="Nombre de commandes" value={summary.count} />
         </div>
 
@@ -148,17 +148,13 @@ export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, c
 
             <Section title="Contrôle de la caisse espèces" accent={diffPalette.bg}>
               <div className={styles.breakdownRows}>
-                <BreakdownLine label={baseLabel} value={base} />
-                {report !== 0 && (
-                  <BreakdownLine
-                    label={`Report non comptés (${reportDays} j.)`}
-                    value={report}
-                    signed
-                  />
-                )}
+                <BreakdownLine label={baseLabel} value={base + report} />
                 <BreakdownLine label="Espèces du jour" value={summary.especes} signed />
                 {opsTotal !== 0 && (
                   <BreakdownLine label="Opérations du jour" value={opsTotal} signed />
+                )}
+                {opsTotal !== 0 && (
+                  <BreakdownLine label="Total du jour" value={summary.especes + opsTotal} signed subtotal />
                 )}
                 <BreakdownLine label="Total attendu en caisse" value={expectedCash} total />
               </div>
@@ -289,11 +285,11 @@ function OperationRow({ operation, dayClosed, onRemove }) {
   );
 }
 
-function BreakdownLine({ label, value, signed, total }) {
+function BreakdownLine({ label, value, signed, total, subtotal }) {
   return (
-    <div className={`${styles.breakdownRow} ${total ? styles.breakdownRowTotal : ''}`}>
+    <div className={`${styles.breakdownRow} ${total ? styles.breakdownRowTotal : ''} ${subtotal ? styles.breakdownRowSubtotal : ''}`}>
       <span className={styles.breakdownLabel}>{label}</span>
-      <span className={`${styles.breakdownValue} ${total ? styles.breakdownValueTotal : ''}`}>
+      <span className={`${styles.breakdownValue} ${total ? styles.breakdownValueTotal : ''} ${subtotal ? styles.breakdownValueSubtotal : ''}`}>
         {signed && value >= 0 ? '+' : ''}{fmtEUR(value)}
       </span>
     </div>

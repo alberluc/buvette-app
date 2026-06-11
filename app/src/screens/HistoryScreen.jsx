@@ -252,6 +252,7 @@ function DayDetail({ day, products }) {
           <div className={styles.detailRows}>
             <DetailRow icon={<span className={`${styles.dot} ${styles.dotEspeces}`} />} label="Espèces" value={fmtEUR(day.especes)} />
             <DetailRow icon={<span className={`${styles.dot} ${styles.dotCarte}`} />} label="Carte" value={fmtEUR(day.carte)} />
+            <DetailRow label="Total" value={fmtEUR(day.total)} bold />
           </div>
           {mouvements.length > 0 && (
             <>
