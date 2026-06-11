@@ -22,7 +22,9 @@
   letter-spacing: 0.3px;
   transition: border-color 100ms, color 100ms, background 100ms;
 }
-.exportBtn:hover { border-color: var(--club); color: var(--club); background: var(--club-soft); }
+.exportBtn:hover:not(:disabled) { border-color: var(--club); color: var(--club); background: var(--club-soft); }
+.exportBtn:disabled { opacity: 0.5; cursor: default; }
+.exportError { margin-top: 6px; font-size: 11px; color: var(--danger); }
 
 /* ── Month selector ─────────────────────────────────────────────────────────── */
 .monthBar {

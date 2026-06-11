@@ -4,8 +4,27 @@ import { requireSession } from '../middleware/auth.js'
 import { generatePdf, monthLabel } from '../lib/reportPdf.js'
 import { sendReport } from '../lib/mailer.js'
 import { reportEmailHtml } from '../lib/emailTemplates.js'
+import { generateXlsx } from '../lib/reportXlsx.js'
 
 const router = Router()
+
+router.get('/report/xlsx/:year/:month', requireSession, async (req, res) => {
+  const year  = parseInt(req.params.year, 10)
+  const month = parseInt(req.params.month, 10)
+  if (!year || !month || month < 1 || month > 12)
+    return res.status(400).json({ error: 'Paramètres year/month invalides.' })
+
+  try {
+    const buffer = await generateXlsx(req.session.licenseKey, year, month)
+    const filename = `assolyte-${year}-${String(month).padStart(2, '0')}.xlsx`
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(buffer)
+  } catch (err) {
+    console.error('[report/xlsx]', err)
+    res.status(500).json({ error: 'Erreur lors de la génération du fichier.' })
+  }
+})
 
 router.post('/report/test', requireSession, async (req, res) => {
   if (req.session.role !== 'admin')

@@ -227,6 +227,17 @@ export async function updateDay(sessionToken, dayKey, patch) {
   return data
 }
 
+export async function downloadXlsx(sessionToken, year, month) {
+  const res = await fetch(`${API_URL}/report/xlsx/${year}/${month}`, {
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Erreur serveur')
+  }
+  return res.blob()
+}
+
 export async function sendTestReport(sessionToken) {
   const res = await fetch(`${API_URL}/report/test`, {
     method: 'POST',

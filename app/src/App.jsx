@@ -457,7 +457,7 @@ export default function App() {
       <div className={styles.main}>
         {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} cashFloat={cashFloat} archived={archived} />}
         {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
-        {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} />}
+        {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} sessionToken={sessionToken} />}
         {tab === 'settings' && <SettingsScreen
           t={t} setTweak={setTweak}
           licenseInfo={licenseInfo}

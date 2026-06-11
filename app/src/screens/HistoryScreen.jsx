@@ -1,51 +1,8 @@
 import { useState, useMemo } from 'react';
 import { AppHeader, Icon } from '../components/UI';
 import { fmtEUR } from '../lib/data';
+import { downloadXlsx } from '../lib/api';
 import styles from './HistoryScreen.module.css';
-
-function buildCsv(daysComputed, products) {
-  const n = v => (v == null ? '' : Number(v).toFixed(2).replace('.', ','));
-  const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-
-  const header = [
-    'Date', 'Jour', 'Commandes',
-    'Total ventes (€)', 'Espèces (€)', 'Carte (€)', 'Opérations (€)', 'Grand total (€)',
-    'Caisse attendue (€)', 'Caisse comptée (€)', 'Écart (€)', 'Clôture',
-    ...products.map(p => `${p.name} (qté)`),
-  ].map(cell).join(';');
-
-  const rows = daysComputed.map(day => {
-    const cloture = day.autoClosed ? 'Auto' : (day.closed ? 'Manuelle' : 'Non clôturée');
-    const productQtys = products.map(p => (day.products || {})[p.id] ?? 0);
-    return [
-      day.dayKey,
-      cell(day.date),
-      day.orderCount,
-      n(day.total),
-      n(day.especes),
-      n(day.carte),
-      n(day._mouvTotal),
-      n(day._grandTotal),
-      n(day._attendu),
-      n(day.cashCounted),
-      n(day._ecart),
-      cell(cloture),
-      ...productQtys,
-    ].join(';');
-  });
-
-  return [header, ...rows].join('\r\n');
-}
-
-function downloadCsv(content, filename) {
-  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function monthKey(dayKey) { return dayKey ? dayKey.slice(0, 7) : ''; }
 
@@ -54,8 +11,10 @@ function monthLabel(ym) {
   return new Date(year, Number(month) - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 }
 
-export function HistoryScreen({ archived, products, cashFloat }) {
+export function HistoryScreen({ archived, products, cashFloat, sessionToken }) {
   const [openId, setOpenId] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
   const days = archived || [];
 
   const currentMonth = useMemo(() => new Date().toISOString().slice(0, 7), []);
@@ -87,8 +46,24 @@ export function HistoryScreen({ archived, products, cashFloat }) {
     [daysComputed, selectedMonth],
   );
 
-  const handleExport = () => {
-    downloadCsv(buildCsv(filteredDays, products), `assolyte-historique-${selectedMonth}.csv`);
+  const handleExport = async () => {
+    if (!sessionToken || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const blob = await downloadXlsx(sessionToken, year, month);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `assolyte-${selectedMonth}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError('Export impossible (hors ligne ?)');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -106,10 +81,11 @@ export function HistoryScreen({ archived, products, cashFloat }) {
               {filteredDays.length} journée{filteredDays.length !== 1 ? 's' : ''} · {filteredDays.reduce((s, d) => s + d.orderCount, 0)} commandes
             </div>
             {filteredDays.length > 0 && (
-              <button onClick={handleExport} className={styles.exportBtn} title="Exporter en CSV">
-                <DownloadSvg /> CSV
+              <button onClick={handleExport} className={styles.exportBtn} title="Exporter en Excel" disabled={exporting || !sessionToken}>
+                <DownloadSvg /> {exporting ? '…' : 'Excel'}
               </button>
             )}
+            {exportError && <div className={styles.exportError}>{exportError}</div>}
           </div>
         }
       />
