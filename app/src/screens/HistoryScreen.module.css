@@ -105,8 +105,11 @@
   /* Assure que le contenu défile au-delà de la TabBar + safe-area */
   .list { padding: 10px 10px calc(78px + env(safe-area-inset-bottom, 0px)); }
 
-  .headerValue { font-size: 24px; }
-  .headerSub   { font-size: 12px; }
+  .headerRight  { display: flex; flex-direction: row; align-items: center; gap: 10px; text-align: left; }
+  .headerLabel  { display: none; }
+  .headerValue  { font-size: 20px; font-weight: 800; white-space: nowrap; }
+  .headerSub    { flex: 1; font-size: 11px; }
+  .exportBtn    { margin-top: 0; }
 
   /* DayRow : 3 colonnes (date | total | chevron), masquer comptage et badge */
   .dayToggleBtn {

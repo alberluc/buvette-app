@@ -132,12 +132,15 @@
   padding: 20px 32px 18px;
   border-bottom: 1px solid var(--line-soft);
   display: flex;
+  flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
   background: var(--cream);
   flex-shrink: 0;
 }
+.appHeaderLeft { flex-shrink: 0; }
+.appHeaderRight { }
 .appHeaderSubtitle {
   font-size: 12px;
   font-weight: 700;
@@ -159,16 +162,30 @@
   .statusBar { display: none; }
 
   .appHeader {
-    padding: 10px 16px;
-    gap: 10px;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .appHeaderLeft {
+    background: var(--club);
+    padding: 14px 16px 16px;
   }
   .appHeaderSubtitle {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.8px;
-    margin-bottom: 2px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 3px;
   }
-  .appHeaderTitle { font-size: 22px; }
+  .appHeaderTitle {
+    font-size: 26px;
+    color: white;
+  }
+  .appHeaderRight {
+    background: var(--cream);
+    padding: 10px 16px 12px;
+  }
 
   .tabBar {
     height: calc(58px + env(safe-area-inset-bottom, 0px));

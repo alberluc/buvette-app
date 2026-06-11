@@ -159,11 +159,11 @@ export function TabBar({ active, onChange }) {
 export function AppHeader({ title, subtitle, right }) {
   return (
     <div className={styles.appHeader}>
-      <div>
+      <div className={styles.appHeaderLeft}>
         <div className={styles.appHeaderSubtitle}>{subtitle}</div>
         <h1 className={styles.appHeaderTitle}>{title}</h1>
       </div>
-      {right}
+      {right && <div className={styles.appHeaderRight}>{right}</div>}
     </div>
   );
 }

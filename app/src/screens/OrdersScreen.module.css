@@ -310,26 +310,60 @@
 .paymentRadioInactive { border: 2px solid var(--ink-mute); }
 .paymentHint  { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
 
-/* ── Header right (stat) ────────────────────────────────────────────────────── */
-.headerRight   { text-align: right; }
-.headerStats   { display: flex; gap: 28px; align-items: flex-start; justify-content: flex-end; }
-.headerStatLabel {
+/* ── Journal Header ─────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 32px 18px;
+  background: var(--cream);
+  border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+.headerLeft { flex-shrink: 0; }
+.headerDate {
   font-size: 12px; font-weight: 700;
   letter-spacing: 1.4px; color: var(--ink-mute);
   text-transform: uppercase; margin-bottom: 6px;
 }
-.headerStatValue {
+.headerTitle {
+  margin: 0;
+  font-size: 32px; font-weight: 700;
+  color: var(--ink); letter-spacing: -0.4px;
+}
+.headerStats {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+.stat { text-align: right; }
+.statLabel {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 1.4px; color: var(--ink-mute);
+  text-transform: uppercase; margin-bottom: 6px;
+  white-space: nowrap;
+}
+.statValue {
   font-size: 38px; font-weight: 800;
   color: var(--club); letter-spacing: -0.6px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.headerCash    { text-align: right; padding-left: 28px; border-left: 1px solid var(--line); }
-.headerCashValue {
+.statCashValue {
   font-size: 28px; font-weight: 800;
   color: var(--amber); letter-spacing: -0.4px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.headerStatSub { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+.statDivider {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.statSub { font-size: 14px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
 
 /* ── List quick-mode (padding réduit, pas de FABs) ──────────────────────────── */
 .listQuick { padding-bottom: 16px; }
@@ -589,18 +623,40 @@
   /* Assure que le contenu défile au-delà des FABs + safe-area */
   .list { padding: 10px 10px calc(160px + env(safe-area-inset-bottom, 0px)); }
 
-  .headerStats {
+  /* ── Header mobile : zone titre verte + bande stats blanche ─── */
+  .header {
     flex-direction: column;
-    gap: 4px;
-    align-items: flex-end;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--line-soft);
   }
-  .headerCash {
-    border-left: none;
-    padding-left: 0;
-    text-align: right;
+  .headerLeft {
+    background: var(--club);
+    padding: 14px 16px 16px;
   }
-  .headerStatLabel  { font-size: 9px; letter-spacing: 0.8px; margin-bottom: 1px; }
-  .headerStatValue  { font-size: 20px; white-space: nowrap; }
-  .headerCashValue  { font-size: 16px; white-space: nowrap; }
-  .headerStatSub    { font-size: 10px; margin-top: 0; }
+  .headerDate {
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 3px;
+  }
+  .headerTitle {
+    font-size: 26px;
+    color: white;
+  }
+  .headerStats {
+    background: var(--cream);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 10px 16px 12px;
+  }
+  .statDivider { display: none; }
+  .stat         { text-align: left; }
+  .stat:last-child { text-align: right; }
+  .statLabel    { font-size: 9px; letter-spacing: 0.8px; margin-bottom: 2px; }
+  .statValue    { font-size: 22px; }
+  .statCashValue { font-size: 18px; }
+  .statSub      { font-size: 10px; margin-top: 1px; }
 }

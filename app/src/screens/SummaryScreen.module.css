@@ -203,8 +203,8 @@
   .cardValueAccent,
   .cardValueNormal { font-size: 28px; }
 
-  /* Badge clôture dans le header : réduit sur mobile */
-  .closedBadge { font-size: 13px; padding: 7px 12px; gap: 7px; }
+  /* Badge clôture dans le strip crème du header */
+  .closedBadge { font-size: 13px; padding: 7px 12px; gap: 7px; display: inline-flex; }
 
   /* Détail + colonne droite : 1 colonne sur mobile */
   .detailGrid { grid-template-columns: 1fr; }

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
+import { Icon, BigButton, PayBadge } from '../components/UI';
 import { OperationModal } from '../components/OperationModal';
 import { fmtEUR, estimatedCash, summarize } from '../lib/data';
 import styles from './OrdersScreen.module.css';
@@ -33,28 +33,25 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
 
   return (
     <div className={styles.screen}>
-      <AppHeader
-        subtitle={day.date.toUpperCase()}
-        title="Journal"
-        right={
-          <div className={styles.headerRight}>
-            <div className={styles.headerStats}>
-              <div>
-                <div className={styles.headerStatLabel}>Total du jour</div>
-                <div className={styles.headerStatValue}>{fmtEUR(summary.total)}</div>
-                <div className={styles.headerStatSub}>
-                  {summary.count} commande{summary.count > 1 ? 's' : ''}
-                </div>
-              </div>
-              <div className={styles.headerCash}>
-                <div className={styles.headerStatLabel}>Caisse espèces</div>
-                <div className={styles.headerCashValue}>{fmtEUR(cashEstimate)}</div>
-                <div className={styles.headerStatSub}>estimé</div>
-              </div>
-            </div>
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerDate}>{day.date}</div>
+          <h1 className={styles.headerTitle}>Journal</h1>
+        </div>
+        <div className={styles.headerStats}>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>Total du jour</div>
+            <div className={styles.statValue}>{fmtEUR(summary.total)}</div>
+            <div className={styles.statSub}>{summary.count} commande{summary.count > 1 ? 's' : ''}</div>
           </div>
-        }
-      />
+          <div className={styles.statDivider} />
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>Caisse espèces</div>
+            <div className={styles.statCashValue}>{fmtEUR(cashEstimate)}</div>
+            <div className={styles.statSub}>estimé</div>
+          </div>
+        </div>
+      </div>
 
       <div ref={listRef} className={`${styles.list} ${quickMode ? styles.listQuick : ''}`}>
         {display.length === 0 && (
