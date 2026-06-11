@@ -10,6 +10,7 @@ COPY lib ./lib
 COPY middleware ./middleware
 COPY routes ./routes
 COPY migrations ./migrations
+COPY seeds ./seeds
 COPY jobs ./jobs
 EXPOSE 3000
 CMD ["sh", "-c", "npx knex migrate:latest && node server.js"]

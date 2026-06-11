@@ -11,4 +11,8 @@ export default {
     directory: './migrations',
     extension: 'js',
   },
+  seeds: {
+    directory: './seeds',
+    extension: 'js',
+  },
 }

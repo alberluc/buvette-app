@@ -19,7 +19,7 @@ services:
     build:
       context: ./app
       args:
-        VITE_API_URL: https://api.assolyte.fr
+        VITE_API_URL: ${VITE_API_URL}
     restart: unless-stopped
     ports:
       - "8080:80"

@@ -6,7 +6,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "migrate": "node --env-file=.env ./node_modules/.bin/knex migrate:latest",
-    "migrate:rollback": "node --env-file=.env ./node_modules/.bin/knex migrate:rollback"
+    "migrate:rollback": "node --env-file=.env ./node_modules/.bin/knex migrate:rollback",
+    "seed": "node --env-file=.env ./node_modules/.bin/knex seed:run"
   },
   "dependencies": {
     "express": "^4.19.2",
