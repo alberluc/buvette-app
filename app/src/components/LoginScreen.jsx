@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { setupFirstAccount, login, createAccount, deleteAccount, changePassword, verifyPassword } from '../lib/api'
+import { PwaInstallButton } from './UI'
 import styles from './LoginScreen.module.css'
 
 // ── Composants partagés ────────────────────────────────────────────────────────
@@ -194,6 +195,7 @@ export function LoginScreen({ accounts, licenseToken, clubName, onLoginSuccess, 
       </div>
 
       <div className={styles.bottomLinks}>
+        <PwaInstallButton />
         {onLeaveLicense && (
           <button onClick={onLeaveLicense} className={styles.leaveBtn}>
             Changer de licence{clubName ? ` · ${clubName}` : ''}

@@ -1,51 +1,90 @@
-/* ── Écran (centrage) ────────────────────────────────────────────────────────── */
+/* ── Layout deux colonnes ────────────────────────────────────────────────────── */
 .screen {
   width: 100%; height: 100%;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  display: flex; flex-direction: row;
   background: var(--cream);
-  padding: 0 16px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* ── Brand (logo + titre) ────────────────────────────────────────────────────── */
-.brand       { margin-bottom: 40px; text-align: center; }
-.brandLogo   { width: 72px; height: 72px; object-fit: contain; margin-bottom: 12px; }
-.brandName   { font-size: 26px; font-weight: 800; color: var(--ink); }
-.brandSub    { font-size: 12px; color: var(--ink-mute); margin-top: 4px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+/* ── Colonne gauche — brand ──────────────────────────────────────────────────── */
+.left {
+  flex: 0 0 40%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 40px;
+  background: var(--club);
+  position: relative;
+}
+
+.brandLogo {
+  width: 80px; height: 80px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+.brandName {
+  font-size: 36px; font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+}
+.brandSub {
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  margin-top: 6px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.footer {
+  position: absolute;
+  bottom: 36px;
+  left: 0; width: 40%;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+}
+
+/* ── Colonne droite — formulaire ─────────────────────────────────────────────── */
+.right {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 40px;
+  overflow-y: auto;
+}
 
 /* ── Carte formulaire ────────────────────────────────────────────────────────── */
 .card {
   background: var(--paper);
   border-radius: 24px;
-  padding: 36px 44px;
-  width: 480px;
-  max-width: 100%;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 44px 48px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.07);
   border: 1px solid var(--line);
 }
 
 /* ── Textes ──────────────────────────────────────────────────────────────────── */
-.title    { margin: 0 0 8px; font-size: 20px; font-weight: 700; color: var(--ink); text-align: center; }
-.subtitle { margin: 0 0 28px; font-size: 14px; color: var(--ink-soft); text-align: center; line-height: 1.5; }
-.subtitleSm { margin-bottom: 24px; }
+.title    { margin: 0 0 8px; font-size: 22px; font-weight: 700; color: var(--ink); }
+.subtitle { margin: 0 0 32px; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+.subtitleSm { margin-bottom: 20px; }
 
 /* ── Saisie de clé ───────────────────────────────────────────────────────────── */
-.keyRow   { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.keyRow   { display: flex; align-items: center; gap: 8px; }
 .keyGroup { display: flex; align-items: center; gap: 8px; }
 
 .keyInput {
-  width: 72px; height: 56px;
+  width: 76px; height: 60px;
   text-align: center;
   font-size: 20px; font-weight: 700; letter-spacing: 6px;
   font-family: monospace;
   border: 1.5px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--cream);
   color: var(--ink);
   outline: none;
   transition: border-color 120ms, background 120ms;
 }
+.keyInput:focus { border-color: var(--club); }
 .keyInputFilled {
   border-color: var(--club);
   background: var(--club-soft);
@@ -56,8 +95,8 @@
 }
 
 /* ── Divider (mode expired) ──────────────────────────────────────────────────── */
-.divider { margin: 24px 0 20px; border: none; border-top: 1px solid var(--line); }
-.newKeyLabel { margin: 0 0 16px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.divider { margin: 28px 0 22px; border: none; border-top: 1px solid var(--line); }
+.newKeyLabel { margin: 0 0 16px; font-size: 13px; color: var(--ink-soft); }
 
 /* ── Boutons ─────────────────────────────────────────────────────────────────── */
 .primaryBtn {
@@ -68,7 +107,7 @@
 }
 .primaryBtn:hover:not(:disabled)  { background: var(--club-deep); }
 .primaryBtn:disabled { background: var(--line); color: var(--ink-mute); cursor: default; }
-.primaryBtnMt   { margin-top: 24px; }
+.primaryBtnMt   { margin-top: 28px; }
 .primaryBtnMtSm { margin-top: 12px; }
 
 .secondaryBtn {
@@ -86,7 +125,7 @@
   font-family: inherit; font-size: 13px; font-weight: 600;
   cursor: pointer;
   display: flex; align-items: center; gap: 6px;
-  margin: 10px auto 0;
+  margin: 12px auto 0;
   padding: 6px 10px;
   border-radius: 8px;
   transition: color 120ms, background 120ms;
@@ -94,63 +133,112 @@
 .pasteBtn:hover { color: var(--club); background: var(--club-soft); }
 
 /* ── Erreur ──────────────────────────────────────────────────────────────────── */
-.error { margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--danger); text-align: center; }
+.error { margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--danger); }
 
-/* ── Section achat ───────────────────────────────────────────────────────────── */
-.buySection {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
+/* ── Section achat (colonne gauche) ─────────────────────────────────────────── */
 .buyText {
   margin: 0;
-  font-size: 13px;
-  color: var(--ink-mute);
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
   font-weight: 600;
+  text-align: center;
 }
 .buyBtn {
   display: inline-flex;
   align-items: center;
-  height: 44px;
-  padding: 0 22px;
-  border-radius: 12px;
-  border: 1.5px solid var(--club);
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.5);
   background: transparent;
-  color: var(--club);
-  font-size: 14px;
+  color: white;
+  font-size: 13px;
   font-weight: 700;
   font-family: inherit;
   text-decoration: none;
-  transition: background 150ms, color 150ms;
+  transition: background 150ms, border-color 150ms;
 }
-.buyBtn:hover { background: var(--club-soft); }
+.buyBtn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.8); }
 
-/* ── Mobile (< 600px) ────────────────────────────────────────────────────────── */
-@media (max-width: 599px) {
-  .screen { padding: 0 12px; }
+/* ── Mobile (< 700px) ────────────────────────────────────────────────────────── */
+@media (max-width: 699px) {
+  /* Fond vert plein, tout centré verticalement */
+  .screen {
+    flex-direction: column;
+    background: var(--club);
+    justify-content: flex-end;
+  }
 
-  .brand      { margin-bottom: 24px; }
-  .brandEmoji { font-size: 40px; }
-  .brandName  { font-size: 20px; }
+  /* Brand : logo + nom centrés dans l'espace vert au-dessus de la carte */
+  .left {
+    flex: 1;
+    justify-content: center;
+    padding: 32px 24px 24px;
+    gap: 10px;
+  }
+  .brandLogo { width: 64px; height: 64px; }
+  .brandName { font-size: 28px; }
+  .brandSub  { font-size: 11px; }
+
+  /* Carte blanche qui remonte depuis le bas, coins arrondis en haut */
+  .right {
+    flex: none;
+    padding: 32px 20px 28px;
+    background: var(--cream);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -4px 32px rgba(0,0,0,0.15);
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  /* Footer sous la carte, sur fond crème */
+  .footer {
+    position: static;
+    width: 100%;
+    background: var(--cream);
+    padding: 14px 20px 28px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px 14px;
+  }
+  .buyText { color: var(--ink-mute); font-size: 12px; width: 100%; text-align: center; }
+  .buyBtn {
+    border-color: var(--club);
+    color: var(--club);
+    background: transparent;
+    height: 36px;
+    font-size: 13px;
+  }
+  .buyBtn:hover { background: var(--club-soft); }
 
   .card {
-    padding: 24px 20px;
-    border-radius: 18px;
-    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
   }
 
-  /* Inputs réduits pour tenir sur 320px (vérifié : 251px pour 256px dispo) */
-  .keyRow   { gap: 4px; }
-  .keyGroup { gap: 4px; }
+  .title    { font-size: 20px; }
+  .subtitle { margin-bottom: 24px; font-size: 13px; }
+
+  .keyRow   { gap: 6px; justify-content: center; }
+  .keyGroup { gap: 6px; }
   .keyInput {
-    width: 50px; height: 50px;
-    font-size: 16px; letter-spacing: 3px;
-    padding: 0; border-radius: 8px;
+    width: 58px; height: 56px;
+    font-size: 17px; letter-spacing: 4px;
+    border-radius: 10px;
+    background: white;
   }
-  .separator { font-size: 14px; }
+  .separator { font-size: 16px; }
 
-  .primaryBtn   { height: 52px; font-size: 16px; }
-  .secondaryBtn { height: 44px; font-size: 14px; }
+  .primaryBtn     { height: 52px; font-size: 16px; }
+  .primaryBtnMt   { margin-top: 24px; }
+  .primaryBtnMtSm { margin-top: 12px; }
+  .secondaryBtn   { height: 44px; font-size: 14px; }
+
 }

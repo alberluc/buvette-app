@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppHeader, Icon } from '../components/UI';
+import { AppHeader, Icon, usePwaInstall } from '../components/UI';
 import { formatDate } from '../lib/storage';
 import { fmtEUR } from '../lib/data';
 import { ACCENT_SWATCHES } from '../lib/theme';
@@ -25,6 +25,7 @@ export function SettingsScreen({
   onManageAccounts,
 }) {
   const isAdmin = currentUser?.role === 'admin';
+  const { canInstall, install } = usePwaInstall();
   const [editingProduct, setEditingProduct] = useState(null);
   const [newSuggestion, setNewSuggestion] = useState({ sortie: '', entree: '' });
   const [testReportStatus, setTestReportStatus] = useState(null); // null | 'loading' | 'sent' | 'error'
@@ -98,6 +99,12 @@ export function SettingsScreen({
                     <span className={styles.toggleThumb} />
                   </button>
                 </div>
+                {canInstall && (
+                  <div className={styles.toggleRow} style={{ marginTop: 12 }}>
+                    <span className={styles.toggleLabel}>Installer l'application</span>
+                    <button onClick={install} className={styles.installBtn}>Installer</button>
+                  </div>
+                )}
               </div>
 
             {licenseInfo && (

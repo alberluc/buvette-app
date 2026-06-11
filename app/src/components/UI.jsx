@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import styles from './UI.module.css';
 
 export function PayBadge({ kind, size = 'md' }) {
@@ -165,6 +166,42 @@ export function AppHeader({ title, subtitle, right }) {
       </div>
       {right && <div className={styles.appHeaderRight}>{right}</div>}
     </div>
+  );
+}
+
+function isRunningAsApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+export function usePwaInstall() {
+  const [canInstall, setCanInstall] = useState(() => !isRunningAsApp() && !!window.__pwaInstallEvent);
+  useEffect(() => {
+    if (isRunningAsApp()) return;
+    const on  = () => setCanInstall(true);
+    const off = () => setCanInstall(false);
+    window.addEventListener('pwa-installable', on);
+    window.addEventListener('pwa-installed',   off);
+    return () => { window.removeEventListener('pwa-installable', on); window.removeEventListener('pwa-installed', off); };
+  }, []);
+  const install = async () => {
+    if (!window.__pwaInstallEvent) return;
+    window.__pwaInstallEvent.prompt();
+    const { outcome } = await window.__pwaInstallEvent.userChoice;
+    if (outcome === 'accepted') { window.__pwaInstallEvent = null; setCanInstall(false); }
+  };
+  return { canInstall, install };
+}
+
+export function PwaInstallButton({ className }) {
+  const { canInstall, install } = usePwaInstall();
+  if (!canInstall) return null;
+  return (
+    <button onClick={install} className={className || styles.pwaInstallBtn}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 5v10M7 15l5 5 5-5"/><path d="M4 20h16"/>
+      </svg>
+      Installer l'application
+    </button>
   );
 }
 

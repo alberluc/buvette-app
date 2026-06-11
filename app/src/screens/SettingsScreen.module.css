@@ -78,6 +78,19 @@
 .toggleTrackOn  .toggleThumb { transform: translateX(20px); }
 .toggleTrackOff .toggleThumb { transform: translateX(0); }
 
+.installBtn {
+  appearance: none;
+  padding: 6px 14px;
+  border: 1.5px solid var(--club);
+  border-radius: 8px;
+  background: var(--club-soft, color-mix(in srgb, var(--club) 12%, transparent));
+  color: var(--club);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.installBtn:hover { background: color-mix(in srgb, var(--club) 20%, transparent); }
+
 /* ── Hint text ───────────────────────────────────────────────────────────────── */
 .hint { font-size: 13px; color: var(--ink-soft); margin-top: 8px; line-height: 1.5; }
 

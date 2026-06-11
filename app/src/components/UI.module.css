@@ -1,3 +1,19 @@
+/* ── PwaInstallButton ───────────────────────────────────────────────────────── */
+.pwaInstallBtn {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--club);
+  border-radius: 10px;
+  background: var(--club-soft, color-mix(in srgb, var(--club) 12%, transparent));
+  color: var(--club);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms, transform 80ms;
+}
+.pwaInstallBtn:hover  { background: color-mix(in srgb, var(--club) 18%, transparent); }
+.pwaInstallBtn:active { transform: scale(0.97); }
+
 /* ── PayBadge ───────────────────────────────────────────────────────────────── */
 .payBadge {
   display: inline-flex;

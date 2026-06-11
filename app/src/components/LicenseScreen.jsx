@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { activateLicense, refreshLicense } from '../lib/api'
+import { PwaInstallButton } from './UI'
 import styles from './LicenseScreen.module.css'
 
 const BUY_URL = 'https://assolyte.fr/#price'
@@ -124,54 +125,57 @@ export function LicenseScreen({ mode = 'activate', expiredToken, onActivated }) 
 
   return (
     <div className={styles.screen}>
-      <div className={styles.brand}>
-        <img src="/logo.svg" className={styles.brandLogo} alt="Assolyte" />
+      <div className={styles.left}>
+        <img src="/logo-inverted.svg" className={styles.brandLogo} alt="Assolyte" />
         <div className={styles.brandName}>Assolyte</div>
-        <div className={styles.brandSub}>Caisse buvette</div>
+        <div className={styles.brandSub}>Caisse buvette de club sportif</div>
       </div>
 
-      <div className={styles.card}>
-        {mode === 'expired' ? (
-          <>
-            <h2 className={styles.title}>Renouvellement requis</h2>
-            <p className={`${styles.subtitle} ${styles.subtitleSm}`}>
-              Votre licence a expiré. Connectez-vous à internet pour la renouveler automatiquement.
-            </p>
-            <button onClick={handleRefresh} disabled={loading} className={styles.primaryBtn}>
-              {loading ? 'Renouvellement…' : 'Renouveler la licence'}
-            </button>
-            {error && <div className={styles.error}>{error}</div>}
-            <hr className={styles.divider} />
-            <p className={styles.newKeyLabel}>Vous avez une nouvelle clé de licence ?</p>
-            {keyInput}
-            <button
-              onClick={handleActivate} disabled={!isComplete || loading}
-              className={styles.secondaryBtn}>
-              Activer une nouvelle clé
-            </button>
-          </>
-        ) : (
-          <>
-            <h2 className={styles.title}>Activation</h2>
-            <p className={styles.subtitle}>Saisir la clé de licence reçue lors de votre achat.</p>
-            {keyInput}
-            {error && <div className={styles.error}>{error}</div>}
-            <button
-              onClick={handleActivate} disabled={!isComplete || loading}
-              className={`${styles.primaryBtn} ${error ? styles.primaryBtnMtSm : styles.primaryBtnMt}`}>
-              {loading ? 'Activation…' : 'Activer'}
-            </button>
-          </>
-        )}
+      <div className={styles.right}>
+        <div className={styles.card}>
+          {mode === 'expired' ? (
+            <>
+              <h2 className={styles.title}>Renouvellement requis</h2>
+              <p className={`${styles.subtitle} ${styles.subtitleSm}`}>
+                Votre licence a expiré. Connectez-vous à internet pour la renouveler automatiquement.
+              </p>
+              <button onClick={handleRefresh} disabled={loading} className={styles.primaryBtn}>
+                {loading ? 'Renouvellement…' : 'Renouveler la licence'}
+              </button>
+              {error && <div className={styles.error}>{error}</div>}
+              <hr className={styles.divider} />
+              <p className={styles.newKeyLabel}>Vous avez une nouvelle clé de licence ?</p>
+              {keyInput}
+              <button
+                onClick={handleActivate} disabled={!isComplete || loading}
+                className={styles.secondaryBtn}>
+                Activer une nouvelle clé
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className={styles.title}>Activation de la licence</h2>
+              <p className={styles.subtitle}>Saisir la clé reçue lors de votre achat.</p>
+              {keyInput}
+              {error && <div className={styles.error}>{error}</div>}
+              <button
+                onClick={handleActivate} disabled={!isComplete || loading}
+                className={`${styles.primaryBtn} ${error ? styles.primaryBtnMtSm : styles.primaryBtnMt}`}>
+                {loading ? 'Activation…' : 'Activer'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className={styles.buySection}>
+      <div className={styles.footer}>
         <p className={styles.buyText}>
           {mode === 'expired' ? 'Besoin de renouveler votre abonnement ?' : 'Pas encore de licence ?'}
         </p>
         <a href={BUY_URL} target="_blank" rel="noopener noreferrer" className={styles.buyBtn}>
           Obtenir une licence →
         </a>
+        <PwaInstallButton />
       </div>
     </div>
   )
