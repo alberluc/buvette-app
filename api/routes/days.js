@@ -134,16 +134,15 @@ router.delete('/days/:dayKey/mouvements/:mouvementId', requireSession, async (re
   }
 })
 
-// Mise à jour de la journée (clôture, réouverture, libellé, espèces comptées)
+// Mise à jour de la journée (clôture, réouverture, espèces comptées)
 router.put('/days/:dayKey', requireSession, async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey } = req.params
-  const { day_closed, auto_closed, cash_counted, label } = req.body
+  const { day_closed, auto_closed, cash_counted } = req.body
   const patch = { updated_at: db.raw('NOW()') }
   if (day_closed !== undefined) patch.day_closed = day_closed
   if (auto_closed !== undefined) patch.auto_closed = auto_closed
   if (cash_counted !== undefined) patch.cash_counted = cash_counted
-  if (label !== undefined) patch.label = label
   try {
     const updated = await db('days')
       .where({ license_key: licenseKey, day_key: dayKey })
@@ -160,7 +159,6 @@ function toClientDay(row) {
   return {
     dayKey: row.day_key,
     date: row.date,
-    label: row.label,
     orders: row.orders,
     mouvements: row.mouvements || [],
     dayClosed: row.day_closed,

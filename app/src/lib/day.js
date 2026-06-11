@@ -7,7 +7,7 @@ export function makeEmptyToday() {
 }
 
 export function makeEmptyDay(key) {
-  return { dayKey: key, date: formatDate(key), label: '', orders: [], mouvements: [], dayClosed: false, cashCounted: null };
+  return { dayKey: key, date: formatDate(key), orders: [], mouvements: [], dayClosed: false, cashCounted: null };
 }
 
 export function archiveFromDay(day, products) {
@@ -15,7 +15,7 @@ export function archiveFromDay(day, products) {
   const archivedProducts = {};
   for (const p of products) archivedProducts[p.id] = s.products[p.id]?.qty ?? 0;
   return {
-    dayKey: day.dayKey, date: day.date, label: day.label || '',
+    dayKey: day.dayKey, date: day.date,
     orderCount: s.count, total: s.total, especes: s.especes, carte: s.carte,
     cashCounted: day.dayClosed ? day.cashCounted : null,
     mouvements: day.mouvements || [],
@@ -28,7 +28,7 @@ export function archiveFromApiDay(day, products) {
   const archivedProducts = {};
   for (const p of products) archivedProducts[p.id] = s.products[p.id]?.qty ?? 0;
   return {
-    dayKey: day.dayKey, date: day.date, label: day.label || '',
+    dayKey: day.dayKey, date: day.date,
     orderCount: s.count, total: s.total, especes: s.especes, carte: s.carte,
     cashCounted: day.autoClosed ? null : day.cashCounted,
     mouvements: day.mouvements || [],

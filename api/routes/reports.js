@@ -65,7 +65,6 @@ function buildMockData(license, year, month) {
     else if (dow === 5 && Math.random() < 0.25) WEEKENDS.push(d)
   }
 
-  const EVENT_LABELS = ['Tournoi', 'Finale', 'Concours amical', 'Fête du club', '']
   const grandProducts = {}
   for (const p of products) grandProducts[p.id] = { name: p.name, qty: 0, total: 0 }
 
@@ -105,7 +104,6 @@ function buildMockData(license, year, month) {
     return {
       dayKey,
       date: displayDate,
-      label: Math.random() < 0.3 ? EVENT_LABELS[rng(0, EVENT_LABELS.length - 1)] : '',
       orderCount,
       dayTotal,
       especes,

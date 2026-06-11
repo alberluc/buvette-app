@@ -8,7 +8,7 @@ function buildCsv(daysComputed, products) {
   const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
   const header = [
-    'Date', 'Jour', 'Libellé', 'Commandes',
+    'Date', 'Jour', 'Commandes',
     'Total ventes (€)', 'Espèces (€)', 'Carte (€)', 'Opérations (€)', 'Grand total (€)',
     'Caisse attendue (€)', 'Caisse comptée (€)', 'Écart (€)', 'Clôture',
     ...products.map(p => `${p.name} (qté)`),
@@ -20,7 +20,6 @@ function buildCsv(daysComputed, products) {
     return [
       day.dayKey,
       cell(day.date),
-      cell(day.label || ''),
       day.orderCount,
       n(day.total),
       n(day.especes),
@@ -127,7 +126,6 @@ function DayRow({ day, products, open, onToggle }) {
       <button onClick={onToggle} className={styles.dayToggleBtn}>
         <div>
           <div className={styles.dayDate}>{day.date}</div>
-          <div className={styles.dayLabel}>{day.label || '—'}</div>
         </div>
         <div className={`${styles.dayStat} ${styles.dayOrders}`}>
           <div className={styles.dayStatLabelSm}>Commandes</div>

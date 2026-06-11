@@ -89,7 +89,6 @@ function aggregateDay(row, products) {
   return {
     dayKey: row.day_key,
     date: row.date,
-    label: row.label,
     orderCount: orders.length,
     dayTotal,
     especes,

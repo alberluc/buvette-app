@@ -4,7 +4,6 @@ export async function up(knex) {
     table.string('license_key', 19).references('key').inTable('licenses').notNullable()
     table.string('day_key', 10).notNullable()   // YYYY-MM-DD
     table.string('date').notNullable()           // chaîne affichable ex: "Samedi 3 mai 2026"
-    table.string('label').notNullable().defaultTo('')
     table.jsonb('orders').notNullable().defaultTo('[]')
     table.boolean('day_closed').notNullable().defaultTo(false)
     table.boolean('auto_closed').notNullable().defaultTo(false)

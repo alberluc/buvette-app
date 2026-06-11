@@ -30,7 +30,6 @@ function buildHtml(data) {
           <tr class="product-row">
             ${i === 0 ? `<td rowspan="${activeProductIds.filter(pid => day.products[pid]?.qty > 0).length + 1}" class="date-cell">
               <strong>${day.date}</strong>
-              ${day.label ? `<br><span class="label">${day.label}</span>` : ''}
             </td>` : ''}
             <td>${stat.name}</td>
             <td class="num">${stat.qty}</td>
@@ -67,7 +66,6 @@ function buildHtml(data) {
   td { padding: 4px 8px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
   .date-cell { width: 130px; border-right: 2px solid #ddd; font-size: 10px; color: #333; vertical-align: middle; }
   .date-cell strong { display: block; font-size: 11px; }
-  .label { color: #888; font-style: italic; }
   .product-row td { background: #fff; }
   .day-total-row td { background: #f5f5f5; font-size: 10px; color: #444; padding: 3px 8px 6px; border-bottom: 2px solid #ccc; }
   .total-cell { font-weight: bold; font-size: 11px; color: #1a1a1a; }

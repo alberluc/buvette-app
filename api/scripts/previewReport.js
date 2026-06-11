@@ -18,7 +18,7 @@ const mockData = {
   ],
   days: [
     {
-      dayKey: '2026-05-03', date: 'Dimanche 3 mai 2026', label: '',
+      dayKey: '2026-05-03', date: 'Dimanche 3 mai 2026',
       orderCount: 7, dayTotal: 23, especes: 19, carte: 4,
       _base: 0, _attendu: 19,
       products: {
@@ -39,7 +39,7 @@ const mockData = {
       mouvements: [],
     },
     {
-      dayKey: '2026-05-04', date: 'Lundi 4 mai 2026', label: '',
+      dayKey: '2026-05-04', date: 'Lundi 4 mai 2026',
       orderCount: 5, dayTotal: 14, especes: 12, carte: 2,
       _base: 0, _attendu: 12,
       products: {
@@ -58,7 +58,7 @@ const mockData = {
       mouvements: [],
     },
     {
-      dayKey: '2026-05-10', date: 'Dimanche 10 mai 2026', label: 'Tournoi printemps',
+      dayKey: '2026-05-10', date: 'Dimanche 10 mai 2026',
       orderCount: 10, dayTotal: 34, especes: 24, carte: 10,
       _base: 0, _attendu: 44,
       products: {
@@ -85,7 +85,7 @@ const mockData = {
       cashCounted: 46,
     },
     {
-      dayKey: '2026-05-17', date: 'Dimanche 17 mai 2026', label: '',
+      dayKey: '2026-05-17', date: 'Dimanche 17 mai 2026',
       orderCount: 8, dayTotal: 28, especes: 20, carte: 8,
       _base: 0, _attendu: 0,
       products: {
@@ -109,7 +109,7 @@ const mockData = {
       ],
     },
     {
-      dayKey: '2026-05-24', date: 'Dimanche 24 mai 2026', label: 'Finale championnat',
+      dayKey: '2026-05-24', date: 'Dimanche 24 mai 2026',
       orderCount: 11, dayTotal: 41, especes: 29, carte: 12,
       _base: 0, _attendu: 79,
       products: {
@@ -137,7 +137,7 @@ const mockData = {
       cashCounted: 81,
     },
     {
-      dayKey: '2026-05-25', date: 'Lundi 25 mai 2026', label: '',
+      dayKey: '2026-05-25', date: 'Lundi 25 mai 2026',
       orderCount: 5, dayTotal: 12, especes: 11, carte: 1,
       _base: 0, _attendu: 11,
       products: {

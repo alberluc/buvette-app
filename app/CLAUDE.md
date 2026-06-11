@@ -46,7 +46,6 @@ src/
 {
   dayKey: 'YYYY-MM-DD',   // clé de tri / détection changement de date
   date: 'Samedi 3 mai…',  // chaîne affichable
-  label: '',              // libellé optionnel (ex : "Match vs FC Bellecourt")
   orders: [Order],
   dayClosed: false,
   cashCounted: null,      // montant espèces compté (number | null)
@@ -60,7 +59,7 @@ src/
 
 ### Journée archivée
 ```js
-{ dayKey, date, label, orderCount, total, especes, carte, cashCounted, closed, autoClosed, products: { biere: 12, … } }
+{ dayKey, date, orderCount, total, especes, carte, cashCounted, closed, autoClosed, products: { biere: 12, … } }
 ```
 
 ### Produits (`PRODUCTS` dans `data.js`)
