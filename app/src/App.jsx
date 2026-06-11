@@ -23,9 +23,11 @@ export default function App() {
     const p = ACCENT_PALETTES[t.accent] || ACCENT_PALETTES.club;
     root.style.setProperty('--club', p.club);
     root.style.setProperty('--club-deep', p.clubDeep);
-    root.style.setProperty('--club-soft', p.clubSoft);
+    root.style.setProperty('--club-soft', t.darkMode ? (p.clubSoftDark || '#1C2E22') : p.clubSoft);
+    if (t.darkMode) root.setAttribute('data-dark', '');
+    else root.removeAttribute('data-dark');
     document.getElementById('root').style.zoom = TEXT_SCALES[t.textSize] || 1;
-  }, [t.accent, t.textSize]);
+  }, [t.accent, t.textSize, t.darkMode]);
 
   const [tab, setTab] = useState('orders');
 
@@ -526,6 +528,7 @@ export default function App() {
             options={[{ value: 'normal', label: 'Normal' }, { value: 'large', label: 'Grand' }, { value: 'xlarge', label: '+ Grand' }]}
             onChange={v => setTweak('textSize', v)}
           />
+          <TweakToggle label="Mode sombre" value={t.darkMode} onChange={v => setTweak('darkMode', v)} />
           <TweakToggle label="Barre d'état" value={t.showStatusBar} onChange={v => setTweak('showStatusBar', v)} />
         </TweakSection>
         <TweakSection label="Démo" />

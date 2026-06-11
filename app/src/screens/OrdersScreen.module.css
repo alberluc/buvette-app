@@ -65,7 +65,7 @@
 .deleteBtn:hover {
   color: var(--danger);
   border-color: var(--danger);
-  background: #FDE8E6;
+  background: var(--danger-soft);
 }
 
 /* ── OperationRow ───────────────────────────────────────────────────────────── */

@@ -22,6 +22,27 @@
   --ok-soft: #DCEAE0;
 }
 
+html[data-dark] {
+  --cream: #1C1912;
+  --cream-deep: #242019;
+  --paper: #221F19;
+  --ink: #F0EBE0;
+  --ink-soft: #A89880;
+  --ink-mute: #6B6050;
+  --line: #35302A;
+  --line-soft: #2B2720;
+  --amber: #D4981C;
+  --amber-soft: #2D2010;
+  --blue: #5E92DE;
+  --blue-soft: #162235;
+  --danger: #D94F3C;
+  --danger-soft: #2D1412;
+  --warn: #E08A20;
+  --warn-soft: #2C1D0A;
+  --ok: #2A8A52;
+  --ok-soft: #1A2E22;
+}
+
 @keyframes fadeIn    { from { opacity: 0; }                              to { opacity: 1; } }
 @keyframes slideUp   { from { opacity: 0; transform: translateY(20px); }  to { opacity: 1; transform: translateY(0); } }
 @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }

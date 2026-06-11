@@ -40,7 +40,7 @@
 .bigBtnGhost:hover:not(:disabled) { background: var(--cream-deep); }
 .bigBtnGhost:disabled             { cursor: not-allowed; }
 .bigBtnDanger                     { border: none; background: var(--danger); color: white; }
-.bigBtnDanger:hover:not(:disabled){ background: #8E2A1E; }
+.bigBtnDanger:hover:not(:disabled){ background: var(--danger); filter: brightness(0.85); }
 
 /* ── Icon.Chevron ───────────────────────────────────────────────────────────── */
 .chevron    { transition: transform 200ms; }

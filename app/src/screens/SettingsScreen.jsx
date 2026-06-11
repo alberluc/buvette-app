@@ -88,6 +88,16 @@ export function SettingsScreen({
                     );
                   })}
                 </div>
+                <div className={styles.toggleRow}>
+                  <span className={styles.toggleLabel}>Mode sombre</span>
+                  <button
+                    role="switch" aria-checked={t.darkMode}
+                    onClick={() => setTweak('darkMode', !t.darkMode)}
+                    className={`${styles.toggleTrack} ${t.darkMode ? styles.toggleTrackOn : styles.toggleTrackOff}`}
+                  >
+                    <span className={styles.toggleThumb} />
+                  </button>
+                </div>
               </div>
 
             {licenseInfo && (
