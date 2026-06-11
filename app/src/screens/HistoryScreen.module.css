@@ -66,15 +66,15 @@
 .dayToggleBtn {
   appearance: none; border: none; background: transparent;
   width: 100%; padding: 18px 24px;
-  display: grid; grid-template-columns: 1fr auto auto auto 28px;
+  display: grid; grid-template-columns: 1fr 110px 140px 160px 28px;
   align-items: center; gap: 24px;
   cursor: pointer; text-align: left; font-family: inherit;
 }
 .dayDate    { font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
 .dayStat    { text-align: right; }
 .dayStatLabelSm { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--ink-mute); text-transform: uppercase; }
-.dayOrders  { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 110px; }
-.dayTotal   { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px; font-variant-numeric: tabular-nums; min-width: 130px; }
+.dayOrders  { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dayTotal   { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
 .chevronCell { color: var(--ink-soft); }
 
 /* ── CaisseBadge ────────────────────────────────────────────────────────────── */
@@ -84,11 +84,11 @@
   font-weight: 700; font-size: 14px; letter-spacing: 0.2px;
   justify-content: center; white-space: nowrap;
 }
-.badgeAuto    { background: var(--warn-soft);   color: var(--warn);     min-width: 160px; }
-.badgeOk      { background: var(--ok-soft);     color: var(--ok);       min-width: 130px; }
-.badgeNone    { background: var(--cream-deep);  color: var(--ink-soft); min-width: 130px; }
-.badgeMissing { background: var(--danger-soft); color: var(--danger);   min-width: 130px; font-variant-numeric: tabular-nums; }
-.badgeExcess  { background: var(--warn-soft);   color: var(--warn);     min-width: 130px; font-variant-numeric: tabular-nums; }
+.badgeAuto    { background: var(--warn-soft);   color: var(--warn);     }
+.badgeOk      { background: var(--ok-soft);     color: var(--ok);       }
+.badgeNone    { background: var(--cream-deep);  color: var(--ink-soft); }
+.badgeMissing { background: var(--danger-soft); color: var(--danger);   font-variant-numeric: tabular-nums; }
+.badgeExcess  { background: var(--warn-soft);   color: var(--warn);     font-variant-numeric: tabular-nums; }
 
 /* ── DayDetail ──────────────────────────────────────────────────────────────── */
 .dayDetail {
