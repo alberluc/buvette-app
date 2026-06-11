@@ -273,7 +273,7 @@ function DayDetail({ day, products }) {
         <div>
           <div className={styles.detailSectionLabel}>Caisse espèces</div>
           <div className={styles.detailRows}>
-            <DetailRow label="Base (fond / comptage préc.)" value={fmtEUR(day._base)} />
+            <DetailRow label="Fond de caisse" value={fmtEUR(day._base)} />
             <DetailRow label="Espèces du jour" value={'+' + fmtEUR(day.especes)} />
             {day._mouvTotal !== 0 && (
               <DetailRow
