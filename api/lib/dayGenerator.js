@@ -114,12 +114,9 @@ function computeExpectedCash(orders, mouvements) {
   return especes + mvtSum
 }
 
-// Retourne null si pas de comptage, sinon le montant compté (avec écart possible)
-function maybeCashCounted(dayType, expected, isAutoClosed) {
+// Clôture manuelle → comptage toujours présent. Clôture auto → null.
+function maybeCashCounted(expected, isAutoClosed) {
   if (isAutoClosed) return null
-
-  const prob = { tournament: 0.70, weekend: 0.55, friday: 0.30, small: 0.20 }
-  if (Math.random() > (prob[dayType] ?? 0.3)) return null
 
   const r = Math.random()
   let ecart = 0
@@ -184,7 +181,7 @@ export function generateHistoricalDays(licenseKey, products, cashFloat = 50) {
       )
 
       const expected   = computeExpectedCash(orders, mouvements)
-      const cashCounted = maybeCashCounted(dayType, expected, isAutoClosed)
+      const cashCounted = maybeCashCounted(expected, isAutoClosed)
       const dayKey     = toDayKey(new Date(cursor))
 
       rows.push({

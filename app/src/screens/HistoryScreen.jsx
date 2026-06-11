@@ -189,6 +189,7 @@ function DayDetail({ day, products }) {
   const hasCount = day.cashCounted != null;
   const diff = day._ecart ?? 0;
   const mouvements = day.mouvements || [];
+  const ecartColor = !hasCount ? 'var(--ink-mute)' : Math.abs(diff) < 0.01 ? 'var(--ok)' : diff < 0 ? 'var(--danger)' : 'var(--warn)';
 
   return (
     <div className={styles.dayDetail}>
