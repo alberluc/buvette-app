@@ -5,7 +5,8 @@ export const DEFAULT_PRODUCTS = [
   { id: 'box',   name: 'Box',        price: 1 },
 ]
 
-const PRODUCT_WEIGHTS = [50, 15, 25, 10]
+// Bière très majoritaire, soda fréquent, vin modéré, box rare
+const PRODUCT_WEIGHTS = [52, 18, 22, 8]
 
 function rng(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -30,19 +31,24 @@ function weightedPick(products) {
   return products[0]
 }
 
-function randomTime(startHour = 10, endHour = 22) {
-  const h = rng(startHour, endHour - 1)
+function randomTime(startHour, endHour) {
+  const h = rng(startHour, Math.max(startHour, endHour - 1))
   const m = rng(0, 59)
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-function generateOrder(products, index, timeOpts = {}) {
-  const numProducts = rng(1, Math.min(3, products.length))
+function generateOrder(products, index, startHour = 10, endHour = 19) {
+  // Majorité de commandes simples (1 produit), parfois 2, rarement 3
+  const numProducts = Math.random() < 0.60 ? 1 : Math.random() < 0.80 ? 2 : 3
   const selected = new Map()
 
-  while (selected.size < numProducts) {
+  while (selected.size < Math.min(numProducts, products.length)) {
     const p = weightedPick(products)
-    if (!selected.has(p.id)) selected.set(p.id, rng(1, 3))
+    if (!selected.has(p.id)) {
+      // Quantité : souvent 1, parfois une tournée (2-4)
+      const qty = Math.random() < 0.55 ? 1 : Math.random() < 0.70 ? 2 : rng(3, 4)
+      selected.set(p.id, qty)
+    }
   }
 
   const items = [...selected.entries()]
@@ -53,14 +59,79 @@ function generateOrder(products, index, timeOpts = {}) {
 
   return {
     id: `order-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
-    time: randomTime(timeOpts.startHour ?? 10, timeOpts.endHour ?? 22),
+    time: randomTime(startHour, endHour),
     items,
-    payment: Math.random() < 0.7 ? 'especes' : 'carte',
+    payment: Math.random() < 0.72 ? 'especes' : 'carte',
     total,
   }
 }
 
-export function generateHistoricalDays(licenseKey, products) {
+let _opSeq = 0
+function nextOpId() {
+  return `op-${++_opSeq}-${Math.random().toString(36).slice(2, 5)}`
+}
+
+function generateMouvements(dayType, cashFloat) {
+  const mvt = []
+
+  // Fond de caisse en début de journée (quasi-systématique pour les grosses journées)
+  const fondProb = { tournament: 0.90, weekend: 0.80, friday: 0.55, small: 0.35 }
+  if (Math.random() < (fondProb[dayType] ?? 0.4)) {
+    mvt.push({ id: nextOpId(), time: randomTime(8, 10), label: 'Fond de caisse', amount: cashFloat })
+  }
+
+  // Achat glaçons en matinée pour les journées chargées
+  if ((dayType === 'tournament' && Math.random() < 0.65) ||
+      (dayType === 'weekend'    && Math.random() < 0.40)) {
+    mvt.push({ id: nextOpId(), time: randomTime(9, 11), label: 'Achat glaçons', amount: -rng(8, 16) })
+  }
+
+  // Appoint monnaie en milieu de journée quand la caisse manque de pièces
+  if ((dayType === 'tournament' && Math.random() < 0.50) ||
+      (dayType === 'weekend'    && Math.random() < 0.25)) {
+    mvt.push({ id: nextOpId(), time: randomTime(11, 14), label: 'Appoint monnaie', amount: rng(20, 50) })
+  }
+
+  // Achat consommables ponctuels (gobelets, pailles…)
+  if (Math.random() < 0.12) {
+    mvt.push({ id: nextOpId(), time: randomTime(9, 12), label: 'Achat consommables', amount: -rng(5, 18) })
+  }
+
+  // Sortie caisse en fin de journée (vidage partiel)
+  if ((dayType === 'tournament' && Math.random() < 0.60) ||
+      (dayType === 'weekend'    && Math.random() < 0.45) ||
+      (dayType === 'friday'     && Math.random() < 0.30)) {
+    mvt.push({ id: nextOpId(), time: randomTime(17, 21), label: 'Sortie caisse', amount: -rng(30, 80) })
+  }
+
+  mvt.sort((a, b) => a.time.localeCompare(b.time))
+  return mvt
+}
+
+function computeExpectedCash(orders, mouvements) {
+  const especes = orders.filter(o => o.payment === 'especes').reduce((s, o) => s + o.total, 0)
+  const mvtSum  = mouvements.reduce((s, m) => s + m.amount, 0)
+  return especes + mvtSum
+}
+
+// Retourne null si pas de comptage, sinon le montant compté (avec écart possible)
+function maybeCashCounted(dayType, expected, isAutoClosed) {
+  if (isAutoClosed) return null
+
+  const prob = { tournament: 0.70, weekend: 0.55, friday: 0.30, small: 0.20 }
+  if (Math.random() > (prob[dayType] ?? 0.3)) return null
+
+  const r = Math.random()
+  let ecart = 0
+  if      (r < 0.45) ecart = 0                                              // exact
+  else if (r < 0.70) ecart = rng(1, 2) * (Math.random() < 0.5 ? 1 : -1)   // ±1-2 €
+  else if (r < 0.88) ecart = rng(3, 5) * (Math.random() < 0.4 ? 1 : -1)   // ±3-5 €
+  else               ecart = rng(6, 15) * (Math.random() < 0.3 ? 1 : -1)   // ±6-15 €
+
+  return Math.max(0, Math.round((expected + ecart) * 100) / 100)
+}
+
+export function generateHistoricalDays(licenseKey, products, cashFloat = 50) {
   const now = new Date()
   const rows = []
 
@@ -71,22 +142,60 @@ export function generateHistoricalDays(licenseKey, products) {
   const cursor = new Date(start)
   while (cursor < now) {
     const dow = cursor.getDay()
-    const isWeekend = dow === 0 || dow === 6
-    const isFriday = dow === 5
+    const isSunday   = dow === 0
+    const isSaturday = dow === 6
+    const isFriday   = dow === 5
+    const isWeekday  = dow >= 1 && dow <= 4
 
-    if ((isWeekend && Math.random() < 0.55) || (isFriday && Math.random() < 0.25)) {
-      const orderCount = isWeekend ? rng(18, 65) : rng(6, 22)
-      const orders = Array.from({ length: orderCount }, (_, i) => generateOrder(products, i))
-      const dayKey = toDayKey(new Date(cursor))
+    let dayType    = null
+    let orderRange = [0, 0]
+    let timeRange  = [10, 19]
+
+    if (isSunday && Math.random() < 0.62) {
+      dayType    = Math.random() < 0.28 ? 'tournament' : 'weekend'
+      orderRange = dayType === 'tournament' ? [38, 72] : [14, 38]
+      timeRange  = dayType === 'tournament' ? [9, 17]  : [10, 18]
+    } else if (isSaturday && Math.random() < 0.45) {
+      dayType    = Math.random() < 0.20 ? 'tournament' : 'weekend'
+      orderRange = dayType === 'tournament' ? [30, 58] : [10, 32]
+      timeRange  = dayType === 'tournament' ? [9, 17]  : [10, 19]
+    } else if (isFriday && Math.random() < 0.30) {
+      dayType    = 'friday'
+      orderRange = [5, 18]
+      timeRange  = [17, 22]
+    } else if (isWeekday && Math.random() < 0.07) {
+      dayType    = 'small'
+      orderRange = [3, 11]
+      timeRange  = [14, 20]
+    }
+
+    if (dayType) {
+      const orderCount = rng(orderRange[0], orderRange[1])
+      const orders     = Array.from({ length: orderCount }, (_, i) =>
+        generateOrder(products, i, timeRange[0], timeRange[1]),
+      )
+      orders.sort((a, b) => a.time.localeCompare(b.time))
+
+      const mouvements  = generateMouvements(dayType, cashFloat)
+      const isAutoClosed = (
+        (dayType === 'small'   && Math.random() < 0.38) ||
+        (dayType === 'friday'  && Math.random() < 0.22) ||
+        (dayType === 'weekend' && Math.random() < 0.10)
+      )
+
+      const expected   = computeExpectedCash(orders, mouvements)
+      const cashCounted = maybeCashCounted(dayType, expected, isAutoClosed)
+      const dayKey     = toDayKey(new Date(cursor))
 
       rows.push({
-        license_key: licenseKey,
-        day_key: dayKey,
-        date: formatDate(dayKey),
-        orders: JSON.stringify(orders),
-        mouvements: JSON.stringify([]),
-        day_closed: true,
-        auto_closed: false,
+        license_key:  licenseKey,
+        day_key:      dayKey,
+        date:         formatDate(dayKey),
+        orders:       JSON.stringify(orders),
+        mouvements:   JSON.stringify(mouvements),
+        day_closed:   true,
+        auto_closed:  isAutoClosed,
+        cash_counted: cashCounted,
       })
     }
 
@@ -96,26 +205,39 @@ export function generateHistoricalDays(licenseKey, products) {
   return rows
 }
 
-export function generateTodayOpen(licenseKey, products) {
-  const now = new Date()
+export function generateTodayOpen(licenseKey, products, cashFloat = 50) {
+  const now         = new Date()
   const currentHour = now.getHours()
-  const startHour = Math.max(9, currentHour - 3)
-  const endHour = Math.max(startHour + 1, currentHour)
+  const startHour   = Math.max(9, currentHour - rng(2, 4))
+  const endHour     = Math.max(startHour + 1, Math.min(currentHour, 22))
+
   const orders = Array.from({ length: rng(8, 22) }, (_, i) =>
-    generateOrder(products, i, { startHour, endHour }),
+    generateOrder(products, i, startHour, endHour),
   )
+  orders.sort((a, b) => a.time.localeCompare(b.time))
+
+  const fondHour = Math.max(8, startHour - 1)
+  const mouvements = [
+    { id: nextOpId(), time: `${String(fondHour).padStart(2, '0')}:00`, label: 'Fond de caisse', amount: cashFloat },
+  ]
+  if (Math.random() < 0.45) {
+    mouvements.push({
+      id: nextOpId(),
+      time: randomTime(startHour, Math.max(startHour + 1, currentHour - 1)),
+      label: 'Achat glaçons',
+      amount: -rng(8, 14),
+    })
+  }
 
   const dayKey = toDayKey(now)
   return {
-    license_key: licenseKey,
-    day_key: dayKey,
-    date: formatDate(dayKey),
-    orders: JSON.stringify(orders),
-    mouvements: JSON.stringify([
-      { id: 'op-1', time: '09:00', label: 'Fond de caisse', amount: 100 },
-      { id: 'op-2', time: '11:30', label: 'Achat glace', amount: -rng(10, 25) },
-    ]),
-    day_closed: false,
-    auto_closed: false,
+    license_key:  licenseKey,
+    day_key:      dayKey,
+    date:         formatDate(dayKey),
+    orders:       JSON.stringify(orders),
+    mouvements:   JSON.stringify(mouvements),
+    day_closed:   false,
+    auto_closed:  false,
+    cash_counted: null,
   }
 }
