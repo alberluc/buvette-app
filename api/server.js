@@ -31,6 +31,7 @@ app.use((req, res, next) => {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:4173',
+    'http://localhost:8080',
     'http://localhost:8082',
   ]
   if (allowed.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin)
