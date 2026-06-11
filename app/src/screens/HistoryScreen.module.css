@@ -102,8 +102,7 @@
 
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {
-  /* Assure que le contenu défile au-delà de la TabBar + safe-area */
-  .list { padding: 10px 10px calc(78px + env(safe-area-inset-bottom, 0px)); }
+  .list { padding: 10px 10px 24px; }
 
   .headerRight  { display: flex; flex-direction: row; align-items: center; gap: 10px; text-align: left; }
   .headerLabel  { display: none; }

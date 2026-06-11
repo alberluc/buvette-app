@@ -196,8 +196,7 @@
 
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {
-  /* Assure que le contenu défile au-delà de la TabBar + safe-area */
-  .scrollArea { padding: 12px 12px calc(78px + env(safe-area-inset-bottom, 0px)); }
+  .scrollArea { padding: 12px 12px 24px; }
 
   .metricsGrid { gap: 10px; margin-bottom: 12px; }
   .cardValueAccent,
