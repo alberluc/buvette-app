@@ -54,7 +54,13 @@ export function OperationModal({ onClose, onValidate, suggestions = {} }) {
 
           <div>
             <label className={styles.fieldLabel}>Montant (€)</label>
-            <div className={styles.amountWrap}>
+            <div
+              className={styles.amountWrap}
+              style={{ '--amount-focus-color': type === 'sortie' ? 'var(--danger)' : 'var(--ok)' }}
+            >
+              <span className={styles.amountSign} style={{ color: type === 'sortie' ? 'var(--danger)' : 'var(--ok)' }}>
+                {type === 'sortie' ? '−' : '+'}
+              </span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -62,6 +68,7 @@ export function OperationModal({ onClose, onValidate, suggestions = {} }) {
                 onChange={e => setAmount(e.target.value)}
                 placeholder="0,00"
                 className={styles.amountInput}
+                style={{ color: type === 'sortie' ? 'var(--danger)' : 'var(--ok)' }}
                 autoFocus
               />
               <span className={styles.euroSign}>€</span>
@@ -99,7 +106,7 @@ export function OperationModal({ onClose, onValidate, suggestions = {} }) {
             Annuler
           </BigButton>
           <BigButton
-            variant="primary"
+            variant={type === 'sortie' ? 'danger' : 'primary'}
             disabled={!valid}
             onClick={handleValidate}
             style={{ flex: 1, fontSize: 20, height: 68 }}
