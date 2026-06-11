@@ -508,6 +508,52 @@
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {
   .list { padding: 10px 10px 160px; }
+  /* prevent 980px modal from creating horizontal overflow */
+  .newOrderModal { max-width: 100%; }
+
+  /* QuickPanel — compact padding */
+  .quickPanel    { padding: 8px 10px 12px; }
+
+  /* Products — grille 2 colonnes au lieu du scroll horizontal */
+  .quickProducts {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    gap: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  /* Chaque bouton produit : 50% de largeur, layout colonne (emoji → nom → prix) */
+  .quickProdBtn {
+    flex: 1 1 calc(50% - 3px);
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 8px;
+    gap: 3px;
+  }
+  .quickProdEmoji     { font-size: 22px; }
+  .quickProdName      { font-size: 13px; }
+  .quickProdPrice     { font-size: 11px; }
+  .quickProdBadge     { top: -8px; right: -8px; min-width: 22px; height: 22px; font-size: 12px; padding: 0 4px; }
+  .quickProdDecrement { bottom: -8px; left: -8px; width: 22px; height: 22px; font-size: 16px; }
+  /* Bouton ops : taille fixe, ne grandit pas avec les produits */
+  .quickOpsBtn { flex: 0 0 44px; width: 44px; height: 44px; }
+
+  /* QuickFooter — wrap so all items fit; Valider takes its own full-width row */
+  .quickFooter   { flex-wrap: wrap; gap: 8px; }
+  .quickExitBtn  { width: 42px; height: 42px; flex-shrink: 0; }
+  .quickPayment  { gap: 6px; }
+  .quickTotal    { flex: 1; min-width: 0; }
+  .quickTotalAmt { font-size: 22px; }
+  .quickClearBtn { height: 44px; padding: 0 14px; font-size: 14px; }
+  /* Valider is always last child — give it its own full-width row */
+  .quickFooter > :last-child {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    height: 54px !important;
+    font-size: 17px !important;
+  }
 
   /* OrderRow + OperationRow : heure+badge+total+del en ligne 1, produits pleine largeur en ligne 2 */
   .orderRow,

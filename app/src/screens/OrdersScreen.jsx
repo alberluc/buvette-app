@@ -116,7 +116,6 @@ export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOp
             const total = items.reduce((s,[pid,q]) => { const p=products.find(x=>x.id===pid); return s+(p?p.price:0)*q; }, 0);
             onAddOrder({ id: crypto.randomUUID(), time, items, payment, total });
           }}
-          onOperationOpen={() => setOperationOpen(true)}
           onExitQuickMode={() => setQuickMode(false)}
         />
       )}
@@ -406,7 +405,7 @@ function TransferSvg() {
   );
 }
 
-function QuickOrderPanel({ products, onValidate, onOperationOpen, onExitQuickMode }) {
+function QuickOrderPanel({ products, onValidate, onExitQuickMode }) {
   const [cart, setCart] = useState({});
   const [payment, setPayment] = useState('especes');
 
@@ -439,10 +438,6 @@ function QuickOrderPanel({ products, onValidate, onOperationOpen, onExitQuickMod
             onDecrement={() => bump(p.id, -1)}
           />
         ))}
-        <button onClick={onOperationOpen} className={styles.quickOpsBtn}
-          title="Opération de caisse" aria-label="Opération de caisse">
-          <TransferSvg />
-        </button>
       </div>
       <div className={styles.quickFooter}>
         <button
