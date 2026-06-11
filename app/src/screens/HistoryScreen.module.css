@@ -24,6 +24,35 @@
 }
 .exportBtn:hover { border-color: var(--club); color: var(--club); background: var(--club-soft); }
 
+/* ── Month selector ─────────────────────────────────────────────────────────── */
+.monthBar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 24px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line-soft);
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.monthBar::-webkit-scrollbar { display: none; }
+.monthChip {
+  appearance: none;
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 100ms, color 100ms, background 100ms;
+}
+.monthChip:hover { border-color: var(--club); color: var(--club); background: var(--club-soft); }
+.monthChipActive { background: var(--club); border-color: var(--club); color: #fff; }
+.monthChipActive:hover { background: var(--club); color: #fff; }
+
 /* ── Empty state ────────────────────────────────────────────────────────────── */
 .emptyState { margin: 80px auto; max-width: 420px; text-align: center; color: var(--ink-soft); }
 .emptyTitle { font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
@@ -102,6 +131,7 @@
 /* ── Mobile responsive (< 600px) ─────────────────────────────────────────────── */
 @media (max-width: 599px) {
   .list { padding: 10px 10px 24px; }
+  .monthBar { padding: 8px 10px; }
 
   .headerRight  { display: flex; flex-direction: row; align-items: center; gap: 10px; text-align: left; }
   .headerLabel  { display: none; }

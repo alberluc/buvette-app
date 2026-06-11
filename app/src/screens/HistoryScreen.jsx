@@ -47,12 +47,22 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+function monthKey(dayKey) { return dayKey ? dayKey.slice(0, 7) : ''; }
+
+function monthLabel(ym) {
+  const [year, month] = ym.split('-');
+  return new Date(year, Number(month) - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
 export function HistoryScreen({ archived, products, cashFloat }) {
   const [openId, setOpenId] = useState(null);
   const days = archived || [];
 
+  const currentMonth = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
   // Recalcule attendu + écart pour chaque journée archivée en propageant la base
-  // (fond de caisse → dernier comptage connu)
+  // (fond de caisse → dernier comptage connu) — doit rester sur toutes les journées
   const daysComputed = useMemo(() => {
     let base = cashFloat ?? 0;
     const result = [];
@@ -66,9 +76,19 @@ export function HistoryScreen({ archived, products, cashFloat }) {
     return result;
   }, [days, cashFloat]);
 
+  const availableMonths = useMemo(() => {
+    const months = new Set(daysComputed.map(d => monthKey(d.dayKey)));
+    months.add(currentMonth);
+    return [...months].sort().reverse();
+  }, [daysComputed, currentMonth]);
+
+  const filteredDays = useMemo(
+    () => daysComputed.filter(d => monthKey(d.dayKey) === selectedMonth),
+    [daysComputed, selectedMonth],
+  );
+
   const handleExport = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    downloadCsv(buildCsv(daysComputed, products), `assolyte-historique-${today}.csv`);
+    downloadCsv(buildCsv(filteredDays, products), `assolyte-historique-${selectedMonth}.csv`);
   };
 
   return (
@@ -78,14 +98,14 @@ export function HistoryScreen({ archived, products, cashFloat }) {
         title="Historique"
         right={
           <div className={styles.headerRight}>
-            <div className={styles.headerLabel}>Cumul saison</div>
+            <div className={styles.headerLabel}>{monthLabel(selectedMonth)}</div>
             <div className={styles.headerValue}>
-              {fmtEUR(daysComputed.reduce((s, d) => s + d._grandTotal, 0))}
+              {fmtEUR(filteredDays.reduce((s, d) => s + d._grandTotal, 0))}
             </div>
             <div className={styles.headerSub}>
-              {days.length} journées · {days.reduce((s, d) => s + d.orderCount, 0)} commandes
+              {filteredDays.length} journée{filteredDays.length !== 1 ? 's' : ''} · {filteredDays.reduce((s, d) => s + d.orderCount, 0)} commandes
             </div>
-            {days.length > 0 && (
+            {filteredDays.length > 0 && (
               <button onClick={handleExport} className={styles.exportBtn} title="Exporter en CSV">
                 <DownloadSvg /> CSV
               </button>
@@ -94,15 +114,38 @@ export function HistoryScreen({ archived, products, cashFloat }) {
         }
       />
 
+      {availableMonths.length > 1 && (
+        <div className={styles.monthBar}>
+          {availableMonths.map(ym => (
+            <button
+              key={ym}
+              onClick={() => { setSelectedMonth(ym); setOpenId(null); }}
+              className={`${styles.monthChip} ${ym === selectedMonth ? styles.monthChipActive : ''}`}
+            >
+              {monthLabel(ym)}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className={styles.list}>
-        {days.length === 0 ? (
+        {filteredDays.length === 0 ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyTitle}>Aucune journée archivée</div>
-            <div className={styles.emptyText}>Les journées clôturées apparaîtront ici.</div>
+            {days.length === 0 ? (
+              <>
+                <div className={styles.emptyTitle}>Aucune journée archivée</div>
+                <div className={styles.emptyText}>Les journées clôturées apparaîtront ici.</div>
+              </>
+            ) : (
+              <>
+                <div className={styles.emptyTitle}>Aucune journée ce mois-ci</div>
+                <div className={styles.emptyText}>Sélectionnez un autre mois pour voir l&apos;historique.</div>
+              </>
+            )}
           </div>
         ) : (
           <div className={styles.dayListInner}>
-            {daysComputed.map((day, i) => (
+            {filteredDays.map((day, i) => (
               <DayRow
                 key={day.dayKey || i} day={day}
                 products={products}
