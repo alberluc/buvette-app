@@ -16,7 +16,7 @@ export default defineConfig({
         description: 'Caisse de buvette pour club sportif — usage tablette',
         start_url: '/',
         display: 'standalone',
-        orientation: 'natural',
+        orientation: 'any',
         background_color: '#F6F1E8',
         theme_color: '#1F6F3F',
         lang: 'fr',
