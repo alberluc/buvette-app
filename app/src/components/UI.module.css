@@ -72,15 +72,14 @@
   padding: 0 24px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--ink);
-  background: var(--module-bg, var(--cream)); /* couleur du module en cours (App.jsx) */
-  border-bottom: 1px solid var(--line-soft);
+  color: white;
+  background: var(--module-fg, var(--club)); /* couleur principale du module en cours (App.jsx) */
 }
 .statusRight {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--ink-soft);
+  color: rgba(255, 255, 255, 0.85);
 }
 .clubName     { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
 .userName     { font-weight: 500; margin-left: 8px; }
@@ -92,12 +91,12 @@
 }
 .statusDotOnline  { background: var(--ok);   box-shadow: 0 0 0 2px var(--ok-soft); }
 .statusDotOffline { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-soft); }
-.offlineLabel { font-size: 11px; font-weight: 700; color: var(--warn); letter-spacing: 0.3px; }
+.offlineLabel { font-size: 11px; font-weight: 700; color: white; letter-spacing: 0.3px; }
 .settingsBtn {
   appearance: none;
   border: none;
   background: transparent;
-  color: var(--ink-soft);
+  color: inherit;
   padding: 2px;
   margin-left: 4px;
   cursor: pointer;
