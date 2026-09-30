@@ -6,13 +6,15 @@ import { SettingsDrawer } from './components/SettingsDrawer';
 import { LoginScreen, ChangePasswordModal, AccountManager } from './components/LoginScreen';
 import { LicenseScreen } from './components/LicenseScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { HomeScreen } from './screens/HomeScreen';
 import { reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadTweaks, saveTweaks } from './lib/storage';
 import { parseJwt, refreshLicense, refreshSession, fetchAccounts, pushSettings } from './lib/api';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { MODULES, enabledModules, accessibleModules } from './modules';
+import { MODULES, enabledModules, accessibleModules, moduleForPath } from './modules';
 import { userFromSession } from './lib/permissions';
 import styles from './App.module.css';
 
+const HOME_PATH = '/';
 const SETTINGS_PATH = '/reglages';
 
 // Shell du socle : licence, connexion, comptes, apparence, navigation.
@@ -139,8 +141,13 @@ export default function App() {
   };
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  // Les modules chargent leurs données au montage de leur Provider (après connexion)
-  const handleLoginSuccess = applySessionToken;
+  // Les modules chargent leurs données au montage de leur Provider (après connexion).
+  // Arrivée : l'accueil, ou directement le module s'il n'y en a qu'un (ex : bénévole buvette).
+  const handleLoginSuccess = async token => {
+    await applySessionToken(token);
+    const accessible = accessibleModules(userFromSession(parseJwt(token)));
+    navigate(accessible.length === 1 ? accessible[0].tabs[0].path : HOME_PATH, { replace: true });
+  };
 
   const handleLogout = async () => {
     await deleteSession();
@@ -211,15 +218,18 @@ export default function App() {
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  // Modules affichés = activés sur la licence ET accessibles à l'utilisateur connecté
+  // Modules affichés = activés sur la licence ET accessibles à l'utilisateur connecté.
+  // Accueil (/) = une tuile par module ; dans un module, la barre du bas ne montre que ses onglets.
   const modules = accessibleModules(currentUser);
   const moduleTabs = modules.flatMap(m => m.tabs);
-  const defaultPath = moduleTabs[0]?.path ?? SETTINGS_PATH;
-  const tabs = [
-    ...moduleTabs.map(tab => ({ id: tab.path, label: tab.label, icon: <tab.Icon size={26} /> })),
-    { id: SETTINGS_PATH, label: 'Réglages', icon: <Icon.Settings size={26} /> },
-  ];
-  const screenLabel = moduleTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
+  const currentModule = moduleForPath(modules, location.pathname);
+  const onHome = location.pathname === HOME_PATH;
+  const homeTab = { id: HOME_PATH, label: 'Accueil', icon: <Icon.Grid size={26} /> };
+  const tabs = currentModule
+    ? [homeTab, ...currentModule.tabs.map(tab => ({ id: tab.path, label: tab.label, icon: <tab.Icon size={26} /> }))]
+    : [homeTab, { id: SETTINGS_PATH, label: 'Réglages', icon: <Icon.Settings size={26} /> }];
+  const screenLabel = onHome ? '00 Accueil'
+    : moduleTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
 
   // ── Rendu principal ───────────────────────────────────────────────────────
   const shell = (
@@ -228,6 +238,13 @@ export default function App() {
 
       <div className={styles.main}>
         <Routes>
+          <Route path={HOME_PATH} element={
+            <HomeScreen
+              modules={modules} settingsPath={SETTINGS_PATH}
+              userName={currentUser.name} clubName={licenseInfo?.club}
+              onOpen={path => navigate(path)}
+            />
+          } />
           {moduleTabs.map(tab => <Route key={tab.path} path={tab.path} element={<tab.Screen />} />)}
           <Route path={SETTINGS_PATH} element={
             <SettingsScreen
@@ -239,13 +256,13 @@ export default function App() {
               onManageAccounts={() => setShowAccountManager(true)}
             />
           } />
-          <Route path="*" element={<Navigate to={defaultPath} replace />} />
+          <Route path="*" element={<Navigate to={HOME_PATH} replace />} />
         </Routes>
 
         {modules.map(m => m.Overlays && <m.Overlays key={m.id} />)}
       </div>
 
-      <TabBar tabs={tabs} active={location.pathname} onChange={path => navigate(path)} />
+      {!onHome && <TabBar tabs={tabs} active={location.pathname} onChange={path => navigate(path)} />}
 
       {!t.showStatusBar && (
         <button onClick={() => setAccountOpen(true)} aria-label="Mon compte"

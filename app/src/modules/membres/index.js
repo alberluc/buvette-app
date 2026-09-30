@@ -8,6 +8,9 @@ import { MembersScreen } from './screens/MembersScreen';
 export default {
   id: 'membres',
   label: 'Membres',
+  description: 'Fichier des adhérents et coordonnées',
+  Icon: Icon.Users,
+  color: { fg: 'var(--blue)', bg: 'var(--blue-soft)' },
   Provider: MembresProvider,
   tabs: [
     { path: '/membres', label: 'Membres', Icon: Icon.Users, screenLabel: '05 Membres', Screen: MembersScreen },

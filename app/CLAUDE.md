@@ -30,6 +30,7 @@ src/
 ├── components/           # socle : UI.jsx (Icon, TabBar, StatusBar…), LoginScreen, LicenseScreen,
 │                         #         SettingsDrawer, TweaksPanel
 ├── screens/
+│   ├── HomeScreen.jsx      # / — accueil : une tuile par module accessible + Réglages
 │   └── SettingsScreen.jsx  # /reglages — cartes du socle + cartes fournies par les modules
 ├── lib/                  # socle : api.js (licences, comptes, /settings), storage.js (licence,
 │                         #         session, comptes, tweaks), format.js (fmtEUR, todayKey, formatDate),
@@ -59,11 +60,17 @@ src/
 ## Ajouter un module
 
 1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')` (lecture/usage) ou `requireModule('<id>', 'admin')` (réglages du module). Ajouter `{ fresh: true }` si le module expose des données personnelles : les droits sont alors relus en base à chaque requête au lieu de se fier au token (7 j).
-2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
+2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `description`, `Icon`, `color`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
 3. L'ajouter au tableau `MODULES` de `modules/index.js`.
 4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
 
-Les onglets du module apparaissent dans la TabBar seulement si le module est activé sur la licence (`currentUser.modules`, lu dans le token de session) **et** si l'utilisateur y a accès (`currentUser.permissions`). Un token sans champ `modules` vaut `['buvette']`. Un module activé sur une licence apparaît à la prochaine ouverture de l'app (voir « Rafraîchissement de session »).
+Le module (sa tuile sur l'accueil, ses onglets) n'apparaît que si le module est activé sur la licence (`currentUser.modules`, lu dans le token de session) **et** si l'utilisateur y a accès (`currentUser.permissions`). Un token sans champ `modules` vaut `['buvette']`. Un module activé sur une licence apparaît à la prochaine ouverture de l'app (voir « Rafraîchissement de session »).
+
+## Navigation
+
+- **Accueil (`/`)** : `HomeScreen`, une tuile par module accessible (icône, nom, description, couleur fournis par le descripteur) + une tuile Réglages. Pas de barre du bas sur l'accueil.
+- **Dans un module** : la barre du bas affiche `Accueil` puis les seuls onglets du module en cours (`moduleForPath()`), jamais ceux des autres modules. Sur `/reglages` : `Accueil` + `Réglages`.
+- **Arrivée après connexion** : l'accueil, ou directement le premier onglet du module si l'utilisateur n'en a qu'un (ex : bénévole buvette). Au rechargement, on reste sur la page en cours. Toute route inconnue ou non autorisée renvoie vers l'accueil.
 
 ## Droits
 

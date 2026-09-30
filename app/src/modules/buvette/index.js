@@ -10,6 +10,9 @@ import { BUVETTE_PATHS } from './paths';
 export default {
   id: 'buvette',
   label: 'Buvette',
+  description: 'Caisse, bilan du jour et historique des ventes',
+  Icon: Icon.Mug,
+  color: { fg: 'var(--amber)', bg: 'var(--amber-soft)' },
   defaultLevel: 'user',
   Provider: BuvetteProvider,
   tabs: [

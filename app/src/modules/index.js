@@ -6,11 +6,16 @@ import membres from './membres';
 // Contrat d'un module :
 //   id            identifiant, doit correspondre à `licenses.modules` côté API
 //   label         nom affiché
+//   description   phrase courte affichée sous le nom sur la tuile de l'accueil
+//   Icon          icône de la tuile de l'accueil (composant Icon.* de components/UI)
+//   color         couleur d'accent de la tuile ({ fg, bg } : variables CSS, ex. var(--amber))
 //   defaultLevel? niveau proposé pour un nouveau compte bénévole ('user' | 'admin') ;
 //                 absent = aucun accès par défaut (ex : module manipulant des données personnelles)
 //   Provider      composant ({ sessionToken, currentUser, onApiStatus, children }) monté
 //                 quand l'utilisateur connecté a accès au module ; peut rendre null tant qu'il charge
-//   tabs          [{ path, label, Icon, screenLabel, Screen }] — onglets et routes du module
+//   tabs          [{ path, label, Icon, screenLabel, Screen }] — onglets et routes du module ;
+//                 le premier onglet est la porte d'entrée depuis l'accueil. La barre du bas
+//                 n'affiche que les onglets du module en cours (précédés du bouton Accueil).
 //   Overlays?     composant rendu dans la zone principale (toasts, modales)
 //   DevTools?     composant rendu dans le panneau Tweaks
 //   SettingsMain? cartes de réglages, colonne principale ({ isAdmin } = responsable du module)
@@ -37,4 +42,9 @@ export function moduleLevel(user, moduleId) {
 // Modules activés sur la licence ET accessibles à l'utilisateur
 export function accessibleModules(user) {
   return enabledModules(user).filter(m => moduleLevel(user, m.id));
+}
+
+// Module auquel appartient une route (null pour l'accueil, les réglages…)
+export function moduleForPath(modules, pathname) {
+  return modules.find(m => m.tabs.some(t => t.path === pathname)) ?? null;
 }
