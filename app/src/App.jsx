@@ -7,7 +7,7 @@ import { LoginScreen, ChangePasswordModal, AccountManager } from './components/L
 import { LicenseScreen } from './components/LicenseScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadTweaks, saveTweaks } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, pushSettings } from './lib/api';
+import { parseJwt, refreshLicense, refreshSession, fetchAccounts, pushSettings } from './lib/api';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
 import { MODULES, enabledModules, accessibleModules } from './modules';
 import { userFromSession } from './lib/permissions';
@@ -63,17 +63,39 @@ export default function App() {
       setCachedAccounts(accsCache);
       applyLicenseToken(licToken);
 
+      let validSession = null;
       if (sesToken) {
         const p = parseJwt(sesToken);
         if (p && p.exp > Date.now() / 1000) {
+          validSession = sesToken;
           setSessionToken(sesToken);
           setCurrentUser(userFromSession(p));
         }
       }
 
       setLoaded(true);
+
+      // Resynchronise modules et droits avec le serveur (module activé, droit modifié depuis la
+      // dernière connexion). Hors ligne : on garde la session locale.
+      if (validSession) {
+        refreshSession(validSession)
+          .then(data => {
+            applySessionToken(data.token);
+            if (data.licenseToken) { saveLicense(data.licenseToken); applyLicenseToken(data.licenseToken); }
+          })
+          .catch(e => {
+            // Compte supprimé ou licence révoquée/expirée : retour à l'écran de connexion
+            if (e.status === 401 || e.status === 403) handleLogout();
+          });
+      }
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function applySessionToken(token) {
+    await saveSession(token);
+    setSessionToken(token);
+    setCurrentUser(userFromSession(parseJwt(token)));
+  }
 
   function applyLicenseToken(token) {
     if (!token) { setLicenseStatus('missing'); return; }
@@ -81,7 +103,7 @@ export default function App() {
     if (!p) { setLicenseStatus('missing'); return; }
     if (p.exp < Date.now() / 1000) { setLicenseToken(token); setLicenseStatus('expired'); return; }
     setLicenseToken(token);
-    setLicenseInfo({ club: p.club, plan: p.plan, licenseExpires: p.licenseExpires, modules: p.modules });
+    setLicenseInfo({ club: p.club, plan: p.plan, licenseExpires: p.licenseExpires });
     setLicenseStatus('valid');
   }
 
@@ -118,12 +140,7 @@ export default function App() {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   // Les modules chargent leurs données au montage de leur Provider (après connexion)
-  const handleLoginSuccess = async sessionJWT => {
-    await saveSession(sessionJWT);
-    setSessionToken(sessionJWT);
-    const p = parseJwt(sessionJWT);
-    setCurrentUser(userFromSession(p));
-  };
+  const handleLoginSuccess = applySessionToken;
 
   const handleLogout = async () => {
     await deleteSession();
@@ -195,7 +212,7 @@ export default function App() {
 
   // ── Navigation ────────────────────────────────────────────────────────────
   // Modules affichés = activés sur la licence ET accessibles à l'utilisateur connecté
-  const modules = accessibleModules(licenseInfo, currentUser);
+  const modules = accessibleModules(currentUser);
   const moduleTabs = modules.flatMap(m => m.tabs);
   const defaultPath = moduleTabs[0]?.path ?? SETTINGS_PATH;
   const tabs = [
@@ -251,7 +268,7 @@ export default function App() {
       )}
 
       {showAccountManager && (
-        <AccountManager accounts={cachedAccounts} currentUser={currentUser} sessionToken={sessionToken} modules={enabledModules(licenseInfo)} onClose={() => { setShowAccountManager(false); refreshCachedAccounts(); }} />
+        <AccountManager accounts={cachedAccounts} currentUser={currentUser} sessionToken={sessionToken} modules={enabledModules(currentUser)} onClose={() => { setShowAccountManager(false); refreshCachedAccounts(); }} />
       )}
 
       <TweaksPanel>

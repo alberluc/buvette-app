@@ -21,9 +21,11 @@ export const MODULES = [buvette, membres];
 // Les tokens émis avant l'introduction des modules n'ont pas de champ `modules`
 export const DEFAULT_MODULE_IDS = ['buvette'];
 
-// Modules activés sur la licence (indépendamment de l'utilisateur)
-export function enabledModules(licenseInfo) {
-  const ids = licenseInfo?.modules ?? DEFAULT_MODULE_IDS;
+// Modules activés sur la licence (indépendamment des droits de l'utilisateur).
+// Lus dans la session (user.modules) et non dans le token de licence : la session est ré-émise
+// à chaque ouverture de l'app, le token de licence peut dater de 30 jours.
+export function enabledModules(user) {
+  const ids = user?.modules ?? DEFAULT_MODULE_IDS;
   return MODULES.filter(m => ids.includes(m.id));
 }
 
@@ -33,6 +35,6 @@ export function moduleLevel(user, moduleId) {
 }
 
 // Modules activés sur la licence ET accessibles à l'utilisateur
-export function accessibleModules(licenseInfo, user) {
-  return enabledModules(licenseInfo).filter(m => moduleLevel(user, m.id));
+export function accessibleModules(user) {
+  return enabledModules(user).filter(m => moduleLevel(user, m.id));
 }

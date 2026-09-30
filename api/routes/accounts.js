@@ -24,13 +24,19 @@ router.get('/accounts', requireLicenseToken, async (req, res) => {
   }
 })
 
+// Modules actuellement activés sur la licence (en base : ceux du token peuvent être périmés)
+async function licenseModules(licenseKey) {
+  const license = await db('licenses').where({ key: licenseKey }).select('modules').first()
+  return license?.modules ?? DEFAULT_MODULES
+}
+
 router.post('/accounts', requireSession, requireClubAdmin, async (req, res) => {
   const { name, password, role, permissions = {} } = req.body
   if (!name?.trim() || !password) return res.status(400).json({ error: 'Nom et mot de passe requis' })
   if (!ROLES.includes(role)) return res.status(400).json({ error: 'Rôle invalide' })
-  if (!isValidPermissions(permissions, req.session.modules ?? DEFAULT_MODULES))
-    return res.status(400).json({ error: 'Droits invalides' })
   try {
+    if (!isValidPermissions(permissions, await licenseModules(req.session.licenseKey)))
+      return res.status(400).json({ error: 'Droits invalides' })
     const id = randomUUID()
     const salt = generateSalt()
     const password_hash = hashPassword(salt, password)
@@ -44,17 +50,17 @@ router.post('/accounts', requireSession, requireClubAdmin, async (req, res) => {
   }
 })
 
-// Modifie le rôle et/ou les droits d'un compte. Pris en compte à sa prochaine connexion.
+// Modifie le rôle et/ou les droits d'un compte. Pris en compte à la prochaine ouverture de l'app (/auth/refresh).
 router.put('/accounts/:id', requireSession, requireClubAdmin, async (req, res) => {
   const { role, permissions } = req.body
   if (role === undefined && permissions === undefined) return res.status(400).json({ error: 'Rien à modifier' })
   if (role !== undefined && !ROLES.includes(role)) return res.status(400).json({ error: 'Rôle invalide' })
-  if (permissions !== undefined && !isValidPermissions(permissions, req.session.modules ?? DEFAULT_MODULES))
-    return res.status(400).json({ error: 'Droits invalides' })
   // Évite qu'un club se retrouve sans administrateur
   if (req.params.id === req.session.accountId && role !== undefined && role !== 'admin')
     return res.status(400).json({ error: 'Impossible de retirer vos propres droits d\'administrateur' })
   try {
+    if (permissions !== undefined && !isValidPermissions(permissions, await licenseModules(req.session.licenseKey)))
+      return res.status(400).json({ error: 'Droits invalides' })
     const account = await db('accounts').where({ id: req.params.id, license_key: req.session.licenseKey }).first()
     if (!account) return res.status(404).json({ error: 'Compte introuvable' })
     await db.transaction(async trx => {

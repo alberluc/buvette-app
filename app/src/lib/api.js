@@ -34,6 +34,20 @@ export async function refreshLicense(token) {
   return data
 }
 
+// ── Session ───────────────────────────────────────────────────────────────────
+
+// Ré-émet la session depuis l'état serveur → { token, licenseToken }.
+// L'erreur porte `status` (401/403 = session à abandonner) ; une erreur réseau n'en a pas.
+export async function refreshSession(sessionToken) {
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${sessionToken}` },
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Erreur serveur'), { status: res.status })
+  return data
+}
+
 // ── Comptes ───────────────────────────────────────────────────────────────────
 
 export async function fetchAccounts(licenseToken) {

@@ -4,7 +4,7 @@ import { db } from '../db.js'
 import { requireLicenseToken, requireSession } from '../middleware/auth.js'
 import { loginLimiter } from '../middleware/rateLimiter.js'
 import { hashPassword, generateSalt } from '../lib/crypto.js'
-import { makeSessionToken } from '../lib/tokens.js'
+import { makeSessionToken, makeLicenseToken, checkLicense } from '../lib/tokens.js'
 import { loadPermissions } from '../lib/permissions.js'
 
 const router = Router()
@@ -40,6 +40,28 @@ router.post('/auth/login', loginLimiter, requireLicenseToken, async (req, res) =
     const license = await db('licenses').where({ key: req.licenseKey }).first()
     const permissions = await loadPermissions([account.id])
     res.json({ token: makeSessionToken(account, license, permissions[account.id]) })
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+// Ré-émet la session (et le token de licence) à partir de l'état en base : modules activés,
+// droits du compte, licence. Appelé par l'app à chaque ouverture, pour qu'un module activé ou un
+// droit modifié apparaisse sans reconnexion. Refusé si le compte a été supprimé ou la licence révoquée.
+router.post('/auth/refresh', requireSession, async (req, res) => {
+  try {
+    const [account, license] = await Promise.all([
+      db('accounts').where({ id: req.session.accountId, license_key: req.session.licenseKey }).first(),
+      db('licenses').where({ key: req.session.licenseKey }).first(),
+    ])
+    if (!account) return res.status(401).json({ error: 'Compte introuvable' })
+    const check = checkLicense(license)
+    if (!check.ok) return res.status(check.status).json({ error: check.error })
+    const permissions = await loadPermissions([account.id])
+    res.json({
+      token: makeSessionToken(account, license, permissions[account.id]),
+      licenseToken: makeLicenseToken(license),
+    })
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }

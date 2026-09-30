@@ -444,7 +444,7 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
             <>
               <AccessFields modules={modules} role={newRole} onRoleChange={setNewRole}
                 permissions={newPermissions} onPermissionsChange={setNewPermissions} />
-              <div className={styles.permHint}>Les changements s'appliquent à la prochaine connexion de {editing.name}.</div>
+              <div className={styles.permHint}>Les changements s'appliquent à la prochaine ouverture de l'application par {editing.name}.</div>
               {error && <div className={styles.centerError}>{error}</div>}
               <button onClick={handleSave} disabled={loading} className={styles.primaryBtn} style={{ marginTop: 24 }}>
                 {loading ? 'Enregistrement…' : 'Enregistrer'}

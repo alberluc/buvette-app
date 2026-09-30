@@ -63,21 +63,31 @@ src/
 3. L'ajouter au tableau `MODULES` de `modules/index.js`.
 4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
 
-Les onglets du module apparaissent dans la TabBar seulement si le module est activé sur la licence (`licenseInfo.modules`) **et** si l'utilisateur y a accès (`currentUser.permissions`). Un token sans champ `modules` vaut `['buvette']`.
+Les onglets du module apparaissent dans la TabBar seulement si le module est activé sur la licence (`currentUser.modules`, lu dans le token de session) **et** si l'utilisateur y a accès (`currentUser.permissions`). Un token sans champ `modules` vaut `['buvette']`. Un module activé sur une licence apparaît à la prochaine ouverture de l'app (voir « Rafraîchissement de session »).
 
 ## Droits
 
 - **Administrateur du club** (`role: 'admin'`) : gère les comptes et l'identité du club, et a implicitement le niveau `admin` sur tous les modules de la licence.
 - **Bénévole** (`role: 'user'`) : droits par module, stockés dans `account_permissions` côté API. Niveaux : `user` (utiliser le module) et `admin` (« Responsable » : réglages du module). Pas de ligne = aucun accès.
-- Les droits effectifs sont calculés à la connexion et embarqués dans le token de session (`permissions: { buvette: 'user' }`). Une modification prend effet à la prochaine connexion du compte.
-- Côté app : `moduleLevel(user, id)` et `accessibleModules(licenseInfo, user)` (`modules/index.js`) ; les cartes de réglages d'un module reçoivent `isAdmin` = responsable de ce module. `userFromSession()` (`lib/permissions.js`) reproduit le repli de l'API pour les sessions émises avant les droits par module.
+- Les droits effectifs et les modules de la licence sont calculés côté serveur et embarqués dans le token de session (`modules: ['buvette'], permissions: { buvette: 'user' }`).
+- Côté app : `enabledModules(user)`, `moduleLevel(user, id)` et `accessibleModules(user)` (`modules/index.js`) ; les cartes de réglages d'un module reçoivent `isAdmin` = responsable de ce module. `userFromSession()` (`lib/permissions.js`) reproduit le repli de l'API pour les sessions émises avant les droits par module.
+
+### Rafraîchissement de session
+
+À chaque ouverture de l'app (session locale valide, en ligne), `App.jsx` appelle `POST /auth/refresh` : l'API relit compte, droits, modules et licence en base et renvoie un nouveau token de session + un nouveau token de licence. Conséquences :
+- un module activé ou un droit modifié apparaît à la prochaine ouverture de l'app, sans reconnexion ;
+- compte supprimé (401) ou licence révoquée/expirée (403) → retour à l'écran de connexion ;
+- hors ligne → la session locale est conservée telle quelle ;
+- la session glisse : elle reste valide 7 jours après la dernière ouverture en ligne.
+
+Ne pas lire les modules dans le token de licence : il peut dater de 30 jours.
 
 ## Socle (App.jsx)
 
 | State | Rôle |
 |---|---|
-| `licenseStatus` / `licenseToken` / `licenseInfo` | Licence activée sur l'appareil (`licenseInfo.modules` = modules actifs) |
-| `sessionToken` / `currentUser` | Utilisateur connecté (`{ id, name, role: 'admin'|'user', permissions: { module: 'user'|'admin' } }`) |
+| `licenseStatus` / `licenseToken` / `licenseInfo` | Licence activée sur l'appareil (`{ club, plan, licenseExpires }`) |
+| `sessionToken` / `currentUser` | Utilisateur connecté (`{ id, name, role: 'admin'|'user', modules: [id], permissions: { module: 'user'|'admin' } }`) |
 | `cachedAccounts` | Comptes du club, cache hors-ligne pour l'écran de connexion |
 | `apiOnline` | Remonté par les modules via le callback `onApiStatus` (point vert / « Hors ligne ») |
 | `t` | Préférences d'apparence (tweaks) |
