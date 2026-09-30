@@ -1,3 +1,5 @@
+import { Icon } from '../components/UI';
+import { levelAtLeast } from '../lib/permissions';
 import buvette from './buvette';
 import membres from './membres';
 
@@ -18,8 +20,10 @@ import membres from './membres';
 //                 n'affiche que les onglets du module en cours (précédés du bouton Accueil).
 //   Overlays?     composant rendu dans la zone principale (toasts, modales)
 //   DevTools?     composant rendu dans le panneau Tweaks
-//   SettingsMain? cartes de réglages, colonne principale ({ isAdmin } = responsable du module)
-//   SettingsSide? cartes de réglages, colonne admin ({ isAdmin } = responsable du module)
+//   settings?     { path, Screen, level, screenLabel } — écran de réglages propre au module, ajouté
+//                 en dernier onglet « Réglages » de la barre du module pour les comptes ayant au
+//                 moins `level` ('user' | 'admin') sur ce module. Les réglages globaux (apparence,
+//                 club, équipe) restent dans /reglages.
 //   reset?        async () => efface les données locales du module
 export const MODULES = [buvette, membres];
 
@@ -44,7 +48,14 @@ export function accessibleModules(user) {
   return enabledModules(user).filter(m => moduleLevel(user, m.id));
 }
 
-// Module auquel appartient une route (null pour l'accueil, les réglages…)
-export function moduleForPath(modules, pathname) {
-  return modules.find(m => m.tabs.some(t => t.path === pathname)) ?? null;
+// Onglets d'un module pour cet utilisateur : ses onglets + « Réglages » s'il a le niveau requis
+export function moduleTabs(module, user) {
+  const { settings } = module;
+  if (!settings || !levelAtLeast(moduleLevel(user, module.id), settings.level)) return module.tabs;
+  return [...module.tabs, { path: settings.path, label: 'Réglages', Icon: Icon.Settings, screenLabel: settings.screenLabel, Screen: settings.Screen }];
+}
+
+// Module auquel appartient une route (null pour l'accueil, les réglages globaux…)
+export function moduleForPath(modules, user, pathname) {
+  return modules.find(m => moduleTabs(m, user).some(t => t.path === pathname)) ?? null;
 }

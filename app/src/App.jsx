@@ -10,7 +10,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadTweaks, saveTweaks } from './lib/storage';
 import { parseJwt, refreshLicense, refreshSession, fetchAccounts, pushSettings } from './lib/api';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { MODULES, enabledModules, accessibleModules, moduleForPath } from './modules';
+import { MODULES, enabledModules, accessibleModules, moduleTabs, moduleForPath } from './modules';
 import { userFromSession } from './lib/permissions';
 import styles from './App.module.css';
 
@@ -220,16 +220,17 @@ export default function App() {
   // ── Navigation ────────────────────────────────────────────────────────────
   // Modules affichés = activés sur la licence ET accessibles à l'utilisateur connecté.
   // Accueil (/) = une tuile par module ; dans un module, la barre du bas ne montre que ses onglets.
+  // Les réglages d'un module sont son dernier onglet (si le niveau le permet) ; /reglages = réglages globaux.
   const modules = accessibleModules(currentUser);
-  const moduleTabs = modules.flatMap(m => m.tabs);
-  const currentModule = moduleForPath(modules, location.pathname);
+  const allTabs = modules.flatMap(m => moduleTabs(m, currentUser));
+  const currentModule = moduleForPath(modules, currentUser, location.pathname);
   const onHome = location.pathname === HOME_PATH;
   const homeTab = { id: HOME_PATH, label: 'Accueil', icon: <Icon.Grid size={26} /> };
   const tabs = currentModule
-    ? [homeTab, ...currentModule.tabs.map(tab => ({ id: tab.path, label: tab.label, icon: <tab.Icon size={26} /> }))]
+    ? [homeTab, ...moduleTabs(currentModule, currentUser).map(tab => ({ id: tab.path, label: tab.label, icon: <tab.Icon size={26} /> }))]
     : [homeTab, { id: SETTINGS_PATH, label: 'Réglages', icon: <Icon.Settings size={26} /> }];
   const screenLabel = onHome ? '00 Accueil'
-    : moduleTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
+    : allTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
 
   // ── Rendu principal ───────────────────────────────────────────────────────
   const shell = (
@@ -245,14 +246,13 @@ export default function App() {
               onOpen={path => navigate(path)}
             />
           } />
-          {moduleTabs.map(tab => <Route key={tab.path} path={tab.path} element={<tab.Screen />} />)}
+          {allTabs.map(tab => <Route key={tab.path} path={tab.path} element={<tab.Screen />} />)}
           <Route path={SETTINGS_PATH} element={
             <SettingsScreen
               t={t} setTweak={setTweak}
               licenseInfo={licenseInfo}
               clubName={licenseInfo?.club} onClubNameChange={updateClubName}
               currentUser={currentUser}
-              modules={modules}
               onManageAccounts={() => setShowAccountManager(true)}
             />
           } />

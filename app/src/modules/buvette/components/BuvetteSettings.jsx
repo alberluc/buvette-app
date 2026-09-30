@@ -1,12 +1,25 @@
 import { useState } from 'react';
+import { AppHeader } from '../../../components/UI';
 import { fmtEUR } from '../../../lib/format';
 import { sendTestReport } from '../lib/api';
 import { useBuvette } from '../context';
 import shared from '../../../screens/SettingsScreen.module.css';
 import styles from './BuvetteSettings.module.css';
 
-// Cartes de réglages du module, insérées par SettingsScreen :
-// `BuvetteSettingsMain` dans la colonne principale, `BuvetteSettingsSide` dans la colonne admin.
+// Réglages du module (/buvette/reglages) — route déclarée uniquement pour les responsables buvette.
+export function BuvetteSettingsScreen() {
+  return (
+    <div className={shared.screen}>
+      <AppHeader subtitle="BUVETTE" title="Réglages" />
+      <div className={shared.scrollArea}>
+        <div className={shared.grid}>
+          <div className={shared.col}><CashSettings /></div>
+          <div className={shared.col}><CatalogSettings /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const PRESET_COLORS = [
   '#C99A3B', '#8E2A3A', '#2F6BBB', '#5E4632',
@@ -16,11 +29,10 @@ const PRESET_COLORS = [
 
 const PRESET_EMOJIS = ['🍺', '🍷', '🥤', '🍿', '☕', '🧃', '🥪', '🍕', '🍫', '🧁', '🍪', '🥨'];
 
-export function BuvetteSettingsMain({ isAdmin }) {
+// Fond de caisse + libellés d'opération
+function CashSettings() {
   const { cashFloat, updateCashFloat, opSuggestions, updateOpSuggestions } = useBuvette();
   const [newSuggestion, setNewSuggestion] = useState({ sortie: '', entree: '' });
-
-  if (!isAdmin) return null;
 
   return (
     <>
@@ -59,12 +71,11 @@ export function BuvetteSettingsMain({ isAdmin }) {
   );
 }
 
-export function BuvetteSettingsSide({ isAdmin }) {
+// Catalogue produits + bilan mensuel de test
+function CatalogSettings() {
   const { products, updateProducts, sessionToken } = useBuvette();
   const [editingProduct, setEditingProduct] = useState(null);
   const [testReportStatus, setTestReportStatus] = useState(null); // null | 'loading' | 'sent' | 'error'
-
-  if (!isAdmin) return null;
 
   const handleSendTestReport = async () => {
     setTestReportStatus('loading');

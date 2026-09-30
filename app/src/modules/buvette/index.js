@@ -2,7 +2,7 @@ import { Icon } from '../../components/UI';
 import { BuvetteProvider } from './BuvetteProvider';
 import { JournalRoute, BilanRoute, HistoriqueRoute } from './routes';
 import { BuvetteOverlays, BuvetteDevTools } from './components/BuvetteOverlays';
-import { BuvetteSettingsMain, BuvetteSettingsSide } from './components/BuvetteSettings';
+import { BuvetteSettingsScreen } from './components/BuvetteSettings';
 import { reset } from './lib/storage';
 import { BUVETTE_PATHS } from './paths';
 
@@ -22,7 +22,7 @@ export default {
   ],
   Overlays: BuvetteOverlays,
   DevTools: BuvetteDevTools,
-  SettingsMain: BuvetteSettingsMain,
-  SettingsSide: BuvetteSettingsSide,
+  // Fond de caisse, libellés, catalogue, bilan de test : réservés aux responsables buvette
+  settings: { path: BUVETTE_PATHS.reglages, Screen: BuvetteSettingsScreen, level: 'admin', screenLabel: '04 Réglages buvette' },
   reset,
 };

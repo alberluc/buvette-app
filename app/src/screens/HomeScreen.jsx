@@ -4,7 +4,7 @@ import styles from './HomeScreen.module.css';
 const SETTINGS_TILE = {
   id: 'reglages',
   label: 'Réglages',
-  description: 'Apparence, club, équipe et réglages des modules',
+  description: 'Apparence, licence, club et équipe',
   Icon: Icon.Settings,
   color: { fg: 'var(--ink-soft)', bg: 'var(--cream-deep)' },
 };

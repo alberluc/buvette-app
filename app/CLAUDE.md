@@ -31,7 +31,7 @@ src/
 │                         #         SettingsDrawer, TweaksPanel
 ├── screens/
 │   ├── HomeScreen.jsx      # / — accueil : une tuile par module accessible + Réglages
-│   └── SettingsScreen.jsx  # /reglages — cartes du socle + cartes fournies par les modules
+│   └── SettingsScreen.jsx  # /reglages — réglages globaux : apparence, licence, club, équipe
 ├── lib/                  # socle : api.js (licences, comptes, /settings), storage.js (licence,
 │                         #         session, comptes, tweaks), format.js (fmtEUR, todayKey, formatDate),
 │                         #         db.js, theme.js
@@ -41,7 +41,7 @@ src/
         ├── index.js          # descripteur du module (onglets, Provider, réglages, overlays…)
         ├── BuvetteProvider.jsx # tout l'état caisse : journée, archives, produits, synchro, minuit
         ├── context.js        # useBuvette()
-        ├── paths.js          # /buvette/journal, /buvette/bilan, /buvette/historique
+        ├── paths.js          # /buvette/journal, /bilan, /historique, /reglages
         ├── routes.jsx        # adaptateurs route → écran (props depuis useBuvette)
         ├── screens/          # OrdersScreen, SummaryScreen, HistoryScreen
         ├── components/       # OperationModal, CashCountModal, BuvetteOverlays, BuvetteSettings
@@ -60,7 +60,7 @@ src/
 ## Ajouter un module
 
 1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')` (lecture/usage) ou `requireModule('<id>', 'admin')` (réglages du module). Ajouter `{ fresh: true }` si le module expose des données personnelles : les droits sont alors relus en base à chaque requête au lieu de se fier au token (7 j).
-2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `description`, `Icon`, `color`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
+2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `description`, `Icon`, `color`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `settings`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
 3. L'ajouter au tableau `MODULES` de `modules/index.js`.
 4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
 
@@ -69,7 +69,10 @@ Le module (sa tuile sur l'accueil, ses onglets) n'apparaît que si le module est
 ## Navigation
 
 - **Accueil (`/`)** : `HomeScreen`, une tuile par module accessible (icône, nom, description, couleur fournis par le descripteur) + une tuile Réglages. Pas de barre du bas sur l'accueil.
-- **Dans un module** : la barre du bas affiche `Accueil` puis les seuls onglets du module en cours (`moduleForPath()`), jamais ceux des autres modules. Sur `/reglages` : `Accueil` + `Réglages`.
+- **Dans un module** : la barre du bas affiche `Accueil` puis les seuls onglets du module en cours (`moduleTabs()`, `moduleForPath()`), jamais ceux des autres modules.
+- **Réglages** — deux niveaux :
+  - **globaux** (`/reglages`, tuile de l'accueil) : apparence, licence, identité du club, équipe. Barre : `Accueil` + `Réglages`.
+  - **par module** : le descripteur fournit `settings: { path, Screen, level, screenLabel }` ; `moduleTabs()` l'ajoute en dernier onglet « Réglages » de la barre du module, et la route n'est déclarée, que si l'utilisateur a au moins `level` sur le module (buvette : `/buvette/reglages`, responsables seulement). Un module sans réglages n'a pas d'onglet.
 - **Arrivée après connexion** : l'accueil, ou directement le premier onglet du module si l'utilisateur n'en a qu'un (ex : bénévole buvette). Au rechargement, on reste sur la page en cours. Toute route inconnue ou non autorisée renvoie vers l'accueil.
 
 ## Droits
@@ -77,7 +80,7 @@ Le module (sa tuile sur l'accueil, ses onglets) n'apparaît que si le module est
 - **Administrateur du club** (`role: 'admin'`) : gère les comptes et l'identité du club, et a implicitement le niveau `admin` sur tous les modules de la licence.
 - **Bénévole** (`role: 'user'`) : droits par module, stockés dans `account_permissions` côté API. Niveaux : `user` (utiliser le module) et `admin` (« Responsable » : réglages du module). Pas de ligne = aucun accès.
 - Les droits effectifs et les modules de la licence sont calculés côté serveur et embarqués dans le token de session (`modules: ['buvette'], permissions: { buvette: 'user' }`).
-- Côté app : `enabledModules(user)`, `moduleLevel(user, id)` et `accessibleModules(user)` (`modules/index.js`) ; les cartes de réglages d'un module reçoivent `isAdmin` = responsable de ce module. `userFromSession()` (`lib/permissions.js`) reproduit le repli de l'API pour les sessions émises avant les droits par module.
+- Côté app : `enabledModules(user)`, `moduleLevel(user, id)` et `accessibleModules(user)` (`modules/index.js`). `userFromSession()` (`lib/permissions.js`) reproduit le repli de l'API pour les sessions émises avant les droits par module.
 
 ### Rafraîchissement de session
 
@@ -122,7 +125,7 @@ Flux : licence → connexion → les `Provider` des modules accessibles sont mon
 ```js
 { id: 'biere', name: 'Bière', price: 2, emoji: '🍺', color: '#C99A3B' }
 ```
-Catalogue par défaut : `DEFAULT_PRODUCTS` (`modules/buvette/lib/data.js`) ; le catalogue réel vient de l'API (`/products`) et se modifie dans Réglages.
+Catalogue par défaut : `DEFAULT_PRODUCTS` (`modules/buvette/lib/data.js`) ; le catalogue réel vient de l'API (`/products`) et se modifie dans les réglages de la buvette (`/buvette/reglages`).
 
 ### Synchro hors-ligne
 - Chaque commande/opération est ajoutée localement puis poussée à l'API ; `pushingRef` évite les doubles envois.
@@ -166,7 +169,7 @@ Les icônes sont dans `public/` : `icon-192.png`, `icon-512.png`, `icon-maskable
 
 ## Conventions
 
-- **CSS Modules** — un fichier `Foo.module.css` à côté de chaque `Foo.jsx`, importé comme `import styles from './Foo.module.css'`. Exception : les cartes de réglages d'un module réutilisent les classes de carte de `screens/SettingsScreen.module.css` (import `shared`).
+- **CSS Modules** — un fichier `Foo.module.css` à côté de chaque `Foo.jsx`, importé comme `import styles from './Foo.module.css'`. Exception : l'écran de réglages d'un module réutilise la mise en page et les cartes de `screens/SettingsScreen.module.css` (import `shared`).
 - **Inline style uniquement** pour les valeurs dynamiques impossibles en CSS pur
 - **Pas de store global** (Redux, Zustand…) — état du socle dans `App.jsx`, état d'un module dans son `Provider` (contexte React). Les écrans restent pilotés par props.
 - **Pas de TypeScript** — JS pur
