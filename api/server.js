@@ -11,6 +11,7 @@ import { startPurgeJob } from './jobs/purgeRevokedLicenses.js'
 import demoRouter from './routes/demo.js'
 import reportsRouter from './routes/reports.js'
 import ambassadorRouter from './routes/ambassador.js'
+import membersRouter from './routes/members.js'
 
 if (!process.env.JWT_SECRET || !process.env.ADMIN_SECRET) {
   console.error('JWT_SECRET et ADMIN_SECRET sont requis')
@@ -53,6 +54,7 @@ app.use('/admin', adminRouter)
 app.use('/', demoRouter)
 app.use('/', reportsRouter)
 app.use('/', ambassadorRouter)
+app.use('/', membersRouter)
 
 app.listen(3000, () => {
   console.log('API buvette démarrée sur :3000')

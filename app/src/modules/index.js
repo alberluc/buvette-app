@@ -1,4 +1,5 @@
 import buvette from './buvette';
+import membres from './membres';
 
 // Registre des modules fonctionnels. Le socle (App.jsx) n'importe rien d'autre de modules/.
 //
@@ -15,7 +16,7 @@ import buvette from './buvette';
 //   SettingsMain? cartes de réglages, colonne principale ({ isAdmin } = responsable du module)
 //   SettingsSide? cartes de réglages, colonne admin ({ isAdmin } = responsable du module)
 //   reset?        async () => efface les données locales du module
-export const MODULES = [buvette];
+export const MODULES = [buvette, membres];
 
 // Les tokens émis avant l'introduction des modules n'ont pas de champ `modules`
 export const DEFAULT_MODULE_IDS = ['buvette'];

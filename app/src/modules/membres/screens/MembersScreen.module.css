@@ -1,0 +1,104 @@
+/* ── Layout ──────────────────────────────────────────────────────────────────── */
+.screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 16px 32px 0; gap: 12px; }
+
+/* ── En-tête ─────────────────────────────────────────────────────────────────── */
+.headerRight { display: flex; align-items: flex-end; gap: 24px; }
+.headerStat { display: flex; flex-direction: column; align-items: flex-end; }
+.headerStatValue { font-size: 28px; font-weight: 800; color: var(--club); line-height: 1; font-variant-numeric: tabular-nums; }
+.headerStatLabel { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.headerActions { display: flex; gap: 8px; }
+
+/* ── Boutons ─────────────────────────────────────────────────────────────────── */
+.primaryBtn, .secondaryBtn {
+  appearance: none; height: 44px; padding: 0 18px; border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.primaryBtn { border: none; background: var(--club); color: white; }
+.primaryBtn:hover { background: var(--club-deep); }
+.secondaryBtn { border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); }
+.secondaryBtn:hover { background: var(--cream-deep); }
+
+/* ── Barre d'outils ──────────────────────────────────────────────────────────── */
+.toolbar { display: flex; gap: 12px; align-items: center; }
+.search {
+  flex: 1; min-width: 0; height: 46px; padding: 0 16px;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--paper);
+  font-family: inherit; font-size: 15px; color: var(--ink); outline: none;
+}
+.search:focus { border-color: var(--club); }
+.segmented { display: flex; background: var(--cream-deep); border-radius: 12px; padding: 4px; gap: 2px; }
+.segBtn {
+  appearance: none; border: none; background: transparent; height: 38px; padding: 0 16px;
+  border-radius: 9px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+}
+.segBtnActive { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.inlineError { font-size: 13px; color: var(--danger); }
+
+/* ── Tableau ─────────────────────────────────────────────────────────────────── */
+.tableWrap {
+  flex: 1; overflow: auto; margin-bottom: 20px;
+  background: var(--paper); border: 1px solid var(--line-soft); border-radius: 16px;
+}
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  position: sticky; top: 0; z-index: 1; background: var(--paper);
+  text-align: left; padding: 12px 16px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-mute);
+  border-bottom: 1px solid var(--line);
+}
+.table td { padding: 12px 16px; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
+.row { cursor: pointer; }
+.row:hover td { background: var(--cream); }
+.row:last-child td { border-bottom: none; }
+.nameCell { font-weight: 500; white-space: nowrap; }
+.lastName { font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.muted { color: var(--ink-soft); }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.badgeActive   { background: var(--ok-soft); color: var(--ok); }
+.badgeInactive { background: var(--cream-deep); color: var(--ink-mute); }
+.consentOk { color: var(--ok); display: inline-grid; place-items: center; }
+.consentMissing { font-size: 12px; font-weight: 700; color: var(--warn); white-space: nowrap; }
+
+/* ── États (chargement, hors ligne, vide) ────────────────────────────────────── */
+.stateBox {
+  margin: 48px auto; max-width: 440px; padding: 0 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+}
+.stateTitle { font-size: 18px; font-weight: 700; color: var(--ink); }
+.stateText { font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.empty { padding: 40px 0; text-align: center; font-size: 14px; color: var(--ink-soft); }
+
+/* ── Tablette portrait / mobile : lignes en cartes ───────────────────────────── */
+@media (max-width: 899px) {
+  .body { padding: 12px 16px 0; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search { flex: none; }
+  .segmented { align-self: flex-start; }
+  .headerRight { gap: 12px; }
+  .headerStat { display: none; }
+  .tableWrap { background: transparent; border: none; border-radius: 0; }
+  .table thead { display: none; }
+  .table, .table tbody { display: block; }
+  .row {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 12px;
+    background: var(--paper); border: 1px solid var(--line-soft); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .table td { padding: 0; border: none; }
+  .row:hover td { background: transparent; }
+  .nameCell { grid-column: 1; grid-row: 1; font-size: 15px; }
+  .row td[data-label="Statut"] { grid-column: 2; grid-row: 1; justify-self: end; }
+  .row td[data-label="Email"], .row td[data-label="Téléphone"] { grid-column: 1; font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+  .row td[data-label="Email"] { grid-row: 2; }
+  .row td[data-label="Téléphone"] { grid-row: 3; }
+  .row td[data-label="Ville"], .row td[data-label="Adhérent depuis"] { display: none; }
+  .row td[data-label="RGPD"] { grid-column: 2; grid-row: 2; justify-self: end; }
+}
+
+@media (max-width: 599px) {
+  .headerRight { padding: 12px 16px 0; }
+  .headerActions { flex-wrap: wrap; }
+}

@@ -1,6 +1,8 @@
 # Assolyte — app (PWA)
 
-PWA tablette pour club sportif. Organisée en **socle** (licence, comptes, apparence, navigation) + **modules** fonctionnels activés par licence. Aujourd'hui un seul module : **buvette** (caisse, hors-ligne).
+PWA tablette pour club sportif. Organisée en **socle** (licence, comptes, apparence, navigation) + **modules** fonctionnels activés par licence :
+- **buvette** — caisse, 100 % hors-ligne
+- **membres** — fichier des adhérents, en ligne uniquement (données personnelles)
 
 ## Commandes
 
@@ -43,13 +45,20 @@ src/
         ├── screens/          # OrdersScreen, SummaryScreen, HistoryScreen
         ├── components/       # OperationModal, CashCountModal, BuvetteOverlays, BuvetteSettings
         └── lib/              # api.js, storage.js, data.js (DEFAULT_PRODUCTS, summarize…), day.js
+    └── membres/
+        ├── index.js          # descripteur (onglet /membres, pas de defaultLevel ni de reset)
+        ├── MembresProvider.jsx # sans état : { sessionToken, canEdit }
+        ├── context.js        # useMembres()
+        ├── screens/          # MembersScreen (tableau, recherche, filtre, export)
+        ├── components/       # MemberModal (fiche : création, édition, lecture seule, suppression)
+        └── lib/api.js        # /members (aucun stockage local)
 ```
 
 **Règle de dépendance** : les modules importent le socle, jamais l'inverse. Le socle ne connaît les modules que via `modules/index.js`. Un module n'importe pas un autre module.
 
 ## Ajouter un module
 
-1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')` (lecture/usage) ou `requireModule('<id>', 'admin')` (réglages du module).
+1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')` (lecture/usage) ou `requireModule('<id>', 'admin')` (réglages du module). Ajouter `{ fresh: true }` si le module expose des données personnelles : les droits sont alors relus en base à chaque requête au lieu de se fier au token (7 j).
 2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
 3. L'ajouter au tableau `MODULES` de `modules/index.js`.
 4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
@@ -102,6 +111,21 @@ Catalogue par défaut : `DEFAULT_PRODUCTS` (`modules/buvette/lib/data.js`) ; le 
 - Chaque commande/opération est ajoutée localement puis poussée à l'API ; `pushingRef` évite les doubles envois.
 - Polling toutes les 10 s (`/days/current`) : fusion des éléments locaux non confirmés + renvoi de ceux qui manquent côté serveur. Resynchro complète au retour de connexion.
 - Auto-archive à minuit : `setInterval` de 60 s qui compare `day.dayKey` au jour courant.
+
+## Module membres
+
+Entité `members` côté API (table du socle, référençable par de futurs modules : cotisations, événements…).
+
+```js
+{ id, firstName, lastName, email, phone, address, postalCode, city,
+  birthDate: 'YYYY-MM-DD'|null, memberSince: 'YYYY-MM-DD'|null, status: 'active'|'inactive',
+  notes, consentAt: ISO|null, createdAt, updatedAt }
+```
+
+- **Droits** : `user` = consultation (fiche en lecture seule), `admin` (responsable) = création, modification, suppression, export CSV. Aucun accès par défaut pour un nouveau bénévole.
+- **Routes** : `GET/POST /members`, `GET/PUT/DELETE /members/:id`, `GET /members/export.csv`. Toutes en `requireModule('membres', …, { fresh: true })` : un droit retiré, un compte supprimé ou une licence révoquée prennent effet immédiatement.
+- **Pas de hors-ligne** : la liste est chargée à l'ouverture de l'écran et oubliée en le quittant ; rien n'est écrit dans IndexedDB. Hors ligne, l'écran affiche « Connexion requise ».
+- **RGPD** : case de consentement sur la fiche (`consent: true|false` à l'envoi ; la date `consentAt` est conservée tant qu'il n'est pas retiré), suppression définitive, export CSV (`;`, BOM UTF-8 pour Excel).
 
 ## Persistance (IndexedDB, table `state`)
 

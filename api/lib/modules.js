@@ -1,6 +1,6 @@
 // Modules fonctionnels activables par licence.
-// Ajouter ici l'identifiant d'un nouveau module (ex : 'membres') avant de l'exposer.
-export const MODULES = ['buvette']
+// Ajouter ici l'identifiant d'un nouveau module avant de l'exposer.
+export const MODULES = ['buvette', 'membres']
 
 // Modules attribués aux licences créées sans précision, et aux tokens émis
 // avant l'introduction des modules (qui n'ont pas de champ `modules`).
