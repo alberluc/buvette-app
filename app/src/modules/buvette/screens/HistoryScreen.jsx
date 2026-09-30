@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { AppHeader, Icon } from '../components/UI';
-import { fmtEUR } from '../lib/data';
+import { AppHeader, Icon } from '../../../components/UI';
+import { fmtEUR } from '../../../lib/format';
 import { downloadXlsx } from '../lib/api';
 import styles from './HistoryScreen.module.css';
 

@@ -1,17 +1,24 @@
 import jwt from 'jsonwebtoken'
 import { randomBytes } from 'crypto'
+import { DEFAULT_MODULES } from './modules.js'
 
 export function makeLicenseToken(license) {
   return jwt.sign(
-    { licenseKey: license.key, club: license.club_name, plan: license.plan, licenseExpires: license.expires_at },
+    {
+      licenseKey: license.key, club: license.club_name, plan: license.plan, licenseExpires: license.expires_at,
+      modules: license.modules ?? DEFAULT_MODULES,
+    },
     process.env.JWT_SECRET,
     { expiresIn: '30d' }
   )
 }
 
-export function makeSessionToken(account, licenseKey, club) {
+export function makeSessionToken(account, license) {
   return jwt.sign(
-    { accountId: account.id, name: account.name, role: account.role, licenseKey, club },
+    {
+      accountId: account.id, name: account.name, role: account.role,
+      licenseKey: license.key, club: license.club_name, modules: license.modules ?? DEFAULT_MODULES,
+    },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   )

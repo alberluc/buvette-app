@@ -1,4 +1,5 @@
-import { load, todayKey, formatDate } from './storage';
+import { load } from './storage';
+import { todayKey, formatDate } from '../../../lib/format';
 import { summarize } from './data';
 
 export function makeEmptyToday() {

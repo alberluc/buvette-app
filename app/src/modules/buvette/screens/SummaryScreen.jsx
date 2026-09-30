@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { AppHeader, Icon, BigButton, PayBadge } from '../components/UI';
+import { AppHeader, Icon, BigButton, PayBadge } from '../../../components/UI';
 import { OperationModal } from '../components/OperationModal';
 import { CashCountModal } from '../components/CashCountModal';
-import { fmtEUR, summarize, estimatedCash } from '../lib/data';
+import { fmtEUR } from '../../../lib/format';
+import { summarize, estimatedCash } from '../lib/data';
 import styles from './SummaryScreen.module.css';
 
 export function SummaryScreen({ day, products, onClose, onReopen, cashCounted, cashFloat, archived, onAddOperation, onRemoveOperation, opSuggestions }) {

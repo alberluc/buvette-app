@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { db } from '../db.js'
-import { requireSession } from '../middleware/auth.js'
+import { requireSession, requireModule } from '../middleware/auth.js'
 
 const router = Router()
 
-router.get('/products', requireSession, async (req, res) => {
+router.get('/products', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   try {
     const license = await db('licenses').where({ key: licenseKey }).select('products').first()
@@ -15,7 +15,7 @@ router.get('/products', requireSession, async (req, res) => {
   }
 })
 
-router.put('/products', requireSession, async (req, res) => {
+router.put('/products', requireSession, requireModule('buvette'), async (req, res) => {
   if (req.session.role !== 'admin') return res.status(403).json({ error: 'Droits insuffisants' })
   const { licenseKey } = req.session
   const products = req.body

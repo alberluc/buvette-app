@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { DEFAULT_MODULES } from '../lib/modules.js'
 
 export function requireAdminSecret(req, res, next) {
   if (req.headers['x-admin-secret'] !== process.env.ADMIN_SECRET)
@@ -30,5 +31,15 @@ export function requireSession(req, res, next) {
     next()
   } catch {
     return res.status(401).json({ error: 'Session expirée' })
+  }
+}
+
+// À placer après requireSession : refuse l'accès si le module n'est pas activé pour la licence.
+// Les sessions émises avant l'introduction des modules n'ont pas de champ `modules` → modules par défaut.
+export function requireModule(name) {
+  return (req, res, next) => {
+    const modules = req.session.modules ?? DEFAULT_MODULES
+    if (!modules.includes(name)) return res.status(403).json({ error: 'Module non activé pour cette licence' })
+    next()
   }
 }

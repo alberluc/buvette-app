@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db.js'
-import { requireSession } from '../middleware/auth.js'
+import { requireSession, requireModule } from '../middleware/auth.js'
 import { generatePdf, monthLabel } from '../lib/reportPdf.js'
 import { sendReport } from '../lib/mailer.js'
 import { reportEmailHtml } from '../lib/emailTemplates.js'
@@ -8,7 +8,7 @@ import { generateXlsx } from '../lib/reportXlsx.js'
 
 const router = Router()
 
-router.get('/report/xlsx/:year/:month', requireSession, async (req, res) => {
+router.get('/report/xlsx/:year/:month', requireSession, requireModule('buvette'), async (req, res) => {
   const year  = parseInt(req.params.year, 10)
   const month = parseInt(req.params.month, 10)
   if (!year || !month || month < 1 || month > 12)
@@ -26,7 +26,7 @@ router.get('/report/xlsx/:year/:month', requireSession, async (req, res) => {
   }
 })
 
-router.post('/report/test', requireSession, async (req, res) => {
+router.post('/report/test', requireSession, requireModule('buvette'), async (req, res) => {
   if (req.session.role !== 'admin')
     return res.status(403).json({ error: 'Réservé aux administrateurs.' })
 

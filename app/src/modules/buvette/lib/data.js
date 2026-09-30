@@ -5,11 +5,6 @@ export const DEFAULT_PRODUCTS = [
   { id: 'box',   name: 'Box',        price: 1, emoji: '🍿', color: '#5E4632' },
 ];
 
-export function fmtEUR(n) {
-  const s = (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
-  return s + ' €';
-}
-
 // Calcule le montant estimé en caisse espèces à partir du fond de caisse,
 // des journées archivées non encore comptées, et de la journée en cours.
 export function estimatedCash(cashFloat, archived, dayEspeces, dayMouvements) {

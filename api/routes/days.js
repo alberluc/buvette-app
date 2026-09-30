@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db.js'
-import { requireSession } from '../middleware/auth.js'
+import { requireSession, requireModule } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -15,7 +15,7 @@ function formatDate(dayKey) {
 }
 
 // Récupère ou crée la journée du jour
-router.get('/days/current', requireSession, async (req, res) => {
+router.get('/days/current', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const dayKey = todayKey()
   try {
@@ -33,7 +33,7 @@ router.get('/days/current', requireSession, async (req, res) => {
 })
 
 // Historique complet du club (toutes les journées sauf la journée en cours)
-router.get('/days', requireSession, async (req, res) => {
+router.get('/days', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   try {
     const days = await db('days')
@@ -47,7 +47,7 @@ router.get('/days', requireSession, async (req, res) => {
 })
 
 // Ajoute une commande à la journée — append atomique en JSONB pour éviter les conflits
-router.post('/days/:dayKey/orders', requireSession, async (req, res) => {
+router.post('/days/:dayKey/orders', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey } = req.params
   const order = req.body
@@ -69,7 +69,7 @@ router.post('/days/:dayKey/orders', requireSession, async (req, res) => {
 })
 
 // Supprime une commande de la journée par son id
-router.delete('/days/:dayKey/orders/:orderId', requireSession, async (req, res) => {
+router.delete('/days/:dayKey/orders/:orderId', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey, orderId } = req.params
   try {
@@ -91,7 +91,7 @@ router.delete('/days/:dayKey/orders/:orderId', requireSession, async (req, res) 
 })
 
 // Ajoute un mouvement de caisse — append atomique en JSONB
-router.post('/days/:dayKey/mouvements', requireSession, async (req, res) => {
+router.post('/days/:dayKey/mouvements', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey } = req.params
   const mouvement = req.body
@@ -113,7 +113,7 @@ router.post('/days/:dayKey/mouvements', requireSession, async (req, res) => {
 })
 
 // Supprime un mouvement de caisse par son id
-router.delete('/days/:dayKey/mouvements/:mouvementId', requireSession, async (req, res) => {
+router.delete('/days/:dayKey/mouvements/:mouvementId', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey, mouvementId } = req.params
   try {
@@ -135,7 +135,7 @@ router.delete('/days/:dayKey/mouvements/:mouvementId', requireSession, async (re
 })
 
 // Mise à jour de la journée (clôture, réouverture, espèces comptées)
-router.put('/days/:dayKey', requireSession, async (req, res) => {
+router.put('/days/:dayKey', requireSession, requireModule('buvette'), async (req, res) => {
   const { licenseKey } = req.session
   const { dayKey } = req.params
   const { day_closed, auto_closed, cash_counted } = req.body

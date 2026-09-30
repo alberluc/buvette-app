@@ -20,7 +20,8 @@ router.post('/auth/setup', requireLicenseToken, async (req, res) => {
     const password_hash = hashPassword(salt, password)
     await db('accounts').insert({ id, license_key: req.licenseKey, name: name.trim(), salt, password_hash, role: 'admin' })
 
-    res.status(201).json({ token: makeSessionToken({ id, name: name.trim(), role: 'admin' }, req.licenseKey, req.club) })
+    const license = await db('licenses').where({ key: req.licenseKey }).first()
+    res.status(201).json({ token: makeSessionToken({ id, name: name.trim(), role: 'admin' }, license) })
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }
@@ -34,7 +35,9 @@ router.post('/auth/login', loginLimiter, requireLicenseToken, async (req, res) =
     if (!account) return res.status(404).json({ error: 'Compte introuvable' })
     if (hashPassword(account.salt, password) !== account.password_hash)
       return res.status(401).json({ error: 'Mot de passe incorrect' })
-    res.json({ token: makeSessionToken(account, req.licenseKey, req.club) })
+    // Relit la licence pour embarquer les modules à jour (le token de licence peut dater de 30 j)
+    const license = await db('licenses').where({ key: req.licenseKey }).first()
+    res.json({ token: makeSessionToken(account, license) })
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }

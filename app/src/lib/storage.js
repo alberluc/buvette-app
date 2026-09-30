@@ -1,33 +1,15 @@
 import { db } from './db';
 
-const DATA_KEY = 'v2';
+// Données du socle uniquement. Chaque module gère ses propres clés
+// (ex : modules/buvette/lib/storage.js) dans la même table `state`.
+
 const LICENSE_KEY = 'license';
 const SESSION_KEY = 'session';
 const ACCOUNTS_CACHE_KEY = 'accounts-cache';
-const PRODUCTS_KEY = 'products';
-
-// ── Données journée ───────────────────────────────────────────────────────────
-
-export async function load() {
-  try {
-    const record = await db.state.get(DATA_KEY);
-    return record?.data ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function save(state) {
-  try {
-    await db.state.put({ key: DATA_KEY, data: state });
-  } catch (e) {
-    console.warn('[storage] save failed', e);
-  }
-}
 
 export async function reset() {
   try {
-    await db.state.bulkDelete([DATA_KEY, SESSION_KEY, ACCOUNTS_CACHE_KEY]);
+    await db.state.bulkDelete([SESSION_KEY, ACCOUNTS_CACHE_KEY]);
   } catch {}
 }
 
@@ -113,66 +95,4 @@ export async function saveTweaks(tweaks) {
   } catch (e) {
     console.warn('[storage] saveTweaks failed', e);
   }
-}
-
-// ── Réglages (fond de caisse…) ────────────────────────────────────────────────
-
-const SETTINGS_KEY = 'settings';
-
-export const DEFAULT_OP_SUGGESTIONS = {
-  sortie: ['Achat glaçons', 'Petite caisse', 'Monnaie rendue'],
-  entree: ['Appoint monnaie', 'Dépôt espèces', 'Remboursement'],
-};
-
-export async function loadSettings() {
-  try {
-    const record = await db.state.get(SETTINGS_KEY);
-    const data = record?.data ?? {};
-    return { cashFloat: 0, ...data, opSuggestions: data.opSuggestions ?? DEFAULT_OP_SUGGESTIONS };
-  } catch {
-    return { cashFloat: 0, opSuggestions: DEFAULT_OP_SUGGESTIONS };
-  }
-}
-
-export async function saveSettings(settings) {
-  try {
-    await db.state.put({ key: SETTINGS_KEY, data: settings });
-  } catch (e) {
-    console.warn('[storage] saveSettings failed', e);
-  }
-}
-
-// ── Produits ──────────────────────────────────────────────────────────────────
-
-export async function loadProducts() {
-  try {
-    const record = await db.state.get(PRODUCTS_KEY);
-    return record?.data ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function saveProducts(products) {
-  try {
-    await db.state.put({ key: PRODUCTS_KEY, data: products });
-  } catch (e) {
-    console.warn('[storage] saveProducts failed', e);
-  }
-}
-
-// ── Utilitaires date ──────────────────────────────────────────────────────────
-
-export function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export function formatDate(d) {
-  // Pour les dates ISO complètes (ex: "2026-12-31T00:00:00.000Z"), on parse directement.
-  // Pour les dates courtes "YYYY-MM-DD", on ajoute T12:00:00 pour éviter un décalage UTC.
-  const dt = new Date(typeof d === 'string' && !d.includes('T') ? d + 'T12:00:00' : d);
-  return dt.toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  });
 }

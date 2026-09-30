@@ -21,6 +21,7 @@ async function runMonthlyReports() {
     .where({ revoked: false })
     .whereNotNull('email')
     .whereNot({ email: '' })
+    .whereRaw('modules @> ?::jsonb', [JSON.stringify(['buvette'])])
 
   let ok = 0
   let ko = 0

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Icon, BigButton } from './UI';
-import { fmtEUR } from '../lib/data';
+import { Icon, BigButton } from '../../../components/UI';
+import { fmtEUR } from '../../../lib/format';
 import styles from './OperationModal.module.css';
 
 export function OperationModal({ onClose, onValidate, suggestions = {} }) {

@@ -133,13 +133,8 @@ export function StatusBar({ time, onAccount, apiOnline = true, clubName, userNam
   );
 }
 
-export function TabBar({ active, onChange }) {
-  const tabs = [
-    { id: 'orders',   label: 'Journal',    icon: <Icon.Receipt  size={26} /> },
-    { id: 'summary',  label: 'Bilan',      icon: <Icon.Chart    size={26} /> },
-    { id: 'history',  label: 'Historique', icon: <Icon.Clock    size={26} /> },
-    { id: 'settings', label: 'Réglages',   icon: <Icon.Settings size={26} /> },
-  ];
+// tabs : [{ id, label, icon }] — fournis par le shell (onglets des modules + Réglages)
+export function TabBar({ tabs, active, onChange }) {
   return (
     <div className={styles.tabBar}>
       {tabs.map(t => {

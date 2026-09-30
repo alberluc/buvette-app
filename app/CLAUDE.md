@@ -1,6 +1,6 @@
-# Buvette Club — CLAUDE.md
+# Assolyte — app (PWA)
 
-Application de caisse pour buvette de club sportif. PWA tablette (paysage), 100 % hors-ligne.
+PWA tablette pour club sportif. Organisée en **socle** (licence, comptes, apparence, navigation) + **modules** fonctionnels activés par licence. Aujourd'hui un seul module : **buvette** (caisse, hors-ligne).
 
 ## Commandes
 
@@ -13,112 +13,115 @@ npm run lint     # lint ESLint
 
 ## Stack
 
-- **React 19** + **Vite 8** — pas de router (navigation par état `tab`)
-- **Dexie 4** — IndexedDB, remplace localStorage
+- **React 19** + **Vite 8**
+- **react-router-dom 7** — `BrowserRouter` dans `main.jsx`, routes construites dans `App.jsx` à partir des modules
+- **Dexie 4** — IndexedDB (base `buvette`, table `state` clé/valeur partagée socle + modules)
 - **vite-plugin-pwa** — génère manifest + service worker au build
-- Le style utilise **CSS Modules** (un fichier `.module.css` par composant/écran). Les styles dynamiques (couleurs produit, valeurs calculées depuis l'état) restent en `style={{}}` inline.
+- **CSS Modules** (un `.module.css` par composant/écran). Les styles dynamiques (couleurs produit, valeurs calculées) restent en `style={{}}` inline.
 
 ## Structure
 
 ```
 src/
-├── lib/
-│   ├── data.js          # PRODUCTS, TODAY, HISTORY, fmtEUR(), summarize()
-│   ├── db.js            # instance Dexie (table `state`, clé `key`)
-│   └── storage.js       # load/save/reset/loadPIN/savePIN (tous async)
-├── components/
-│   ├── UI.jsx           # PayBadge, BigButton, Icon, StatusBar, TabBar, AppHeader
-│   ├── TweaksPanel.jsx  # useTweaks + tous les contrôles Tweak* (outil dev/proto)
-│   └── PINScreen.jsx    # PINLockScreen, PINChallenge, ChangePINModal
+├── App.jsx               # shell du socle : licence, session, comptes, tweaks, routes, TabBar
+├── main.jsx              # point d'entrée, BrowserRouter, capture beforeinstallprompt
+├── components/           # socle : UI.jsx (Icon, TabBar, StatusBar…), LoginScreen, LicenseScreen,
+│                         #         SettingsDrawer, TweaksPanel
 ├── screens/
-│   ├── OrdersScreen.jsx  # Écran 1 — journal + modal nouvelle commande
-│   ├── SummaryScreen.jsx # Écran 2 — bilan du jour + clôture caisse
-│   └── HistoryScreen.jsx # Écran 3 — historique des journées archivées
-├── App.jsx              # shell, état global, flux PIN, SettingsDrawer
-├── main.jsx             # point d'entrée, capture beforeinstallprompt
-└── index.css            # variables CSS + reset global (pas de classes)
+│   └── SettingsScreen.jsx  # /reglages — cartes du socle + cartes fournies par les modules
+├── lib/                  # socle : api.js (licences, comptes, /settings), storage.js (licence,
+│                         #         session, comptes, tweaks), format.js (fmtEUR, todayKey, formatDate),
+│                         #         db.js, theme.js
+└── modules/
+    ├── index.js          # registre MODULES + contrat d'un module + enabledModules(licenseInfo)
+    └── buvette/
+        ├── index.js          # descripteur du module (onglets, Provider, réglages, overlays…)
+        ├── BuvetteProvider.jsx # tout l'état caisse : journée, archives, produits, synchro, minuit
+        ├── context.js        # useBuvette()
+        ├── paths.js          # /buvette/journal, /buvette/bilan, /buvette/historique
+        ├── routes.jsx        # adaptateurs route → écran (props depuis useBuvette)
+        ├── screens/          # OrdersScreen, SummaryScreen, HistoryScreen
+        ├── components/       # OperationModal, CashCountModal, BuvetteOverlays, BuvetteSettings
+        └── lib/              # api.js, storage.js, data.js (DEFAULT_PRODUCTS, summarize…), day.js
 ```
 
-## Modèle de données
+**Règle de dépendance** : les modules importent le socle, jamais l'inverse. Le socle ne connaît les modules que via `modules/index.js`. Un module n'importe pas un autre module.
+
+## Ajouter un module
+
+1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')`.
+2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `Provider`, `tabs`, et optionnellement `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`).
+3. L'ajouter au tableau `MODULES` de `modules/index.js`.
+4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
+
+Les onglets du module apparaissent dans la TabBar seulement si `licenseInfo.modules` (token de licence) le contient. Un token sans champ `modules` vaut `['buvette']`.
+
+## Socle (App.jsx)
+
+| State | Rôle |
+|---|---|
+| `licenseStatus` / `licenseToken` / `licenseInfo` | Licence activée sur l'appareil (`licenseInfo.modules` = modules actifs) |
+| `sessionToken` / `currentUser` | Utilisateur connecté (`{ id, name, role: 'admin'|'user' }`) |
+| `cachedAccounts` | Comptes du club, cache hors-ligne pour l'écran de connexion |
+| `apiOnline` | Remonté par les modules via le callback `onApiStatus` (point vert / « Hors ligne ») |
+| `t` | Préférences d'apparence (tweaks) |
+
+Flux : licence → connexion → les `Provider` des modules actifs sont montés autour du shell (ils chargent leurs données à ce moment-là et rendent `null` tant qu'ils chargent). À la déconnexion, ils sont démontés.
+
+## Module buvette
 
 ### Journée en cours (`day`)
 ```js
-{
-  dayKey: 'YYYY-MM-DD',   // clé de tri / détection changement de date
-  date: 'Samedi 3 mai…',  // chaîne affichable
-  orders: [Order],
-  dayClosed: false,
-  cashCounted: null,      // montant espèces compté (number | null)
-}
+{ dayKey: 'YYYY-MM-DD', date: 'Samedi 3 mai…', orders: [Order], mouvements: [Operation], dayClosed: false, cashCounted: null }
 ```
 
 ### Commande (`Order`)
 ```js
-{ time: 'HH:MM', items: [['biere', 2], ['soda', 1]], payment: 'especes'|'carte', total: 5 }
+{ id, time: 'HH:MM', items: [['biere', 2], ['soda', 1]], payment: 'especes'|'carte', total: 5, by: 'Nom' }
 ```
 
 ### Journée archivée
 ```js
-{ dayKey, date, orderCount, total, especes, carte, cashCounted, closed, autoClosed, products: { biere: 12, … } }
+{ dayKey, date, orderCount, total, especes, carte, cashCounted, mouvements, closed, autoClosed, products: { biere: 12, … } }
 ```
 
-### Produits (`PRODUCTS` dans `data.js`)
+### Produits
 ```js
 { id: 'biere', name: 'Bière', price: 2, emoji: '🍺', color: '#C99A3B' }
 ```
-Modifier ce tableau pour changer le catalogue.
+Catalogue par défaut : `DEFAULT_PRODUCTS` (`modules/buvette/lib/data.js`) ; le catalogue réel vient de l'API (`/products`) et se modifie dans Réglages.
 
-## État global (App.jsx)
+### Synchro hors-ligne
+- Chaque commande/opération est ajoutée localement puis poussée à l'API ; `pushingRef` évite les doubles envois.
+- Polling toutes les 10 s (`/days/current`) : fusion des éléments locaux non confirmés + renvoi de ceux qui manquent côté serveur. Resynchro complète au retour de connexion.
+- Auto-archive à minuit : `setInterval` de 60 s qui compare `day.dayKey` au jour courant.
 
-`App.jsx` est la seule source de vérité. Il gère :
+## Persistance (IndexedDB, table `state`)
 
-| State | Type | Rôle |
+| Clé | Propriétaire | Contenu |
 |---|---|---|
-| `day` | object | Journée en cours |
-| `archived` | array | Historique des journées clôturées |
-| `loaded` | bool | Chargement initial terminé |
-| `tab` | string | `'orders'` `'summary'` `'history'` |
-| `storedPIN` | string\|null | Code PIN stocké (`null` = jamais modifié, défaut `'1234'`) |
-| `pinUnlocked` | bool | L'utilisateur a passé l'écran de verrouillage (reset au rechargement) |
-| `pendingClose` | object\|null | `{ cashCounted }` — déclenche la modale PIN avant clôture |
+| `license` | socle | token de licence |
+| `session` | socle | token de session |
+| `accounts-cache` | socle | comptes du club |
+| `tweaks` | socle | préférences d'apparence |
+| `v2` | buvette | `{ day, archived }` |
+| `products` | buvette | catalogue |
+| `settings` | buvette | `{ cashFloat, opSuggestions }` |
 
-## Persistance (IndexedDB)
-
-Base Dexie `buvette`, table `state`, deux enregistrements :
-
-| Clé | Contenu |
-|---|---|
-| `'v2'` | `{ day, archived }` — état complet de l'app |
-| `'pin'` | Code PIN sous forme de chaîne `'XXXX'` |
-
-`reset()` supprime les deux clés. `loadPIN()` retourne `null` si jamais modifié (le code par défaut `'1234'` est dans `DEFAULT_PIN`).
-
-## Système PIN
-
-Trois points de contrôle :
-1. **Ouverture de l'app** — `PINLockScreen` (plein écran) bloque tant que `!pinUnlocked`
-2. **Clôture de journée** — `SummaryScreen` appelle `requestCloseDay()` → `PINChallenge` (modale) → `closeDay()`
-3. **Changement de code** — `ChangePINModal` (3 étapes) depuis le drawer Réglages → section Sécurité
-
-Les composants PIN sont dans `src/components/PINScreen.jsx`.
-
-## Auto-archive à minuit
-
-Un `setInterval` de 60 s dans `App.jsx` compare `day.dayKey` avec `todayKey()`. Si la date a changé (app restée ouverte toute la nuit), la journée est archivée automatiquement (`autoClosed: true`) et une nouvelle journée vide est créée.
+Ne pas renommer ces clés : les tablettes installées ont leurs données dessous. « Réinitialiser les données » appelle `reset()` du socle puis `reset()` de chaque module.
 
 ## PWA
 
-`vite.config.js` configure `vite-plugin-pwa` avec `registerType: 'autoUpdate'`. Le manifest et le SW sont générés au build — ne pas créer `manifest.webmanifest` ou `service-worker.js` manuellement.
+`vite.config.js` configure `vite-plugin-pwa` avec `registerType: 'autoUpdate'`. Le manifest et le SW sont générés au build — ne pas créer `manifest.webmanifest` ou `service-worker.js` manuellement. Le fallback de navigation (Workbox + `nginx.conf`) sert `index.html` pour les routes du router.
 
 Les icônes sont dans `public/` : `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`.
 
 ## Conventions
 
-- **CSS Modules** — un fichier `Foo.module.css` à côté de chaque `Foo.jsx`, importé comme `import styles from './Foo.module.css'`
-- **Inline style uniquement** pour les valeurs dynamiques impossibles en CSS pur (couleur spécifique d'un produit, largeur calculée depuis l'état, etc.)
-- **Pas de router** — la navigation est un `useState('orders'|'summary'|'history')`
-- **Pas de global state** (Redux, Zustand…) — tout dans `App.jsx`, passé en props
+- **CSS Modules** — un fichier `Foo.module.css` à côté de chaque `Foo.jsx`, importé comme `import styles from './Foo.module.css'`. Exception : les cartes de réglages d'un module réutilisent les classes de carte de `screens/SettingsScreen.module.css` (import `shared`).
+- **Inline style uniquement** pour les valeurs dynamiques impossibles en CSS pur
+- **Pas de store global** (Redux, Zustand…) — état du socle dans `App.jsx`, état d'un module dans son `Provider` (contexte React). Les écrans restent pilotés par props.
 - **Pas de TypeScript** — JS pur
 - **Composants sous-écran** (ex : `OrderRow`, `ProductCard`) définis dans le même fichier que leur écran parent, non exportés
-- `fmtEUR(n)` pour tout affichage monétaire
-- `summarize(orders)` calcule totaux, répartition espèces/carte, qtés par produit
+- `fmtEUR(n)` (`lib/format.js`) pour tout affichage monétaire
+- `summarize(orders, products)` calcule totaux, répartition espèces/carte, qtés par produit

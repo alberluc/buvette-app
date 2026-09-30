@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef } from 'react';
-import { Icon, BigButton, PayBadge } from '../components/UI';
+import { Icon, BigButton, PayBadge } from '../../../components/UI';
 import { OperationModal } from '../components/OperationModal';
-import { fmtEUR, estimatedCash, summarize } from '../lib/data';
+import { fmtEUR } from '../../../lib/format';
+import { estimatedCash, summarize } from '../lib/data';
 import styles from './OrdersScreen.module.css';
 
 export function OrdersScreen({ day, products, onAddOrder, onRemoveOrder, onAddOperation, onRemoveOperation, opSuggestions, cashFloat, archived }) {

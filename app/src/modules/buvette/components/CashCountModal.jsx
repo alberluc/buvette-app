@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Icon, BigButton } from './UI';
-import { fmtEUR } from '../lib/data';
+import { Icon, BigButton } from '../../../components/UI';
+import { fmtEUR } from '../../../lib/format';
 import styles from './CashCountModal.module.css';
 
 const BILLETS = [100, 50, 20, 10, 5];

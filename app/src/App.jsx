@@ -1,22 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { StatusBar, TabBar, Icon } from './components/UI';
 import { useTweaks, TweaksPanel, TweakSection, TweakColor, TweakRadio, TweakToggle, TweakButton } from './components/TweaksPanel';
 import { SettingsDrawer } from './components/SettingsDrawer';
 import { LoginScreen, ChangePasswordModal, AccountManager } from './components/LoginScreen';
 import { LicenseScreen } from './components/LicenseScreen';
-import { OrdersScreen } from './screens/OrdersScreen';
-import { SummaryScreen } from './screens/SummaryScreen';
-import { HistoryScreen } from './screens/HistoryScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { save, reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadProducts, saveProducts, loadSettings, saveSettings, loadTweaks, saveTweaks, DEFAULT_OP_SUGGESTIONS } from './lib/storage';
-import { parseJwt, refreshLicense, fetchAccounts, fetchCurrentDay, fetchDays, pushOrder, deleteOrder, updateDay, fetchProducts, pushProducts, fetchSettings, pushSettings, pushOperation, deleteOperation } from './lib/api';
-import { fmtEUR, DEFAULT_PRODUCTS } from './lib/data';
+import { reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadTweaks, saveTweaks } from './lib/storage';
+import { parseJwt, refreshLicense, fetchAccounts, pushSettings } from './lib/api';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { makeEmptyToday, makeEmptyDay, archiveFromDay, archiveFromApiDay, loadInitialState } from './lib/day';
+import { MODULES, enabledModules } from './modules';
 import styles from './App.module.css';
 
+const SETTINGS_PATH = '/reglages';
+
+// Shell du socle : licence, connexion, comptes, apparence, navigation.
+// Les données métier vivent dans les modules (voir modules/index.js).
 export default function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -29,16 +32,7 @@ export default function App() {
     document.getElementById('root').style.zoom = TEXT_SCALES[t.textSize] || 1;
   }, [t.accent, t.textSize, t.darkMode]);
 
-  const [tab, setTab] = useState('orders');
-
-  // ── Données ───────────────────────────────────────────────────────────────
   const [loaded, setLoaded] = useState(false);
-  const [day, setDay] = useState(null);
-  const [archived, setArchived] = useState([]);
-  const [autoCloseNotice, setAutoCloseNotice] = useState(null);
-  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
-  const [cashFloat, setCashFloat] = useState(0);
-  const [opSuggestions, setOpSuggestions] = useState({ ...DEFAULT_OP_SUGGESTIONS });
 
   // ── Licence ───────────────────────────────────────────────────────────────
   const [licenseStatus, setLicenseStatus] = useState('checking');
@@ -50,17 +44,10 @@ export default function App() {
   const [sessionToken, setSessionToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // ── Sync ──────────────────────────────────────────────────────────────────
+  // ── Sync (état remonté par les modules) ───────────────────────────────────
   const [apiOnline, setApiOnline] = useState(true);
-  const wasOfflineRef = useRef(false);
-  // Ref miroir de `day` — accessible dans les closures de setInterval sans dépendance
-  const dayRef = useRef(null);
-  useEffect(() => { dayRef.current = day; }, [day]);
-  // IDs des commandes/opérations dont le push est en cours (évite les doubles envois)
-  const pushingRef = useRef(new Set());
 
   // ── UI ────────────────────────────────────────────────────────────────────
-  const [pendingClose, setPendingClose] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showAccountManager, setShowAccountManager] = useState(false);
@@ -68,54 +55,18 @@ export default function App() {
   // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      const [initial, licToken, sesToken, accsCache, savedProducts, savedSettings, savedTweaks] = await Promise.all([
-        loadInitialState(), loadLicense(), loadSession(), loadAccountsCache(), loadProducts(), loadSettings(), loadTweaks(),
+      const [licToken, sesToken, accsCache, savedTweaks] = await Promise.all([
+        loadLicense(), loadSession(), loadAccountsCache(), loadTweaks(),
       ]);
-      setCashFloat(savedSettings.cashFloat ?? 0);
-      setOpSuggestions(savedSettings.opSuggestions ?? DEFAULT_OP_SUGGESTIONS);
       if (savedTweaks) setTweak(savedTweaks);
-
-      const resolvedProducts = savedProducts || DEFAULT_PRODUCTS;
-      setProducts(resolvedProducts);
-
-      setDay(initial.day);
-      if (initial.justAutoClosed) {
-        const archiveEntry = archiveFromDay(initial.justAutoClosed, resolvedProducts);
-        setArchived([archiveEntry, ...(initial.archived || [])]);
-        if (!initial.justAutoClosed.dayClosed) setAutoCloseNotice(archiveEntry);
-      } else {
-        setArchived(initial.archived);
-      }
       setCachedAccounts(accsCache);
       applyLicenseToken(licToken);
 
-      let validSession = null;
       if (sesToken) {
         const p = parseJwt(sesToken);
         if (p && p.exp > Date.now() / 1000) {
-          validSession = sesToken;
           setSessionToken(sesToken);
           setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
-        }
-      }
-
-      if (validSession) {
-        try {
-          const [apiDay, apiDays, apiProducts, apiSettings] = await Promise.all([
-            fetchCurrentDay(validSession),
-            fetchDays(validSession),
-            fetchProducts(validSession).catch(() => null),
-            fetchSettings(validSession).catch(() => null),
-          ]);
-          const finalProducts = apiProducts || resolvedProducts;
-          setProducts(finalProducts);
-          saveProducts(finalProducts);
-          if (apiSettings) { setCashFloat(apiSettings.cashFloat ?? 0); saveSettings(apiSettings); }
-          setDay({ mouvements: [], ...apiDay });
-          setArchived(apiDays.map(d => archiveFromApiDay(d, finalProducts)));
-          setAutoCloseNotice(null);
-        } catch {
-          // Fallback silencieux : l'état local est déjà affiché
         }
       }
 
@@ -129,7 +80,7 @@ export default function App() {
     if (!p) { setLicenseStatus('missing'); return; }
     if (p.exp < Date.now() / 1000) { setLicenseToken(token); setLicenseStatus('expired'); return; }
     setLicenseToken(token);
-    setLicenseInfo({ club: p.club, plan: p.plan, licenseExpires: p.licenseExpires });
+    setLicenseInfo({ club: p.club, plan: p.plan, licenseExpires: p.licenseExpires, modules: p.modules });
     setLicenseStatus('valid');
   }
 
@@ -151,207 +102,26 @@ export default function App() {
 
   // ── Persistance ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (loaded && day) save({ day, archived });
-  }, [day, archived, loaded]);
-
-  useEffect(() => {
     if (loaded) saveTweaks(t);
   }, [t]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Auto-archive à minuit ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!loaded || !day) return;
-    const id = setInterval(() => {
-      const today = new Date();
-      const key = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      if (day.dayKey !== key && day.dayKey < key) {
-        const entry = archiveFromDay(day, products);
-        setArchived(prev => [entry, ...prev]);
-        if (!day.dayClosed) setAutoCloseNotice(entry);
-        if (sessionToken) {
-          updateDay(sessionToken, day.dayKey, { day_closed: true, auto_closed: true }).catch(() => {});
-          fetchCurrentDay(sessionToken).then(apiDay => setDay(apiDay)).catch(() => setDay(makeEmptyToday()));
-        } else {
-          setDay(makeEmptyToday());
-        }
-      }
-    }, 60000);
-    return () => clearInterval(id);
-  }, [day, loaded, sessionToken, products]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Polling (sync inter-tablettes, toutes les 10 s) ──────────────────────
-  useEffect(() => {
-    if (!loaded || !sessionToken) return;
-
-    async function poll() {
-      if (document.hidden) return; // pause si onglet/app en arrière-plan
-      try {
-        const apiDay = await fetchCurrentDay(sessionToken);
-        const wasOffline = wasOfflineRef.current;
-        wasOfflineRef.current = false;
-        setApiOnline(true);
-        if (wasOffline) {
-          const [apiDays, apiProducts] = await Promise.all([
-            fetchDays(sessionToken),
-            fetchProducts(sessionToken).catch(() => null),
-          ]);
-          if (apiProducts) {
-            setProducts(apiProducts);
-            saveProducts(apiProducts);
-          }
-          setArchived(apiDays.map(d => archiveFromApiDay(d, apiProducts || products)));
-        }
-        setDay(prev => {
-          if (!prev || apiDay.updatedAt === prev.updatedAt) return prev;
-          if (prev.dayKey !== apiDay.dayKey) return prev;
-          // Merge : réintègre les commandes/opérations locales pas encore confirmées par l'API
-          const apiOrderIds = new Set(apiDay.orders.map(o => o.id));
-          const apiMouvIds  = new Set((apiDay.mouvements || []).map(m => m.id));
-          const pendingOrders = prev.orders.filter(o => o.id && !apiOrderIds.has(o.id));
-          const pendingMouv   = (prev.mouvements || []).filter(m => m.id && !apiMouvIds.has(m.id));
-          return {
-            ...apiDay,
-            orders:     pendingOrders.length ? [...apiDay.orders, ...pendingOrders] : apiDay.orders,
-            mouvements: pendingMouv.length   ? [...(apiDay.mouvements || []), ...pendingMouv] : (apiDay.mouvements || []),
-          };
-        });
-
-        // Retry : repousse les items locaux pas encore sur le serveur
-        const localDay = dayRef.current;
-        if (localDay && localDay.dayKey === apiDay.dayKey) {
-          const apiOrderIds = new Set(apiDay.orders.map(o => o.id));
-          for (const order of localDay.orders) {
-            if (order.id && !apiOrderIds.has(order.id) && !pushingRef.current.has(order.id)) {
-              pushingRef.current.add(order.id);
-              pushOrder(sessionToken, localDay.dayKey, order)
-                .then(() => pushingRef.current.delete(order.id))
-                .catch(() => pushingRef.current.delete(order.id));
-            }
-          }
-          const apiMouvIds = new Set((apiDay.mouvements || []).map(m => m.id));
-          for (const mouv of (localDay.mouvements || [])) {
-            if (mouv.id && !apiMouvIds.has(mouv.id) && !pushingRef.current.has(mouv.id)) {
-              pushingRef.current.add(mouv.id);
-              pushOperation(sessionToken, localDay.dayKey, mouv)
-                .then(() => pushingRef.current.delete(mouv.id))
-                .catch(() => pushingRef.current.delete(mouv.id));
-            }
-          }
-        }
-      } catch {
-        wasOfflineRef.current = true;
-        setApiOnline(false);
-      }
-    }
-
-    const id = setInterval(poll, 10000);
-    // Resync immédiat au retour au premier plan (rattrape les mises à jour manquées)
-    const onVisible = () => { if (!document.hidden) poll(); };
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      clearInterval(id);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, [loaded, sessionToken, products]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Journée ───────────────────────────────────────────────────────────────
-  const addOrder = o => {
-    const order = currentUser ? { ...o, by: currentUser.name } : o;
-    setDay(d => ({ ...d, orders: [...d.orders, order] }));
-    if (sessionToken) {
-      pushingRef.current.add(order.id);
-      pushOrder(sessionToken, day.dayKey, order)
-        .then(() => pushingRef.current.delete(order.id))
-        .catch(() => pushingRef.current.delete(order.id));
-    }
-  };
-  const removeOrder = (order, orderIndex) => {
-    setDay(d => ({ ...d, orders: d.orders.filter((_, i) => i !== orderIndex) }));
-    if (sessionToken && order.id) deleteOrder(sessionToken, day.dayKey, order.id).catch(() => {});
-  };
-  const closeDay = cashCounted => {
-    setDay(d => ({ ...d, dayClosed: true, cashCounted }));
-    setTab('summary');
-    if (sessionToken) updateDay(sessionToken, day.dayKey, { day_closed: true, cash_counted: cashCounted }).catch(() => {});
-  };
-  const reopenDay = () => {
-    setDay(d => ({ ...d, dayClosed: false }));
-    if (sessionToken) updateDay(sessionToken, day.dayKey, { day_closed: false }).catch(() => {});
-  };
-  const requestCloseDay = cashCounted => setPendingClose({ cashCounted });
-
-  const simulateNextDay = () => {
-    const entry = archiveFromDay(day, products);
-    setArchived(prev => [entry, ...prev]);
-    const [y, m, d] = day.dayKey.split('-').map(Number);
-    const next = new Date(y, m - 1, d + 1);
-    const nextKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
-    setDay(makeEmptyDay(nextKey));
-    if (!day.dayClosed) setAutoCloseNotice(entry);
-  };
-
-  const addOperation = op => {
-    setDay(d => ({ ...d, mouvements: [...(d.mouvements || []), op] }));
-    if (sessionToken) {
-      pushingRef.current.add(op.id);
-      pushOperation(sessionToken, day.dayKey, op)
-        .then(() => pushingRef.current.delete(op.id))
-        .catch(() => pushingRef.current.delete(op.id));
-    }
-  };
-
-  const removeOperation = id => {
-    setDay(d => ({ ...d, mouvements: (d.mouvements || []).filter(op => op.id !== id) }));
-    if (sessionToken) deleteOperation(sessionToken, day.dayKey, id).catch(() => {});
-  };
-
-  const updateCashFloat = val => {
-    setCashFloat(val);
-    saveSettings({ cashFloat: val, opSuggestions });
-    if (sessionToken) pushSettings(sessionToken, { cashFloat: val, opSuggestions }).catch(() => {});
-  };
-
-  const updateOpSuggestions = val => {
-    setOpSuggestions(val);
-    saveSettings({ cashFloat, opSuggestions: val });
-    if (sessionToken) pushSettings(sessionToken, { cashFloat, opSuggestions: val }).catch(() => {});
-  };
-
+  // ── Réglages club ─────────────────────────────────────────────────────────
   const updateClubName = name => {
     if (!sessionToken) return;
-    pushSettings(sessionToken, { cashFloat, opSuggestions, clubName: name })
+    pushSettings(sessionToken, { clubName: name })
       .then(data => {
         if (data.licenseToken) { saveLicense(data.licenseToken); applyLicenseToken(data.licenseToken); }
       })
       .catch(() => {});
   };
 
-  const updateProducts = async newProducts => {
-    setProducts(newProducts);
-    saveProducts(newProducts);
-    if (sessionToken) pushProducts(sessionToken, newProducts).catch(() => {});
-  };
-
   // ── Auth ──────────────────────────────────────────────────────────────────
+  // Les modules chargent leurs données au montage de leur Provider (après connexion)
   const handleLoginSuccess = async sessionJWT => {
     await saveSession(sessionJWT);
     setSessionToken(sessionJWT);
     const p = parseJwt(sessionJWT);
     setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
-    try {
-      const [apiDay, apiDays, apiProducts, apiSettings] = await Promise.all([
-        fetchCurrentDay(sessionJWT),
-        fetchDays(sessionJWT),
-        fetchProducts(sessionJWT).catch(() => null),
-        fetchSettings(sessionJWT).catch(() => null),
-      ]);
-      const loginProducts = apiProducts || products;
-      if (apiProducts) { setProducts(apiProducts); saveProducts(apiProducts); }
-      if (apiSettings) { setCashFloat(apiSettings.cashFloat ?? 0); saveSettings(apiSettings); }
-      setDay({ mouvements: [], ...apiDay });
-      setArchived(apiDays.map(d => archiveFromApiDay(d, loginProducts)));
-    } catch { /* Fallback silencieux : on reste en mode hors-ligne */ }
   };
 
   const handleLogout = async () => {
@@ -369,10 +139,8 @@ export default function App() {
 
   const handleReset = async () => {
     await reset();
+    await Promise.all(MODULES.map(m => m.reset?.()));
     await deleteSession();
-    const fresh = await loadInitialState();
-    setDay(fresh.day);
-    setArchived(fresh.archived);
     setCurrentUser(null);
     setSessionToken(null);
     setCachedAccounts([]);
@@ -390,24 +158,6 @@ export default function App() {
     setLicenseStatus('missing');
   };
 
-  // ── PWA install ───────────────────────────────────────────────────────────
-  const [installable, setInstallable] = useState(!!window.__pwaInstallEvent);
-  const [installed, setInstalled] = useState(false);
-  useEffect(() => {
-    const onAvail = () => setInstallable(true);
-    const onDone  = () => { setInstallable(false); setInstalled(true); };
-    window.addEventListener('pwa-installable', onAvail);
-    window.addEventListener('pwa-installed', onDone);
-    return () => { window.removeEventListener('pwa-installable', onAvail); window.removeEventListener('pwa-installed', onDone); };
-  }, []);
-  const triggerInstall = async () => {
-    const ev = window.__pwaInstallEvent;
-    if (!ev) return;
-    ev.prompt();
-    const { outcome } = await ev.userChoice;
-    if (outcome === 'accepted') { setInstalled(true); setInstallable(false); }
-  };
-
   // ── Horloge ───────────────────────────────────────────────────────────────
   const [clockTime, setClockTime] = useState(() => {
     const d = new Date();
@@ -422,7 +172,7 @@ export default function App() {
   }, []);
 
   // ── Garde-fous ────────────────────────────────────────────────────────────
-  if (!loaded || !day) return null;
+  if (!loaded) return null;
 
   if (licenseStatus === 'missing')
     return <LicenseScreen mode="activate" onActivated={token => { saveLicense(token); applyLicenseToken(token); }} />;
@@ -442,43 +192,41 @@ export default function App() {
     );
   }
 
+  // ── Navigation ────────────────────────────────────────────────────────────
+  const modules = enabledModules(licenseInfo);
+  const moduleTabs = modules.flatMap(m => m.tabs);
+  const defaultPath = moduleTabs[0]?.path ?? SETTINGS_PATH;
+  const tabs = [
+    ...moduleTabs.map(tab => ({ id: tab.path, label: tab.label, icon: <tab.Icon size={26} /> })),
+    { id: SETTINGS_PATH, label: 'Réglages', icon: <Icon.Settings size={26} /> },
+  ];
+  const screenLabel = moduleTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
+
   // ── Rendu principal ───────────────────────────────────────────────────────
-  return (
-    <div
-      data-screen-label={
-        tab === 'orders' ? '01 Commandes' :
-        tab === 'summary' ? '02 Bilan' :
-        tab === 'history' ? '03 Historique' :
-        '04 Réglages'
-      }
-      className={styles.root}>
+  const shell = (
+    <div data-screen-label={screenLabel} className={styles.root}>
       {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
-        {tab === 'orders'  && <OrdersScreen day={day} products={products} onAddOrder={addOrder} onRemoveOrder={removeOrder} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} cashFloat={cashFloat} archived={archived} />}
-        {tab === 'summary' && <SummaryScreen day={day} products={products} onClose={requestCloseDay} onReopen={reopenDay} cashCounted={day.cashCounted} cashFloat={cashFloat} archived={archived} onAddOperation={addOperation} onRemoveOperation={removeOperation} opSuggestions={opSuggestions} />}
-        {tab === 'history' && <HistoryScreen archived={archived} products={products} cashFloat={cashFloat} sessionToken={sessionToken} />}
-        {tab === 'settings' && <SettingsScreen
-          t={t} setTweak={setTweak}
-          licenseInfo={licenseInfo}
-          clubName={licenseInfo?.club} onClubNameChange={updateClubName}
-          cashFloat={cashFloat} onCashFloatChange={updateCashFloat}
-          products={products} onProductsChange={updateProducts}
-          opSuggestions={opSuggestions} onOpSuggestionsChange={updateOpSuggestions}
-          currentUser={currentUser} sessionToken={sessionToken}
-          onManageAccounts={() => setShowAccountManager(true)}
-        />}
+        <Routes>
+          {moduleTabs.map(tab => <Route key={tab.path} path={tab.path} element={<tab.Screen />} />)}
+          <Route path={SETTINGS_PATH} element={
+            <SettingsScreen
+              t={t} setTweak={setTweak}
+              licenseInfo={licenseInfo}
+              clubName={licenseInfo?.club} onClubNameChange={updateClubName}
+              currentUser={currentUser}
+              modules={modules}
+              onManageAccounts={() => setShowAccountManager(true)}
+            />
+          } />
+          <Route path="*" element={<Navigate to={defaultPath} replace />} />
+        </Routes>
 
-        {autoCloseNotice && (
-          <AutoCloseToast
-            entry={autoCloseNotice}
-            onDismiss={() => setAutoCloseNotice(null)}
-            onView={() => { setTab('history'); setAutoCloseNotice(null); }}
-          />
-        )}
+        {modules.map(m => m.Overlays && <m.Overlays key={m.id} />)}
       </div>
 
-      <TabBar active={tab} onChange={setTab} />
+      <TabBar tabs={tabs} active={location.pathname} onChange={path => navigate(path)} />
 
       {!t.showStatusBar && (
         <button onClick={() => setAccountOpen(true)} aria-label="Mon compte"
@@ -493,13 +241,6 @@ export default function App() {
           onLogout={() => { setAccountOpen(false); handleLogout(); }}
           onChangePassword={() => { setAccountOpen(false); setShowChangePassword(true); }}
           onClose={() => setAccountOpen(false)}
-        />
-      )}
-
-      {pendingClose && (
-        <ConfirmCloseModal
-          onConfirm={() => { closeDay(pendingClose.cashCounted); setPendingClose(null); }}
-          onCancel={() => setPendingClose(null)}
         />
       )}
 
@@ -531,58 +272,15 @@ export default function App() {
           <TweakToggle label="Mode sombre" value={t.darkMode} onChange={v => setTweak('darkMode', v)} />
           <TweakToggle label="Barre d'état" value={t.showStatusBar} onChange={v => setTweak('showStatusBar', v)} />
         </TweakSection>
-        <TweakSection label="Démo" />
-        <TweakButton label="🗓️ Simuler le jour suivant" onClick={simulateNextDay} />
-        <TweakButton label={day.dayClosed ? 'Rouvrir la journée' : 'Clôturer la journée'} onClick={() => day.dayClosed ? reopenDay() : closeDay(day.cashCounted ?? 0)} />
+        {modules.map(m => m.DevTools && <m.DevTools key={m.id} />)}
         <TweakButton label="Réinitialiser les données" secondary onClick={handleReset} />
       </TweaksPanel>
     </div>
   );
-}
 
-// ── Confirmation de clôture ───────────────────────────────────────────────────
-function ConfirmCloseModal({ onConfirm, onCancel }) {
-  return (
-    <div className={styles.confirmOverlay}>
-      <div className={styles.confirmModal}>
-        <div className={styles.confirmTitle}>Clôturer la journée ?</div>
-        <div className={styles.confirmBody}>
-          Cette action archivera la journée en cours.<br />Elle peut être réouverte depuis le bilan.
-        </div>
-        <div className={styles.confirmActions}>
-          <button onClick={onCancel} className={styles.confirmBtnCancel}>Annuler</button>
-          <button onClick={onConfirm} className={styles.confirmBtnOk}>Clôturer</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Toast clôture automatique ─────────────────────────────────────────────────
-function AutoCloseToast({ entry, onDismiss, onView }) {
-  return (
-    <div className={styles.toast}>
-      <div className={styles.toastIcon}>!</div>
-      <div className={styles.toastBody}>
-        <div className={styles.toastTitle}>Clôture automatique</div>
-        <div className={styles.toastText}>
-          La journée du <b>{entry.date}</b> n'a pas été clôturée manuellement.
-          Elle a été archivée avec son total ({fmtEUR(entry.total)}).
-        </div>
-      </div>
-      <button onClick={onView} className={styles.toastViewBtn}>Voir l'historique</button>
-      <button onClick={onDismiss} aria-label="Fermer" className={styles.toastCloseBtn}>
-        <Icon.Close size={20} />
-      </button>
-    </div>
-  );
-}
-
-function GearSvg() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 11-2.83-2.83l.06.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
-    </svg>
+  // Chaque module actif enveloppe le shell avec son Provider (état + synchro)
+  return modules.reduceRight(
+    (children, m) => <m.Provider key={m.id} sessionToken={sessionToken} currentUser={currentUser} onApiStatus={setApiOnline}>{children}</m.Provider>,
+    shell,
   );
 }

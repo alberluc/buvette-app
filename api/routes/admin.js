@@ -4,13 +4,16 @@ import { requireAdminSecret } from '../middleware/auth.js'
 import { makeLicenseToken, generateKey, checkLicense } from '../lib/tokens.js'
 import { sendMail } from '../lib/mailer.js'
 import { licenseEmailHtml } from '../lib/emailTemplates.js'
+import { MODULES, DEFAULT_MODULES, isValidModuleList } from '../lib/modules.js'
 
 const router = Router()
 
 router.post('/licenses', requireAdminSecret, async (req, res) => {
-  const { club_name, email, plan } = req.body
+  const { club_name, email, plan, modules = DEFAULT_MODULES } = req.body
   if (!club_name || !email || !['monthly', 'annual'].includes(plan))
     return res.status(400).json({ error: 'club_name, email et plan (monthly|annual) requis' })
+  if (!isValidModuleList(modules))
+    return res.status(400).json({ error: `modules invalide : sous-ensemble de [${MODULES.join(', ')}] attendu` })
   const ms = plan === 'annual' ? 365 * 24 * 3600 * 1000 : 30 * 24 * 3600 * 1000
   const expiresAt = new Date(Date.now() + ms).toISOString().split('T')[0]
   try {
@@ -20,6 +23,7 @@ router.post('/licenses', requireAdminSecret, async (req, res) => {
       email: email.trim(),
       plan,
       expires_at: expiresAt,
+      modules: JSON.stringify(modules),
     }).returning('*')
 
     const expiresLabel = new Date(expiresAt).toLocaleDateString('fr-FR', {
@@ -62,6 +66,22 @@ router.post('/licenses/:key/restore', requireAdminSecret, async (req, res) => {
       .update({ revoked: false, revoked_at: null })
     if (count === 0) return res.status(404).json({ error: 'Licence introuvable' })
     res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+// Active / désactive des modules. Pris en compte à la prochaine connexion ou au prochain refresh de licence.
+router.put('/licenses/:key/modules', requireAdminSecret, async (req, res) => {
+  const { modules } = req.body
+  if (!isValidModuleList(modules))
+    return res.status(400).json({ error: `modules invalide : sous-ensemble de [${MODULES.join(', ')}] attendu` })
+  try {
+    const [row] = await db('licenses').where({ key: req.params.key.toUpperCase() })
+      .update({ modules: JSON.stringify(modules), updated_at: db.fn.now() })
+      .returning('*')
+    if (!row) return res.status(404).json({ error: 'Licence introuvable' })
+    res.json(row)
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }
