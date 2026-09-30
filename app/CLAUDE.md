@@ -73,6 +73,7 @@ Le module (sa tuile sur l'accueil, ses onglets) n'apparaît que si le module est
 - **Réglages** — deux niveaux :
   - **globaux** (`/reglages`, tuile de l'accueil) : apparence, licence, identité du club, équipe. Barre : `Accueil` + `Réglages`.
   - **par module** : le descripteur fournit `settings: { path, Screen, level, screenLabel }` ; `moduleTabs()` l'ajoute en dernier onglet « Réglages » de la barre du module, et la route n'est déclarée, que si l'utilisateur a au moins `level` sur le module (buvette : `/buvette/reglages`, responsables seulement). Un module sans réglages n'a pas d'onglet.
+- **Couleur du module** : dans un module, `App.jsx` pose `--module-fg` / `--module-bg` (= `color` du descripteur) sur le shell. La barre d'état, les en-têtes d'écran (`AppHeader`, en-tête du Journal) et l'onglet actif les utilisent, avec repli sur les couleurs du club hors module (accueil, réglages globaux). Un nouvel en-tête d'écran doit utiliser `var(--module-bg, var(--cream))` / `var(--module-fg, …)` pour suivre la couleur du module.
 - **Arrivée après connexion** : l'accueil, ou directement le premier onglet du module si l'utilisateur n'en a qu'un (ex : bénévole buvette). Au rechargement, on reste sur la page en cours. Toute route inconnue ou non autorisée renvoie vers l'accueil.
 
 ## Droits

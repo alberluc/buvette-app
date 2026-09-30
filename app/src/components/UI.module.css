@@ -73,7 +73,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  background: var(--cream);
+  background: var(--module-bg, var(--cream)); /* couleur du module en cours (App.jsx) */
   border-bottom: 1px solid var(--line-soft);
 }
 .statusRight {
@@ -131,13 +131,13 @@
   position: relative;
   transition: color 120ms;
 }
-.tabBtnActive   { color: var(--club); font-weight: 700; }
+.tabBtnActive   { color: var(--module-fg, var(--club)); font-weight: 700; }
 .tabIndicator {
   position: absolute;
   top: 0; left: 50%;
   transform: translateX(-50%);
   width: 0; height: 3px;
-  background: var(--club);
+  background: var(--module-fg, var(--club));
   border-radius: 0 0 3px 3px;
   transition: width 160ms ease;
 }
@@ -152,7 +152,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  background: var(--cream);
+  background: var(--module-bg, var(--cream));
   flex-shrink: 0;
 }
 .appHeaderLeft { flex-shrink: 0; }
@@ -161,7 +161,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.4px;
-  color: var(--ink-mute);
+  color: var(--module-fg, var(--ink-mute));
   text-transform: uppercase;
   margin-bottom: 6px;
 }
@@ -185,7 +185,7 @@
     background: transparent;
   }
   .appHeaderLeft {
-    background: var(--club);
+    background: var(--module-fg, var(--club));
     padding: 14px 16px 16px;
   }
   .appHeaderSubtitle {

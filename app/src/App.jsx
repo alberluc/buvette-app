@@ -232,9 +232,15 @@ export default function App() {
   const screenLabel = onHome ? '00 Accueil'
     : allTabs.find(tab => tab.path === location.pathname)?.screenLabel ?? '04 Réglages';
 
+  // Couleur du module en cours, reprise par la barre d'état, les en-têtes et l'onglet actif
+  // (variables CSS inline — valeurs dynamiques). Hors module : couleurs du club.
+  const moduleColors = currentModule
+    ? { '--module-fg': currentModule.color.fg, '--module-bg': currentModule.color.bg }
+    : undefined;
+
   // ── Rendu principal ───────────────────────────────────────────────────────
   const shell = (
-    <div data-screen-label={screenLabel} className={styles.root}>
+    <div data-screen-label={screenLabel} className={styles.root} style={moduleColors}>
       {t.showStatusBar && <StatusBar time={clockTime} onAccount={() => setAccountOpen(true)} apiOnline={apiOnline} clubName={licenseInfo?.club} userName={currentUser?.name} />}
 
       <div className={styles.main}>
