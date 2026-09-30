@@ -10,6 +10,7 @@ import { BUVETTE_PATHS } from './paths';
 export default {
   id: 'buvette',
   label: 'Buvette',
+  defaultLevel: 'user',
   Provider: BuvetteProvider,
   tabs: [
     { path: BUVETTE_PATHS.journal,    label: 'Journal',    Icon: Icon.Receipt, screenLabel: '01 Commandes',  Screen: JournalRoute },

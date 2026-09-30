@@ -39,6 +39,7 @@ export async function seed(knex) {
 
   const adminSalt = generateSalt()
   const userSalt  = generateSalt()
+  const userId    = randomUUID()
   await knex('accounts').insert([
     {
       id:            randomUUID(),
@@ -49,7 +50,7 @@ export async function seed(knex) {
       role:          'admin',
     },
     {
-      id:            randomUUID(),
+      id:            userId,
       license_key:   LICENSE_KEY,
       name:          'Thomas Lebrun',
       salt:          userSalt,
@@ -57,6 +58,8 @@ export async function seed(knex) {
       role:          'user',
     },
   ])
+  // L'admin a tous les droits implicitement ; le bénévole a l'accès caisse
+  await knex('account_permissions').insert({ account_id: userId, module: 'buvette', level: 'user' })
 
   const historicalDays = generateHistoricalDays(LICENSE_KEY, PRODUCTS, CASH_FLOAT)
   const today          = generateTodayOpen(LICENSE_KEY, PRODUCTS, CASH_FLOAT)

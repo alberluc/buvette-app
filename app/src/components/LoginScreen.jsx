@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { setupFirstAccount, login, createAccount, deleteAccount, changePassword, verifyPassword } from '../lib/api'
+import { setupFirstAccount, login, createAccount, updateAccount, deleteAccount, changePassword, verifyPassword } from '../lib/api'
+import { LEVELS, LEVEL_LABELS } from '../lib/permissions'
 import { PwaInstallButton } from './UI'
 import styles from './LoginScreen.module.css'
 
@@ -303,11 +304,16 @@ function StepForm({ title, subtitle, value, onChange, onSubmit, onCancel, error,
 }
 
 // ── Gestionnaire de comptes ────────────────────────────────────────────────────
-export function AccountManager({ accounts: initialAccounts, currentUser, sessionToken, onClose }) {
+// modules : modules activés sur la licence (pour attribuer les droits)
+export function AccountManager({ accounts: initialAccounts, currentUser, sessionToken, modules, onClose }) {
+  const defaultPermissions = () => Object.fromEntries(modules.filter(m => m.defaultLevel).map(m => [m.id, m.defaultLevel]))
+
   const [accounts, setAccounts] = useState(initialAccounts)
-  const [view, setView] = useState('list')
+  const [view, setView] = useState('list') // 'list' | 'add' | 'edit'
+  const [editing, setEditing] = useState(null)
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState('user')
+  const [newPermissions, setNewPermissions] = useState(defaultPermissions)
   const [newPassword, setNewPassword] = useState('')
   const [newConfirm, setNewConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -318,16 +324,41 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
   const passwordMismatch = newConfirm.length > 0 && newPassword !== newConfirm
   const canAdd = newName.trim().length > 0 && newPassword.length >= 4 && newPassword === newConfirm
 
+  const backToList = () => { setView('list'); setEditing(null); setError('') }
+
+  const openAdd = () => {
+    setNewName(''); setNewRole('user'); setNewPermissions(defaultPermissions()); setNewPassword(''); setNewConfirm('')
+    setView('add'); setError('')
+  }
+
+  const openEdit = acc => {
+    setEditing(acc)
+    setNewRole(acc.role)
+    setNewPermissions({ ...(acc.permissions ?? {}) })
+    setView('edit'); setError('')
+  }
+
   const handleAdd = async () => {
     if (!canAdd || loading) return
     setLoading(true); setError('')
     try {
-      const acc = await createAccount(sessionToken, { name: newName, password: newPassword, role: newRole })
+      const acc = await createAccount(sessionToken, { name: newName, password: newPassword, role: newRole, permissions: newPermissions })
       setAccounts(prev => [...prev, acc])
-      setView('list')
-      setNewName(''); setNewRole('user'); setNewPassword(''); setNewConfirm('')
+      backToList()
     } catch (e) {
       setError(e.message || 'Erreur lors de la création.')
+    } finally { setLoading(false) }
+  }
+
+  const handleSave = async () => {
+    if (loading) return
+    setLoading(true); setError('')
+    try {
+      const acc = await updateAccount(sessionToken, editing.id, { role: newRole, permissions: newPermissions })
+      setAccounts(prev => prev.map(a => a.id === acc.id ? { ...a, ...acc } : a))
+      backToList()
+    } catch (e) {
+      setError(e.message || 'Erreur lors de l\'enregistrement.')
     } finally { setLoading(false) }
   }
 
@@ -343,16 +374,18 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
     } finally { setLoading(false) }
   }
 
+  const title = { list: 'Comptes', add: 'Nouveau compte', edit: editing?.name }[view]
+
   return (
     <div className={styles.drawerOverlay}>
       <div className={styles.drawerPanel}>
         <div className={styles.drawerHeader}>
-          {view === 'add' && (
-            <button onClick={() => { setView('list'); setError('') }} className={styles.drawerIconBtn}>←</button>
+          {view !== 'list' && (
+            <button onClick={backToList} className={styles.drawerIconBtn}>←</button>
           )}
           <div className={styles.drawerHeaderFlex}>
             <div className={styles.drawerHeaderLabel}>Gestion des comptes</div>
-            <h2 className={styles.drawerHeaderTitle}>{view === 'add' ? 'Nouveau compte' : 'Comptes'}</h2>
+            <h2 className={styles.drawerHeaderTitle}>{title}</h2>
           </div>
           <button onClick={onClose} className={styles.drawerIconBtn}>✕</button>
         </div>
@@ -362,27 +395,27 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
             <>
               {error && <div className={styles.inlineError} style={{ marginBottom: 12 }}>{error}</div>}
               <div className={styles.accountItemsList}>
-                {accounts.map(acc => (
-                  <div key={acc.id} className={styles.accountItem}>
-                    <Avatar name={acc.name} active={acc.id === currentUser.id} size={44} />
-                    <div className={styles.accountItemInfo}>
-                      <div className={styles.accountItemHeader}>
-                        <span className={styles.accountItemName}>{acc.name}</span>
-                        {acc.id === currentUser.id && (
-                          <span className={styles.accountItemYou}>Vous</span>
-                        )}
-                      </div>
-                      <div className={styles.accountItemRole}>
-                        {acc.role === 'admin' ? 'Administrateur' : 'Bénévole'}
-                      </div>
+                {accounts.map(acc => {
+                  const isSelf = acc.id === currentUser.id
+                  return (
+                    <div key={acc.id} className={styles.accountItem}>
+                      <Avatar name={acc.name} active={isSelf} size={44} />
+                      <button onClick={() => !isSelf && openEdit(acc)} disabled={isSelf}
+                        className={`${styles.accountItemInfo} ${styles.accountItemInfoBtn}`}>
+                        <div className={styles.accountItemHeader}>
+                          <span className={styles.accountItemName}>{acc.name}</span>
+                          {isSelf && <span className={styles.accountItemYou}>Vous</span>}
+                        </div>
+                        <div className={styles.accountItemRole}>{accessSummary(acc, modules)}</div>
+                      </button>
+                      {!isSelf && (
+                        <button onClick={() => setConfirmDelete(acc)} disabled={loading} className={styles.accountItemDeleteBtn}>×</button>
+                      )}
                     </div>
-                    {acc.id !== currentUser.id && (
-                      <button onClick={() => setConfirmDelete(acc)} disabled={loading} className={styles.accountItemDeleteBtn}>×</button>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-              <button onClick={() => { setView('add'); setError('') }} className={styles.addAccountBtn}>
+              <button onClick={openAdd} className={styles.addAccountBtn}>
                 + Ajouter un compte
               </button>
             </>
@@ -392,15 +425,8 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
             <>
               <FieldLabel>Nom</FieldLabel>
               <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ex : Jean Martin" className={styles.input} autoFocus />
-              <FieldLabel mt>Rôle</FieldLabel>
-              <div className={styles.roleGroup}>
-                {[{ v: 'user', l: 'Bénévole' }, { v: 'admin', l: 'Administrateur' }].map(o => (
-                  <button key={o.v} onClick={() => setNewRole(o.v)}
-                    className={`${styles.roleBtn} ${newRole === o.v ? styles.roleBtnActive : ''}`}>
-                    {o.l}
-                  </button>
-                ))}
-              </div>
+              <AccessFields modules={modules} role={newRole} onRoleChange={setNewRole}
+                permissions={newPermissions} onPermissionsChange={setNewPermissions} />
               <FieldLabel>Mot de passe</FieldLabel>
               <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={styles.input} />
               {passwordShort && <div className={styles.inlineWarn}>Minimum 4 caractères.</div>}
@@ -410,6 +436,18 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
               {error && <div className={styles.centerError}>{error}</div>}
               <button onClick={handleAdd} disabled={!canAdd || loading} className={styles.primaryBtn} style={{ marginTop: 24 }}>
                 {loading ? 'Création…' : 'Créer le compte'}
+              </button>
+            </>
+          )}
+
+          {view === 'edit' && (
+            <>
+              <AccessFields modules={modules} role={newRole} onRoleChange={setNewRole}
+                permissions={newPermissions} onPermissionsChange={setNewPermissions} />
+              <div className={styles.permHint}>Les changements s'appliquent à la prochaine connexion de {editing.name}.</div>
+              {error && <div className={styles.centerError}>{error}</div>}
+              <button onClick={handleSave} disabled={loading} className={styles.primaryBtn} style={{ marginTop: 24 }}>
+                {loading ? 'Enregistrement…' : 'Enregistrer'}
               </button>
             </>
           )}
@@ -432,4 +470,62 @@ export function AccountManager({ accounts: initialAccounts, currentUser, session
       )}
     </div>
   )
+}
+
+// Rôle club + droits par module (formulaires d'ajout et de modification)
+function AccessFields({ modules, role, onRoleChange, permissions, onPermissionsChange }) {
+  const setLevel = (moduleId, level) => {
+    const next = { ...permissions }
+    if (level === 'none') delete next[moduleId]
+    else next[moduleId] = level
+    onPermissionsChange(next)
+  }
+  return (
+    <>
+      <FieldLabel mt>Rôle</FieldLabel>
+      <div className={styles.roleGroup}>
+        {[{ v: 'user', l: 'Bénévole' }, { v: 'admin', l: 'Administrateur' }].map(o => (
+          <button key={o.v} onClick={() => onRoleChange(o.v)}
+            className={`${styles.roleBtn} ${role === o.v ? styles.roleBtnActive : ''}`}>
+            {o.l}
+          </button>
+        ))}
+      </div>
+      {role === 'admin' ? (
+        <div className={styles.permHint} style={{ marginBottom: 18 }}>
+          Accès complet à tous les modules, gestion des comptes et de l'identité du club.
+        </div>
+      ) : (
+        <>
+          <FieldLabel>Accès aux modules</FieldLabel>
+          <div className={styles.permList}>
+            {modules.map(m => {
+              const current = permissions[m.id] ?? 'none'
+              return (
+                <div key={m.id} className={styles.permRow}>
+                  <span className={styles.permModule}>{m.label}</span>
+                  <div className={styles.permLevels}>
+                    {['none', ...LEVELS].map(l => (
+                      <button key={l} onClick={() => setLevel(m.id, l)}
+                        className={`${styles.permBtn} ${current === l ? styles.permBtnActive : ''}`}>
+                        {LEVEL_LABELS[l]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
+function accessSummary(acc, modules) {
+  if (acc.role === 'admin') return 'Administrateur'
+  const parts = modules
+    .filter(m => acc.permissions?.[m.id])
+    .map(m => acc.permissions[m.id] === 'admin' ? `${m.label} (responsable)` : m.label)
+  return parts.length ? `Bénévole · ${parts.join(', ')}` : 'Bénévole · aucun accès'
 }

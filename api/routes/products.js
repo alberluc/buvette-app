@@ -15,8 +15,7 @@ router.get('/products', requireSession, requireModule('buvette'), async (req, re
   }
 })
 
-router.put('/products', requireSession, requireModule('buvette'), async (req, res) => {
-  if (req.session.role !== 'admin') return res.status(403).json({ error: 'Droits insuffisants' })
+router.put('/products', requireSession, requireModule('buvette', 'admin'), async (req, res) => {
   const { licenseKey } = req.session
   const products = req.body
   if (!Array.isArray(products) || products.length === 0)

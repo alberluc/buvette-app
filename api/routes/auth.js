@@ -5,6 +5,7 @@ import { requireLicenseToken, requireSession } from '../middleware/auth.js'
 import { loginLimiter } from '../middleware/rateLimiter.js'
 import { hashPassword, generateSalt } from '../lib/crypto.js'
 import { makeSessionToken } from '../lib/tokens.js'
+import { loadPermissions } from '../lib/permissions.js'
 
 const router = Router()
 
@@ -21,7 +22,7 @@ router.post('/auth/setup', requireLicenseToken, async (req, res) => {
     await db('accounts').insert({ id, license_key: req.licenseKey, name: name.trim(), salt, password_hash, role: 'admin' })
 
     const license = await db('licenses').where({ key: req.licenseKey }).first()
-    res.status(201).json({ token: makeSessionToken({ id, name: name.trim(), role: 'admin' }, license) })
+    res.status(201).json({ token: makeSessionToken({ id, name: name.trim(), role: 'admin' }, license, {}) })
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }
@@ -35,9 +36,10 @@ router.post('/auth/login', loginLimiter, requireLicenseToken, async (req, res) =
     if (!account) return res.status(404).json({ error: 'Compte introuvable' })
     if (hashPassword(account.salt, password) !== account.password_hash)
       return res.status(401).json({ error: 'Mot de passe incorrect' })
-    // Relit la licence pour embarquer les modules à jour (le token de licence peut dater de 30 j)
+    // Relit la licence et les droits pour embarquer l'état à jour (le token de licence peut dater de 30 j)
     const license = await db('licenses').where({ key: req.licenseKey }).first()
-    res.json({ token: makeSessionToken(account, license) })
+    const permissions = await loadPermissions([account.id])
+    res.json({ token: makeSessionToken(account, license, permissions[account.id]) })
   } catch {
     res.status(500).json({ error: 'Erreur serveur' })
   }

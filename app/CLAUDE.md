@@ -49,24 +49,31 @@ src/
 
 ## Ajouter un module
 
-1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')`.
-2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `Provider`, `tabs`, et optionnellement `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`).
+1. Côté API : ajouter l'id dans `api/lib/modules.js`, protéger ses routes avec `requireSession, requireModule('<id>')` (lecture/usage) ou `requireModule('<id>', 'admin')` (réglages du module).
+2. Créer `src/modules/<id>/index.js` qui respecte le contrat documenté dans `modules/index.js` (`id`, `label`, `Provider`, `tabs`, et optionnellement `defaultLevel`, `Overlays`, `DevTools`, `SettingsMain`, `SettingsSide`, `reset`). Ne pas mettre de `defaultLevel` si le module manipule des données personnelles.
 3. L'ajouter au tableau `MODULES` de `modules/index.js`.
 4. Activer le module sur une licence : `PUT /admin/licenses/:key/modules`.
 
-Les onglets du module apparaissent dans la TabBar seulement si `licenseInfo.modules` (token de licence) le contient. Un token sans champ `modules` vaut `['buvette']`.
+Les onglets du module apparaissent dans la TabBar seulement si le module est activé sur la licence (`licenseInfo.modules`) **et** si l'utilisateur y a accès (`currentUser.permissions`). Un token sans champ `modules` vaut `['buvette']`.
+
+## Droits
+
+- **Administrateur du club** (`role: 'admin'`) : gère les comptes et l'identité du club, et a implicitement le niveau `admin` sur tous les modules de la licence.
+- **Bénévole** (`role: 'user'`) : droits par module, stockés dans `account_permissions` côté API. Niveaux : `user` (utiliser le module) et `admin` (« Responsable » : réglages du module). Pas de ligne = aucun accès.
+- Les droits effectifs sont calculés à la connexion et embarqués dans le token de session (`permissions: { buvette: 'user' }`). Une modification prend effet à la prochaine connexion du compte.
+- Côté app : `moduleLevel(user, id)` et `accessibleModules(licenseInfo, user)` (`modules/index.js`) ; les cartes de réglages d'un module reçoivent `isAdmin` = responsable de ce module. `userFromSession()` (`lib/permissions.js`) reproduit le repli de l'API pour les sessions émises avant les droits par module.
 
 ## Socle (App.jsx)
 
 | State | Rôle |
 |---|---|
 | `licenseStatus` / `licenseToken` / `licenseInfo` | Licence activée sur l'appareil (`licenseInfo.modules` = modules actifs) |
-| `sessionToken` / `currentUser` | Utilisateur connecté (`{ id, name, role: 'admin'|'user' }`) |
+| `sessionToken` / `currentUser` | Utilisateur connecté (`{ id, name, role: 'admin'|'user', permissions: { module: 'user'|'admin' } }`) |
 | `cachedAccounts` | Comptes du club, cache hors-ligne pour l'écran de connexion |
 | `apiOnline` | Remonté par les modules via le callback `onApiStatus` (point vert / « Hors ligne ») |
 | `t` | Préférences d'apparence (tweaks) |
 
-Flux : licence → connexion → les `Provider` des modules actifs sont montés autour du shell (ils chargent leurs données à ce moment-là et rendent `null` tant qu'ils chargent). À la déconnexion, ils sont démontés.
+Flux : licence → connexion → les `Provider` des modules accessibles sont montés autour du shell (ils chargent leurs données à ce moment-là et rendent `null` tant qu'ils chargent). À la déconnexion, ils sont démontés.
 
 ## Module buvette
 

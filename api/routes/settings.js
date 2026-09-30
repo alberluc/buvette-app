@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { db } from '../db.js'
 import { requireSession } from '../middleware/auth.js'
 import { makeLicenseToken } from '../lib/tokens.js'
+import { levelAtLeast, sessionPermissions } from '../lib/permissions.js'
 
 const router = Router()
 
@@ -17,13 +18,17 @@ router.get('/settings', requireSession, async (req, res) => {
 })
 
 router.put('/settings', requireSession, async (req, res) => {
-  if (req.session.role !== 'admin') return res.status(403).json({ error: 'Droits insuffisants' })
   const { licenseKey } = req.session
   const { cashFloat, clubName } = req.body
 
   // Chaque champ est optionnel : le socle envoie clubName, le module buvette envoie cashFloat
   if (cashFloat === undefined && clubName === undefined)
     return res.status(400).json({ error: 'Aucun réglage à mettre à jour' })
+  // clubName : administrateur du club ; cashFloat : responsable de la buvette
+  if (clubName !== undefined && req.session.role !== 'admin')
+    return res.status(403).json({ error: 'Droits insuffisants' })
+  if (cashFloat !== undefined && !levelAtLeast(sessionPermissions(req.session).buvette, 'admin'))
+    return res.status(403).json({ error: 'Droits insuffisants' })
   if (cashFloat !== undefined && (typeof cashFloat !== 'number' || cashFloat < 0))
     return res.status(400).json({ error: 'cashFloat invalide : nombre positif ou nul attendu' })
   if (clubName !== undefined && (typeof clubName !== 'string' || !clubName.trim()))

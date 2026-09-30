@@ -9,7 +9,8 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { reset, loadLicense, saveLicense, loadSession, saveSession, deleteSession, loadAccountsCache, saveAccountsCache, loadTweaks, saveTweaks } from './lib/storage';
 import { parseJwt, refreshLicense, fetchAccounts, pushSettings } from './lib/api';
 import { TWEAK_DEFAULTS, ACCENT_PALETTES, ACCENT_SWATCHES, TEXT_SCALES } from './lib/theme';
-import { MODULES, enabledModules } from './modules';
+import { MODULES, enabledModules, accessibleModules } from './modules';
+import { userFromSession } from './lib/permissions';
 import styles from './App.module.css';
 
 const SETTINGS_PATH = '/reglages';
@@ -66,7 +67,7 @@ export default function App() {
         const p = parseJwt(sesToken);
         if (p && p.exp > Date.now() / 1000) {
           setSessionToken(sesToken);
-          setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
+          setCurrentUser(userFromSession(p));
         }
       }
 
@@ -121,7 +122,7 @@ export default function App() {
     await saveSession(sessionJWT);
     setSessionToken(sessionJWT);
     const p = parseJwt(sessionJWT);
-    setCurrentUser({ id: p.accountId, name: p.name, role: p.role });
+    setCurrentUser(userFromSession(p));
   };
 
   const handleLogout = async () => {
@@ -193,7 +194,8 @@ export default function App() {
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  const modules = enabledModules(licenseInfo);
+  // Modules affichés = activés sur la licence ET accessibles à l'utilisateur connecté
+  const modules = accessibleModules(licenseInfo, currentUser);
   const moduleTabs = modules.flatMap(m => m.tabs);
   const defaultPath = moduleTabs[0]?.path ?? SETTINGS_PATH;
   const tabs = [
@@ -249,7 +251,7 @@ export default function App() {
       )}
 
       {showAccountManager && (
-        <AccountManager accounts={cachedAccounts} currentUser={currentUser} sessionToken={sessionToken} onClose={() => { setShowAccountManager(false); refreshCachedAccounts(); }} />
+        <AccountManager accounts={cachedAccounts} currentUser={currentUser} sessionToken={sessionToken} modules={enabledModules(licenseInfo)} onClose={() => { setShowAccountManager(false); refreshCachedAccounts(); }} />
       )}
 
       <TweaksPanel>

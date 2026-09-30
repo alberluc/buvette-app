@@ -26,10 +26,7 @@ router.get('/report/xlsx/:year/:month', requireSession, requireModule('buvette')
   }
 })
 
-router.post('/report/test', requireSession, requireModule('buvette'), async (req, res) => {
-  if (req.session.role !== 'admin')
-    return res.status(403).json({ error: 'Réservé aux administrateurs.' })
-
+router.post('/report/test', requireSession, requireModule('buvette', 'admin'), async (req, res) => {
   const { licenseKey } = req.session
   const license = await db('licenses').where({ key: licenseKey }).first()
   if (!license?.email)

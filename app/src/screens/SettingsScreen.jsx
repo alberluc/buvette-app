@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppHeader, usePwaInstall } from '../components/UI';
 import { formatDate } from '../lib/format';
 import { ACCENT_SWATCHES } from '../lib/theme';
+import { moduleLevel } from '../modules';
 import styles from './SettingsScreen.module.css';
 
 // Réglages du socle (apparence, licence, club, équipe) + cartes fournies par les modules actifs
@@ -13,14 +14,17 @@ export function SettingsScreen({
   modules,
   onManageAccounts,
 }) {
-  const isAdmin = currentUser?.role === 'admin';
+  // Administrateur du club : identité du club, comptes. Responsable d'un module : ses réglages.
+  const isClubAdmin = currentUser?.role === 'admin';
+  const isModuleAdmin = m => moduleLevel(currentUser, m.id) === 'admin';
+  const showSideCol = isClubAdmin || modules.some(m => m.SettingsSide && isModuleAdmin(m));
   const { canInstall, install } = usePwaInstall();
 
   return (
     <div className={styles.screen}>
       <AppHeader subtitle="CONFIGURATION" title="Réglages" />
       <div className={styles.scrollArea}>
-        <div className={`${styles.grid} ${!isAdmin ? styles.gridNarrow : ''}`}>
+        <div className={`${styles.grid} ${!showSideCol ? styles.gridNarrow : ''}`}>
           <div className={styles.col}>
 
             <div className={styles.card}>
@@ -84,7 +88,7 @@ export function SettingsScreen({
               </div>
             )}
 
-            {isAdmin && (
+            {isClubAdmin && (
               <div className={styles.card}>
                 <div className={styles.cardTitle}>Identité du club</div>
                 <div className={styles.fieldLabel}>Nom du club</div>
@@ -95,21 +99,23 @@ export function SettingsScreen({
               </div>
             )}
 
-            {modules.map(m => m.SettingsMain && <m.SettingsMain key={m.id} isAdmin={isAdmin} />)}
+            {modules.map(m => m.SettingsMain && <m.SettingsMain key={m.id} isAdmin={isModuleAdmin(m)} />)}
 
           </div>
 
-          {isAdmin && (
+          {showSideCol && (
             <div className={styles.col}>
 
-              {modules.map(m => m.SettingsSide && <m.SettingsSide key={m.id} isAdmin={isAdmin} />)}
+              {modules.map(m => m.SettingsSide && <m.SettingsSide key={m.id} isAdmin={isModuleAdmin(m)} />)}
 
-              <div className={styles.card}>
-                <div className={styles.cardTitle}>Équipe</div>
-                <button onClick={onManageAccounts} className={styles.btn}>
-                  👥 Gérer les comptes
-                </button>
-              </div>
+              {isClubAdmin && (
+                <div className={styles.card}>
+                  <div className={styles.cardTitle}>Équipe</div>
+                  <button onClick={onManageAccounts} className={styles.btn}>
+                    👥 Gérer les comptes
+                  </button>
+                </div>
+              )}
 
             </div>
           )}

@@ -67,11 +67,23 @@ export async function login(licenseToken, { accountId, password }) {
   return data // { token: sessionJWT }
 }
 
-export async function createAccount(sessionToken, { name, password, role }) {
+// permissions : { module: 'user' | 'admin' } (ignoré côté API pour un administrateur du club)
+export async function createAccount(sessionToken, { name, password, role, permissions }) {
   const res = await fetch(`${API_URL}/accounts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-    body: JSON.stringify({ name, password, role }),
+    body: JSON.stringify({ name, password, role, permissions }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur')
+  return data
+}
+
+export async function updateAccount(sessionToken, accountId, { role, permissions }) {
+  const res = await fetch(`${API_URL}/accounts/${accountId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ role, permissions }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Erreur serveur')

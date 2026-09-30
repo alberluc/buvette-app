@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { randomBytes } from 'crypto'
 import { DEFAULT_MODULES } from './modules.js'
+import { effectivePermissions } from './permissions.js'
 
 export function makeLicenseToken(license) {
   return jwt.sign(
@@ -13,11 +14,14 @@ export function makeLicenseToken(license) {
   )
 }
 
-export function makeSessionToken(account, license) {
+// storedPermissions : droits du compte en base ({ module: level }), cf. lib/permissions.js
+export function makeSessionToken(account, license, storedPermissions) {
+  const modules = license.modules ?? DEFAULT_MODULES
   return jwt.sign(
     {
       accountId: account.id, name: account.name, role: account.role,
-      licenseKey: license.key, club: license.club_name, modules: license.modules ?? DEFAULT_MODULES,
+      licenseKey: license.key, club: license.club_name, modules,
+      permissions: effectivePermissions(account, modules, storedPermissions),
     },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
