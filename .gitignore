@@ -38,3 +38,7 @@ coverage/
 
 # Docker
 docker-compose.override.yml
+
+# Claude Code (worktrees d'isolation, sorties Playwright)
+.claude/worktrees/
+.playwright-mcp/
