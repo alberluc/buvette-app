@@ -1,5 +1,5 @@
 {
-  "nodeArgs": ["--env-file=.env"],
+  "nodeArgs": ["--env-file-if-exists=.env"],
   "ext": "js,json",
   "ignore": ["node_modules", "data", "migrations"]
 }
